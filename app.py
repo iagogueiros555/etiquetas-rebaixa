@@ -28,20 +28,25 @@ LAYOUTS = {
 
 
 def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
-    """Desenha os textos com foco e calibração no modelo A6"""
+    """Desenha a etiqueta com precisão milimétrica para o modelo A6"""
 
     x_center = x_base + (col_w / 2.0)
+    topo_etiqueta = y_base + row_h  # Borda superior de cada retângulo de etiqueta
 
     # -------------------------------------------------------------------
-    # 1. DESCRIÇÃO DO PRODUTO (Arial-Black Tamanho 14 | Limite de 31 Chars)
+    # 1. DESCRIÇÃO DO PRODUTO (Arial-Black 14pt | Distância de 40.8mm do topo)
     # -------------------------------------------------------------------
     tam_fonte_desc = int(14 * scale)
     c.setFont("Arial-Black", tam_fonte_desc)
+    
+    # Posição Y inicial: Exatamente 40,8 mm abaixo do topo da etiqueta
+    y_primeira_linha = topo_etiqueta - (40.8 * mm * scale)
+
     desc = item["desc"]
 
-    # Se tiver 31 caracteres ou menos (contando espaços), imprime em 1 linha
+    # Se tiver até 31 caracteres (contando espaços), imprime em 1 linha
     if len(desc) <= 31:
-        c.drawCentredString(x_center, y_base + (row_h * 0.80), desc)
+        c.drawCentredString(x_center, y_primeira_linha, desc)
     else:
         # Quebra em 2 linhas respeitando o limite de 31 caracteres por linha
         palavras = desc.split()
@@ -55,18 +60,21 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
             else:
                 linha2 = f"{linha2} {palavra}".strip()
 
-        # Desenha as 2 linhas ligeiramente ajustadas na altura
-        c.drawCentredString(x_center, y_base + (row_h * 0.83), linha1)
-        c.drawCentredString(x_center, y_base + (row_h * 0.75), linha2)
+        # Espaçamento entre a 1ª e a 2ª linha do nome do produto
+        espacamento_linhas = (tam_fonte_desc * 0.35 + 1.8) * mm
+        y_segunda_linha = y_primeira_linha - espacamento_linhas
+        
+        c.drawCentredString(x_center, y_primeira_linha, linha1)
+        c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO DE PREÇO (MANTIDO TEMPORARIAMENTE PARA OS PRÓXIMOS PASSOS)
+    # 2. BLOCO DE PREÇO (MANTIDO PARA OS PRÓXIMOS PASSOS)
     # -------------------------------------------------------------------
     if item["de"]:
         # --- MODO DE / POR ---
         c.setFont("Arial-Black", int(9 * scale))
         p_de_str = f"De R$ {item['de']}"
-        y_de = y_base + (row_h * 0.62)
+        y_de = y_base + (row_h * 0.52)
         c.drawCentredString(x_center, y_de, p_de_str)
 
         # Risco sobre o preço antigo
@@ -81,7 +89,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         # Preço POR
         c.setFont("Arial-Black", int(24 * scale))
-        y_por = y_base + (row_h * 0.44)
+        y_por = y_base + (row_h * 0.36)
         c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
 
         # Unidade
@@ -90,7 +98,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     else:
         # --- MODO PREÇO ÚNICO ---
         c.setFont("Arial-Black", int(28 * scale))
-        y_por = y_base + (row_h * 0.49)
+        y_por = y_base + (row_h * 0.40)
         c.drawCentredString(x_center, y_por, f"R$ {item['por']}")
 
         # Unidade
@@ -102,14 +110,14 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     # -------------------------------------------------------------------
     if item["e_rebaixa"]:
         c.setFont("Arial-Black", int(7.5 * scale))
-        c.drawCentredString(x_center, y_base + (row_h * 0.25), "PRODUTO PRÓXIMO")
+        c.drawCentredString(x_center, y_base + (row_h * 0.22), "PRODUTO PRÓXIMO")
         c.drawCentredString(
-            x_center, y_base + (row_h * 0.19), "A DATA DE VENCIMENTO"
+            x_center, y_base + (row_h * 0.16), "A DATA DE VENCIMENTO"
         )
 
         c.setFont("Arial-Black", int(11 * scale))
         c.drawCentredString(
-            x_center, y_base + (row_h * 0.08), f"VALIDADE: {item['val']}"
+            x_center, y_base + (row_h * 0.07), f"VALIDADE: {item['val']}"
         )
 
 
