@@ -17,7 +17,6 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
-st.caption("Modelos Verticais (Retrato)")
 
 # --- CONFIGURAÇÕES DE LAYOUTS VERTICAIS ---
 LAYOUTS = {
