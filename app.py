@@ -1,4 +1,5 @@
 import io
+import base64
 import streamlit as st
 from reportlab.lib.pagesizes import A3, A4
 from reportlab.lib.units import mm
@@ -18,7 +19,7 @@ LAYOUTS = {
 }
 
 def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
-    """Desenha apenas os textos essenciais na etiqueta"""
+    """Desenha os textos essenciais na etiqueta"""
     
     # 1. DESCRIÇÃO DO PRODUTO
     c.setFont("Helvetica-Bold", int(10 * scale))
@@ -26,21 +27,17 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
     # 2. BLOCO DE PREÇO (De/Por vs Preço Único)
     if item["de"]:
-        # --- MODO DE / POR ---
         c.setFont("Helvetica-Bold", int(8 * scale))
         p_de_x = x_base + (35 * mm * (scale if scale < 2 else 1.2))
         p_de_y = y_base + (row_h * 0.48)
         c.drawString(p_de_x, p_de_y, f"De R$ {item['de']}")
         
-        # Risco diagonal sobre o preço antigo
         c.setLineWidth(1.1 * scale)
         c.line(p_de_x - (1 * mm), p_de_y - (1 * mm), p_de_x + (16 * mm * scale), p_de_y + (5 * mm * scale))
 
-        # Preço NOVO
         c.setFont("Helvetica-Bold", int(22 * scale))
         c.drawString(x_base + (58 * mm * (scale if scale < 2 else 1.1)), y_base + (row_h * 0.40), f"Por R$ {item['por']}")
     else:
-        # --- MODO PREÇO ÚNICO ---
         c.setFont("Helvetica-Bold", int(24 * scale))
         c.drawString(x_base + (45 * mm * (scale if scale < 2 else 1.1)), y_base + (row_h * 0.43), f"R$ {item['por']}")
 
@@ -93,14 +90,12 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
 if "lista_itens" not in st.session_state:
     st.session_state.lista_itens = []
 
-# Escolha do modelo
 modelo_selecionado = st.selectbox("Selecione o Formato da Folha:", list(LAYOUTS.keys()))
 
 st.divider()
 
 st.markdown("### 📝 Dados do Produto")
 
-# Toggles de Configuração Rápida
 col_t1, col_t2 = st.columns(2)
 with col_t1:
     tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
@@ -110,7 +105,6 @@ with col_t2:
 with st.form("form_produto", clear_on_submit=True):
     desc = st.text_input("Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE").upper()
 
-    # Preços e Unidade
     if tem_desconto:
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
@@ -127,7 +121,6 @@ with st.form("form_produto", clear_on_submit=True):
         with col_p2:
             unidade = st.text_input("Unidade:", value="1 UN").upper()
 
-    # Data de Validade (apenas se for rebaixa)
     if e_rebaixa:
         validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
     else:
@@ -150,7 +143,7 @@ with st.form("form_produto", clear_on_submit=True):
         else:
             st.warning("Preencha ao menos a Descrição e o Preço POR!")
 
-# Tabela e Botão de Download
+# Tabela e Visualizador do PDF
 if st.session_state.lista_itens:
     st.divider()
     st.markdown("### 📋 Lista para Impressão")
@@ -163,10 +156,14 @@ if st.session_state.lista_itens:
             st.rerun()
 
     with c2:
-        pdf_bytes = gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado)
-        st.download_button(
-            label="📄 BAIXAR PDF PRONTO",
-            data=pdf_bytes,
-            file_name=f"etiquetas_{modelo_selecionado.split()[0].lower()}.pdf",
-            mime="application/pdf"
-        )
+        btn_gerar = st.button("🖨️ VISUALIZAR / IMPRIMIR ETIQUETAS")
+
+    if btn_gerar:
+        pdf_buffer = gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado)
+        base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
+        
+        # Exibe o leitor de PDF direto na tela
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="650" type="application/pdf"></iframe>'
+        st.markdown("---")
+        st.markdown("### 📄 Pré-visualização da Folha:")
+        st.markdown(pdf_display, unsafe_allow_html=True)
