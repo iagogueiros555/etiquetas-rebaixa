@@ -31,7 +31,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     """Desenha a etiqueta com precisão milimétrica para o modelo A6"""
 
     x_center = x_base + (col_w / 2.0)
-    topo_etiqueta = y_base + row_h  # Borda superior de cada retângulo de etiqueta
+    topo_etiqueta = y_base + row_h  # Borda superior de cada etiqueta
 
     # -------------------------------------------------------------------
     # 1. DESCRIÇÃO DO PRODUTO (Arial-Black 14pt | Distância de 40.8mm do topo)
@@ -65,7 +65,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO "DE" (VALOR ANTIGO COM REAIS E CENTAVOS DINÂMICOS)
+    # 2. BLOCO "DE" (PREÇO ANTIGO COM RISCO DE 2pt SOMENTE SOBRE OS NÚMEROS)
     # -------------------------------------------------------------------
     if item["de"]:
         # --- A) Rótulo "De" e "R$" ---
@@ -89,39 +89,37 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
             reais_str = val_de_raw
             centavos_str = ",00"
 
-        # --- C) Desenho dos Reais (Fonte 24 | Topo 65.4mm | Lateral 14.5mm) ---
+        # --- C) Reais (Fonte 24 | Topo 68.8mm | Lateral 14.5mm) ---
         tam_fonte_reais = int(24 * scale)
         c.setFont("Arial-Black", tam_fonte_reais)
-        
+
         x_reais = x_base + (14.5 * mm * scale)
-        y_reais = topo_etiqueta - (69 * mm * scale)
+        y_reais = topo_etiqueta - (68.8 * mm * scale)
         c.drawString(x_reais, y_reais, reais_str)
 
-        # Mede a largura exata do texto dos Reais na tela
         largura_reais = c.stringWidth(reais_str, "Arial-Black", tam_fonte_reais)
 
-        # --- D) Desenho dos Centavos com Vírgula (Fonte 15 | Topo 66.3mm | +0.3mm dos Reais) ---
+        # --- D) Centavos (Fonte 15 | Topo 64.8mm | +0.3mm dos Reais) ---
         tam_fonte_centavos = int(15 * scale)
         c.setFont("Arial-Black", tam_fonte_centavos)
 
         x_centavos = x_reais + largura_reais + (0.3 * mm * scale)
-        y_centavos = topo_etiqueta - (67.3 * mm * scale)
+        y_centavos = topo_etiqueta - (64.8 * mm * scale)
         c.drawString(x_centavos, y_centavos, centavos_str)
 
-        # Mede a largura dos centavos para o risco
         largura_centavos = c.stringWidth(centavos_str, "Arial-Black", tam_fonte_centavos)
 
-        # --- E) Risco Diagonal cobrindo todo o Preço DE ---
-        x_fim_risco = x_centavos + largura_centavos
-        c.setLineWidth(1.8 * scale)
-        c.line(
-            x_de - (0.5 * mm),
-            y_rs_de - (1.0 * mm),
-            x_fim_risco + (1.0 * mm),
-            y_reais + (10 * scale),
-        )
+        # --- E) Risco Diagonal (Linha de 2pt focada apenas nos números Reais + Centavos) ---
+        x_inicio_risco = x_reais - (1.2 * mm * scale)
+        x_fim_risco = x_centavos + largura_centavos + (1.2 * mm * scale)
+        
+        y_inicio_risco = y_reais - (0.5 * mm * scale)
+        y_fim_risco = y_centavos + (3.8 * mm * scale)
 
-        # Preço POR (Mantido para ajuste no próximo passo)
+        c.setLineWidth(2.0 * scale)  # Espessura exata de 2pt (igual ao Affinity)
+        c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
+
+        # Preço POR (Aguardando definições exatas de posição)
         c.setFont("Arial-Black", int(24 * scale))
         y_por = y_base + (row_h * 0.36)
         c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
