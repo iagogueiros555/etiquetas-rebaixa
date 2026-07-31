@@ -105,7 +105,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos)
 
         x_centavos = x_reais + largura_reais + (0.3 * mm * scale)
-        y_centavos = topo_etiqueta - (66.3 * mm * scale)
+        y_centavos = topo_etiqueta - (67.3 * mm * scale)
         c.drawString(x_centavos, y_centavos, centavos_str)
 
         # Mede a largura dos centavos para o risco
