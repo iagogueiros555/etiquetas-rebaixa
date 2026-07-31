@@ -20,39 +20,65 @@ LAYOUTS = {
 }
 
 def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
-    """Desenha os textos essenciais na etiqueta"""
+    """Desenha os textos centralizados e organizados dentro do bloco de cada etiqueta"""
     
-    # 1. DESCRIÇÃO DO PRODUTO
-    c.setFont("Helvetica-Bold", int(10 * scale))
-    c.drawString(x_base + (32 * mm * (scale if scale < 2 else 1.2)), y_base + (row_h * 0.70), item["desc"])
+    # Centro horizontal da etiqueta atual
+    x_center = x_base + (col_w / 2.0)
 
-    # 2. BLOCO DE PREÇO (De/Por vs Preço Único)
-    if item["de"]:
-        c.setFont("Helvetica-Bold", int(8 * scale))
-        p_de_x = x_base + (35 * mm * (scale if scale < 2 else 1.2))
-        p_de_y = y_base + (row_h * 0.48)
-        c.drawString(p_de_x, p_de_y, f"De R$ {item['de']}")
-        
-        c.setLineWidth(1.1 * scale)
-        c.line(p_de_x - (1 * mm), p_de_y - (1 * mm), p_de_x + (16 * mm * scale), p_de_y + (5 * mm * scale))
+    # 1. DESCRIÇÃO DO PRODUTO (Centralizada e com quebra de linha se for longa)
+    c.setFont("Helvetica-Bold", int(11 * scale))
+    desc = item["desc"]
+    palavras = desc.split()
 
-        c.setFont("Helvetica-Bold", int(22 * scale))
-        c.drawString(x_base + (58 * mm * (scale if scale < 2 else 1.1)), y_base + (row_h * 0.40), f"Por R$ {item['por']}")
+    if len(desc) > 22 and len(palavras) > 1:
+        meio = len(palavras) // 2
+        linha1 = " ".join(palavras[:meio])
+        linha2 = " ".join(palavras[meio:])
+        c.drawCentredString(x_center, y_base + (row_h * 0.84), linha1)
+        c.drawCentredString(x_center, y_base + (row_h * 0.76), linha2)
     else:
-        c.setFont("Helvetica-Bold", int(24 * scale))
-        c.drawString(x_base + (45 * mm * (scale if scale < 2 else 1.1)), y_base + (row_h * 0.43), f"R$ {item['por']}")
+        c.drawCentredString(x_center, y_base + (row_h * 0.80), desc)
 
-    # 3. UNIDADE DE MEDIDA
-    c.setFont("Helvetica-Bold", int(8 * scale))
-    c.drawString(x_base + (col_w - (18 * mm * scale)), y_base + (row_h * 0.38), item["un"])
-
-    # 4. TARJA / AVISO DE REBAIXA (VALIDADE)
-    if item["e_rebaixa"]:
-        c.setFont("Helvetica-Bold", int(6 * scale))
-        c.drawString(x_base + (32 * mm * (scale if scale < 2 else 1.2)), y_base + (row_h * 0.22), "PRODUTO PRÓXIMO A DATA DE VENCIMENTO")
+    # 2. BLOCO DE PREÇO
+    if item["de"]:
+        # --- MODO DE / POR ---
+        # Preço DE (Menor, centralizado e riscado)
+        c.setFont("Helvetica-Bold", int(10 * scale))
+        p_de_str = f"De R$ {item['de']}"
+        y_de = y_base + (row_h * 0.62)
+        c.drawCentredString(x_center, y_de, p_de_str)
         
+        # Risco exato sobre a largura do texto "De R$ XX,XX"
+        largura_texto = c.stringWidth(p_de_str, "Helvetica-Bold", int(10 * scale))
+        c.setLineWidth(1.5 * scale)
+        c.line(x_center - (largura_texto / 2) - 2, y_de - 1, x_center + (largura_texto / 2) + 2, y_de + (8 * scale))
+
+        # Preço POR (Grande e em destaque)
+        c.setFont("Helvetica-Bold", int(26 * scale))
+        y_por = y_base + (row_h * 0.45)
+        c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
+        
+        # Unidade (Logo abaixo do preço Por)
         c.setFont("Helvetica-Bold", int(9 * scale))
-        c.drawString(x_base + (32 * mm * (scale if scale < 2 else 1.2)), y_base + (row_h * 0.13), f"VALIDADE: {item['val']}")
+        c.drawCentredString(x_center, y_por - (12 * scale), item["un"])
+    else:
+        # --- MODO PREÇO ÚNICO ---
+        c.setFont("Helvetica-Bold", int(32 * scale))
+        y_por = y_base + (row_h * 0.50)
+        c.drawCentredString(x_center, y_por, f"R$ {item['por']}")
+        
+        # Unidade
+        c.setFont("Helvetica-Bold", int(10 * scale))
+        c.drawCentredString(x_center, y_por - (14 * scale), item["un"])
+
+    # 3. TARJA / AVISO DE REBAIXA (VALIDADE)
+    if item["e_rebaixa"]:
+        c.setFont("Helvetica-Bold", int(8 * scale))
+        c.drawCentredString(x_center, y_base + (row_h * 0.25), "PRODUTO PRÓXIMO")
+        c.drawCentredString(x_center, y_base + (row_h * 0.19), "A DATA DE VENCIMENTO")
+        
+        c.setFont("Helvetica-Bold", int(12 * scale))
+        c.drawCentredString(x_center, y_base + (row_h * 0.09), f"VALIDADE: {item['val']}")
 
 
 def gerar_pdf_etiquetas(itens, modelo_chave):
@@ -157,11 +183,9 @@ if st.session_state.lista_itens:
             st.rerun()
 
     with c2:
-        # Gera o PDF em memória e converte para Base64
         pdf_buffer = gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado)
         base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
-        # Botão interativo que abre o PDF diretamente em uma nova aba do navegador
         components.html(
             f"""
             <button onclick="openPDF()" style="
