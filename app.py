@@ -1,12 +1,20 @@
-import io
 import base64
+import io
 import streamlit as st
 import streamlit.components.v1 as components
 from reportlab.lib.pagesizes import A3, A4
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-st.set_page_config(page_title="Gerador de Etiquetas - Novo Atacarejo", layout="centered")
+# --- REGISTRO DA FONTE CUSTOMIZADA ---
+# O arquivo 'arialblack.ttf' precisa estar na raiz do repositório no GitHub
+pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
+
+st.set_page_config(
+    page_title="Gerador de Etiquetas - Novo Atacarejo", layout="centered"
+)
 
 st.title("🏷️ Gerador de Etiquetas")
 st.caption("Modelos Verticais (Retrato)")
@@ -19,18 +27,18 @@ LAYOUTS = {
     "A3 Vertical (1 por A3)": {"size": A3, "cols": 1, "rows": 1, "scale": 3.1},
 }
 
+
 def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
-    """Desenha os textos centralizados e organizados dentro do bloco de cada etiqueta"""
-    
-    # Centro horizontal da etiqueta atual
+    """Desenha os textos usando a fonte Arial Black nativa"""
+
     x_center = x_base + (col_w / 2.0)
 
-    # 1. DESCRIÇÃO DO PRODUTO (Centralizada e com quebra de linha se for longa)
-    c.setFont("Helvetica-Bold", int(11 * scale))
+    # 1. DESCRIÇÃO DO PRODUTO (Arial Black)
+    c.setFont("Arial-Black", int(10 * scale))
     desc = item["desc"]
     palavras = desc.split()
 
-    if len(desc) > 22 and len(palavras) > 1:
+    if len(desc) > 20 and len(palavras) > 1:
         meio = len(palavras) // 2
         linha1 = " ".join(palavras[:meio])
         linha2 = " ".join(palavras[meio:])
@@ -42,43 +50,51 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     # 2. BLOCO DE PREÇO
     if item["de"]:
         # --- MODO DE / POR ---
-        # Preço DE (Menor, centralizado e riscado)
-        c.setFont("Helvetica-Bold", int(10 * scale))
+        c.setFont("Arial-Black", int(9 * scale))
         p_de_str = f"De R$ {item['de']}"
         y_de = y_base + (row_h * 0.62)
         c.drawCentredString(x_center, y_de, p_de_str)
-        
-        # Risco exato sobre a largura do texto "De R$ XX,XX"
-        largura_texto = c.stringWidth(p_de_str, "Helvetica-Bold", int(10 * scale))
-        c.setLineWidth(1.5 * scale)
-        c.line(x_center - (largura_texto / 2) - 2, y_de - 1, x_center + (largura_texto / 2) + 2, y_de + (8 * scale))
 
-        # Preço POR (Grande e em destaque)
-        c.setFont("Helvetica-Bold", int(26 * scale))
-        y_por = y_base + (row_h * 0.45)
+        # Risco sobre o preço antigo
+        largura_texto = c.stringWidth(p_de_str, "Arial-Black", int(9 * scale))
+        c.setLineWidth(1.5 * scale)
+        c.line(
+            x_center - (largura_texto / 2) - 2,
+            y_de - 1,
+            x_center + (largura_texto / 2) + 2,
+            y_de + (7 * scale),
+        )
+
+        # Preço POR (Destaque Principal)
+        c.setFont("Arial-Black", int(24 * scale))
+        y_por = y_base + (row_h * 0.44)
         c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
-        
-        # Unidade (Logo abaixo do preço Por)
-        c.setFont("Helvetica-Bold", int(9 * scale))
+
+        # Unidade
+        c.setFont("Arial-Black", int(8 * scale))
         c.drawCentredString(x_center, y_por - (12 * scale), item["un"])
     else:
         # --- MODO PREÇO ÚNICO ---
-        c.setFont("Helvetica-Bold", int(32 * scale))
-        y_por = y_base + (row_h * 0.50)
+        c.setFont("Arial-Black", int(28 * scale))
+        y_por = y_base + (row_h * 0.49)
         c.drawCentredString(x_center, y_por, f"R$ {item['por']}")
-        
+
         # Unidade
-        c.setFont("Helvetica-Bold", int(10 * scale))
+        c.setFont("Arial-Black", int(9 * scale))
         c.drawCentredString(x_center, y_por - (14 * scale), item["un"])
 
     # 3. TARJA / AVISO DE REBAIXA (VALIDADE)
     if item["e_rebaixa"]:
-        c.setFont("Helvetica-Bold", int(8 * scale))
+        c.setFont("Arial-Black", int(7.5 * scale))
         c.drawCentredString(x_center, y_base + (row_h * 0.25), "PRODUTO PRÓXIMO")
-        c.drawCentredString(x_center, y_base + (row_h * 0.19), "A DATA DE VENCIMENTO")
-        
-        c.setFont("Helvetica-Bold", int(12 * scale))
-        c.drawCentredString(x_center, y_base + (row_h * 0.09), f"VALIDADE: {item['val']}")
+        c.drawCentredString(
+            x_center, y_base + (row_h * 0.19), "A DATA DE VENCIMENTO"
+        )
+
+        c.setFont("Arial-Black", int(11 * scale))
+        c.drawCentredString(
+            x_center, y_base + (row_h * 0.08), f"VALIDADE: {item['val']}"
+        )
 
 
 def gerar_pdf_etiquetas(itens, modelo_chave):
@@ -117,7 +133,9 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
 if "lista_itens" not in st.session_state:
     st.session_state.lista_itens = []
 
-modelo_selecionado = st.selectbox("Selecione o Formato da Folha:", list(LAYOUTS.keys()))
+modelo_selecionado = st.selectbox(
+    "Selecione o Formato da Folha:", list(LAYOUTS.keys())
+)
 
 st.divider()
 
@@ -127,10 +145,14 @@ col_t1, col_t2 = st.columns(2)
 with col_t1:
     tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
 with col_t2:
-    e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
+    e_rebaixa = st.checkbox(
+        "Etiqueta de Rebaixa (Próximo à Validade)", value=True
+    )
 
 with st.form("form_produto", clear_on_submit=True):
-    desc = st.text_input("Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE").upper()
+    desc = st.text_input(
+        "Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE"
+    ).upper()
 
     if tem_desconto:
         col_p1, col_p2, col_p3 = st.columns(3)
@@ -163,7 +185,7 @@ with st.form("form_produto", clear_on_submit=True):
                 "por": por.replace(".", ",").strip(),
                 "un": unidade,
                 "val": validade,
-                "e_rebaixa": e_rebaixa
+                "e_rebaixa": e_rebaixa,
             })
             st.success(f"Produto '{desc}' adicionado!")
             st.rerun()
@@ -183,7 +205,9 @@ if st.session_state.lista_itens:
             st.rerun()
 
     with c2:
-        pdf_buffer = gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado)
+        pdf_buffer = gerar_pdf_etiquetas(
+            st.session_state.lista_itens, modelo_selecionado
+        )
         base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
         components.html(
