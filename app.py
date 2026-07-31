@@ -9,7 +9,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
-# O arquivo 'arialblack.ttf' precisa estar na raiz do repositório no GitHub
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
 
 st.set_page_config(
@@ -17,6 +16,7 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
+st.caption("Ajuste Fino - Modelo A6 Vertical")
 
 # --- CONFIGURAÇÕES DE LAYOUTS VERTICAIS ---
 LAYOUTS = {
@@ -28,25 +28,40 @@ LAYOUTS = {
 
 
 def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
-    """Desenha os textos usando a fonte Arial Black nativa"""
+    """Desenha os textos com foco e calibração no modelo A6"""
 
     x_center = x_base + (col_w / 2.0)
 
-    # 1. DESCRIÇÃO DO PRODUTO (Arial Black)
-    c.setFont("Arial-Black", int(10 * scale))
+    # -------------------------------------------------------------------
+    # 1. DESCRIÇÃO DO PRODUTO (Arial-Black Tamanho 14 | Limite de 31 Chars)
+    # -------------------------------------------------------------------
+    tam_fonte_desc = int(14 * scale)
+    c.setFont("Arial-Black", tam_fonte_desc)
     desc = item["desc"]
-    palavras = desc.split()
 
-    if len(desc) > 20 and len(palavras) > 1:
-        meio = len(palavras) // 2
-        linha1 = " ".join(palavras[:meio])
-        linha2 = " ".join(palavras[meio:])
-        c.drawCentredString(x_center, y_base + (row_h * 0.84), linha1)
-        c.drawCentredString(x_center, y_base + (row_h * 0.76), linha2)
-    else:
+    # Se tiver 31 caracteres ou menos (contando espaços), imprime em 1 linha
+    if len(desc) <= 31:
         c.drawCentredString(x_center, y_base + (row_h * 0.80), desc)
+    else:
+        # Quebra em 2 linhas respeitando o limite de 31 caracteres por linha
+        palavras = desc.split()
+        linha1 = ""
+        linha2 = ""
 
-    # 2. BLOCO DE PREÇO
+        for palavra in palavras:
+            teste_linha1 = f"{linha1} {palavra}".strip()
+            if len(teste_linha1) <= 31 and not linha2:
+                linha1 = teste_linha1
+            else:
+                linha2 = f"{linha2} {palavra}".strip()
+
+        # Desenha as 2 linhas ligeiramente ajustadas na altura
+        c.drawCentredString(x_center, y_base + (row_h * 0.83), linha1)
+        c.drawCentredString(x_center, y_base + (row_h * 0.75), linha2)
+
+    # -------------------------------------------------------------------
+    # 2. BLOCO DE PREÇO (MANTIDO TEMPORARIAMENTE PARA OS PRÓXIMOS PASSOS)
+    # -------------------------------------------------------------------
     if item["de"]:
         # --- MODO DE / POR ---
         c.setFont("Arial-Black", int(9 * scale))
@@ -64,7 +79,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
             y_de + (7 * scale),
         )
 
-        # Preço POR (Destaque Principal)
+        # Preço POR
         c.setFont("Arial-Black", int(24 * scale))
         y_por = y_base + (row_h * 0.44)
         c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
@@ -82,7 +97,9 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", int(9 * scale))
         c.drawCentredString(x_center, y_por - (14 * scale), item["un"])
 
+    # -------------------------------------------------------------------
     # 3. TARJA / AVISO DE REBAIXA (VALIDADE)
+    # -------------------------------------------------------------------
     if item["e_rebaixa"]:
         c.setFont("Arial-Black", int(7.5 * scale))
         c.drawCentredString(x_center, y_base + (row_h * 0.25), "PRODUTO PRÓXIMO")
