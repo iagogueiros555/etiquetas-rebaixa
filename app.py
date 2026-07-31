@@ -1,6 +1,7 @@
 import io
 import base64
 import streamlit as st
+import streamlit.components.v1 as components
 from reportlab.lib.pagesizes import A3, A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
@@ -143,7 +144,7 @@ with st.form("form_produto", clear_on_submit=True):
         else:
             st.warning("Preencha ao menos a Descrição e o Preço POR!")
 
-# Tabela e Visualizador do PDF
+# Tabela e Ação de Impressão
 if st.session_state.lista_itens:
     st.divider()
     st.markdown("### 📋 Lista para Impressão")
@@ -156,14 +157,42 @@ if st.session_state.lista_itens:
             st.rerun()
 
     with c2:
-        btn_gerar = st.button("🖨️ VISUALIZAR / IMPRIMIR ETIQUETAS")
-
-    if btn_gerar:
+        # Gera o PDF em memória e converte para Base64
         pdf_buffer = gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado)
         base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
-        
-        # Exibe o leitor de PDF direto na tela
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="650" type="application/pdf"></iframe>'
-        st.markdown("---")
-        st.markdown("### 📄 Pré-visualização da Folha:")
-        st.markdown(pdf_display, unsafe_allow_html=True)
+
+        # Botão interativo que abre o PDF diretamente em uma nova aba do navegador
+        components.html(
+            f"""
+            <button onclick="openPDF()" style="
+                background-color: #FF4B4B;
+                color: white;
+                padding: 10px 16px;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 15px;
+                cursor: pointer;
+                width: 100%;
+                font-family: sans-serif;
+            ">
+                🖨️ ABRIR PDF EM NOVA ABA
+            </button>
+
+            <script>
+            function openPDF() {{
+                const base64Data = "{base64_pdf}";
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {{
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }}
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {{ type: 'application/pdf' }});
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+            }}
+            </script>
+            """,
+            height=50,
+        )
