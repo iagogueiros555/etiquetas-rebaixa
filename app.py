@@ -109,14 +109,14 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_centavos = c.stringWidth(centavos_str, "Arial-Black", tam_fonte_centavos)
 
-        # --- E) Risco Diagonal (Linha de 2pt focada apenas nos números Reais + Centavos) ---
-        x_inicio_risco = x_reais - (1.2 * mm * scale)
-        x_fim_risco = x_centavos + largura_centavos + (1.2 * mm * scale)
+        # --- E) Risco Diagonal (Linha de 2pt com sobra reduzida de 0.5mm) ---
+        x_inicio_risco = x_reais - (0.5 * mm * scale)
+        x_fim_risco = x_centavos + largura_centavos + (0.5 * mm * scale)
         
         y_inicio_risco = y_reais - (0.5 * mm * scale)
         y_fim_risco = y_centavos + (3.8 * mm * scale)
 
-        c.setLineWidth(2.0 * scale)  # Espessura exata de 2pt (igual ao Affinity)
+        c.setLineWidth(2.0 * scale)  # Espessura de 2pt
         c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
 
         # Preço POR (Aguardando definições exatas de posição)
