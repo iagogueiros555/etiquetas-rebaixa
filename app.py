@@ -39,9 +39,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     tam_fonte_desc = int(14 * scale)
     c.setFont("Arial-Black", tam_fonte_desc)
     
-    # Posição Y inicial: Exatamente 40,8 mm abaixo do topo da etiqueta
     y_primeira_linha = topo_etiqueta - (40.8 * mm * scale)
-
     desc = item["desc"]
 
     # Se tiver até 31 caracteres (contando espaços), imprime em 1 linha
@@ -60,7 +58,6 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
             else:
                 linha2 = f"{linha2} {palavra}".strip()
 
-        # Espaçamento entre a 1ª e a 2ª linha do nome do produto
         espacamento_linhas = (tam_fonte_desc * 0.35 + 1.8) * mm
         y_segunda_linha = y_primeira_linha - espacamento_linhas
         
@@ -68,26 +65,31 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO DE PREÇO (MANTIDO PARA OS PRÓXIMOS PASSOS)
+    # 2. BLOCO DE PREÇO DE (64.2mm do topo | 9.2mm da borda lateral/central)
     # -------------------------------------------------------------------
     if item["de"]:
         # --- MODO DE / POR ---
-        c.setFont("Arial-Black", int(9 * scale))
+        tam_fonte_de = int(9 * scale)
+        c.setFont("Arial-Black", tam_fonte_de)
         p_de_str = f"De R$ {item['de']}"
-        y_de = y_base + (row_h * 0.52)
-        c.drawCentredString(x_center, y_de, p_de_str)
+        
+        # Posições exatas solicitadas
+        x_de = x_base + (9.2 * mm * scale)
+        y_de = topo_etiqueta - (64.2 * mm * scale)
+        
+        c.drawString(x_de, y_de, p_de_str)
 
-        # Risco sobre o preço antigo
-        largura_texto = c.stringWidth(p_de_str, "Arial-Black", int(9 * scale))
+        # Risco sobre o preço antigo (da esquerda para a direita)
+        largura_texto = c.stringWidth(p_de_str, "Arial-Black", tam_fonte_de)
         c.setLineWidth(1.5 * scale)
         c.line(
-            x_center - (largura_texto / 2) - 2,
-            y_de - 1,
-            x_center + (largura_texto / 2) + 2,
-            y_de + (7 * scale),
+            x_de - (0.5 * mm),
+            y_de - (0.5 * mm),
+            x_de + largura_texto + (0.5 * mm),
+            y_de + (6 * scale),
         )
 
-        # Preço POR
+        # Preço POR (Mantido para ajuste no próximo passo)
         c.setFont("Arial-Black", int(24 * scale))
         y_por = y_base + (row_h * 0.36)
         c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
