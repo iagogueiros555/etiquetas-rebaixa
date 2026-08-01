@@ -65,10 +65,10 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO "DE" (PREÇO ANTIGO COM RISCO DE 2pt SOMENTE SOBRE OS NÚMEROS)
+    # 2. BLOCO DE PREÇOS ("DE" E "POR")
     # -------------------------------------------------------------------
     if item["de"]:
-        # --- A) Rótulo "De" e "R$" ---
+        # --- A) Rótulo "De" e "R$" (Fonte tam 10) ---
         tam_fonte_de = int(10 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
 
@@ -79,54 +79,62 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawString(x_de, y_de, "De")
         c.drawString(x_de, y_rs_de, "R$")
 
-        # --- B) Separação de Reais e Centavos ---
+        # --- B) Separação de Reais e Centavos (DE) ---
         val_de_raw = item["de"].replace(".", ",")
         if "," in val_de_raw:
-            partes = val_de_raw.split(",")
-            reais_str = partes[0]
-            centavos_str = f",{partes[1]}"
+            partes_de = val_de_raw.split(",")
+            reais_de_str = partes_de[0]
+            centavos_de_str = f",{partes_de[1]}"
         else:
-            reais_str = val_de_raw
-            centavos_str = ",00"
+            reais_de_str = val_de_raw
+            centavos_de_str = ",00"
 
-        # --- C) Reais (Fonte 24 | Topo 68.8mm | Lateral 14.5mm) ---
-        tam_fonte_reais = int(24 * scale)
-        c.setFont("Arial-Black", tam_fonte_reais)
+        # --- C) Reais DE (Fonte 24 | Topo 68.8mm | Lateral 14.5mm) ---
+        tam_fonte_reais_de = int(24 * scale)
+        c.setFont("Arial-Black", tam_fonte_reais_de)
 
-        x_reais = x_base + (14.5 * mm * scale)
-        y_reais = topo_etiqueta - (68.8 * mm * scale)
-        c.drawString(x_reais, y_reais, reais_str)
+        x_reais_de = x_base + (14.5 * mm * scale)
+        y_reais_de = topo_etiqueta - (68.8 * mm * scale)
+        c.drawString(x_reais_de, y_reais_de, reais_de_str)
 
-        largura_reais = c.stringWidth(reais_str, "Arial-Black", tam_fonte_reais)
+        largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
 
-        # --- D) Centavos (Fonte 15 | Topo 64.8mm | +0.3mm dos Reais) ---
-        tam_fonte_centavos = int(15 * scale)
-        c.setFont("Arial-Black", tam_fonte_centavos)
+        # --- D) Centavos DE (Fonte 15 | Topo 64.8mm | +0.3mm dos Reais) ---
+        tam_fonte_centavos_de = int(15 * scale)
+        c.setFont("Arial-Black", tam_fonte_centavos_de)
 
-        x_centavos = x_reais + largura_reais + (0.3 * mm * scale)
-        y_centavos = topo_etiqueta - (64.8 * mm * scale)
-        c.drawString(x_centavos, y_centavos, centavos_str)
+        x_centavos_de = x_reais_de + largura_reais_de + (0.3 * mm * scale)
+        y_centavos_de = topo_etiqueta - (64.8 * mm * scale)
+        c.drawString(x_centavos_de, y_centavos_de, centavos_de_str)
 
-        largura_centavos = c.stringWidth(centavos_str, "Arial-Black", tam_fonte_centavos)
+        largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
 
-        # --- E) Risco Diagonal (Linha de 2pt com sobra reduzida de 0.5mm) ---
-        x_inicio_risco = x_reais - (0.5 * mm * scale)
-        x_fim_risco = x_centavos + largura_centavos + (0.5 * mm * scale)
+        # --- E) Risco Diagonal (Linha de 2pt com sobra de 0.5mm) ---
+        x_inicio_risco = x_reais_de - (0.5 * mm * scale)
+        x_fim_risco = x_centavos_de + largura_centavos_de + (0.5 * mm * scale)
         
-        y_inicio_risco = y_reais - (0.5 * mm * scale)
-        y_fim_risco = y_centavos + (3.8 * mm * scale)
+        y_inicio_risco = y_reais_de - (0.5 * mm * scale)
+        y_fim_risco = y_centavos_de + (3.8 * mm * scale)
 
-        c.setLineWidth(2.0 * scale)  # Espessura de 2pt
+        c.setLineWidth(2.0 * scale)
         c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
 
-        # Preço POR (Aguardando definições exatas de posição)
-        c.setFont("Arial-Black", int(24 * scale))
-        y_por = y_base + (row_h * 0.36)
-        c.drawCentredString(x_center, y_por, f"Por R$ {item['por']}")
+        # --- F) Rótulos "Por" e "R$" (Fonte tam 16 | Coordenadas Exatas) ---
+        tam_fonte_por_rotulo = int(16 * scale)
+        c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
-        # Unidade
+        x_por = x_base + (46.3 * mm * scale)
+        y_por = topo_etiqueta - (62.0 * mm * scale)
+
+        x_rs_por = x_base + (48.4 * mm * scale)
+        y_rs_por = topo_etiqueta - (69.1 * mm * scale)
+
+        c.drawString(x_por, y_por, "Por")
+        c.drawString(x_rs_por, y_rs_por, "R$")
+
+        # Unidade (Temporário para calibração posterior)
         c.setFont("Arial-Black", int(8 * scale))
-        c.drawCentredString(x_center, y_por - (12 * scale), item["un"])
+        c.drawCentredString(x_center, y_base + (row_h * 0.30), item["un"])
     else:
         # --- MODO PREÇO ÚNICO ---
         c.setFont("Arial-Black", int(28 * scale))
