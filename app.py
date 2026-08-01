@@ -147,7 +147,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_reais_por)
 
         x_reais_por = x_base + (56.6 * mm * scale)
-        y_reais_por = topo_etiqueta - (63.7 * mm * scale)
+        y_reais_por = topo_etiqueta - (66.7 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
         largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
