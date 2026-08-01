@@ -127,7 +127,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         y_por = topo_etiqueta - (62.0 * mm * scale)
 
         x_rs_por = x_base + (48.4 * mm * scale)
-        y_rs_por = topo_etiqueta - (73 * mm * scale)
+        y_rs_por = topo_etiqueta - (69.1 * mm * scale)
 
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
@@ -147,7 +147,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_reais_por)
 
         x_reais_por = x_base + (56.6 * mm * scale)
-        y_reais_por = topo_etiqueta - (71 * mm * scale)
+        y_reais_por = topo_etiqueta - (73 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
         largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
