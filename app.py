@@ -109,12 +109,12 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
 
-        # --- E) Unidade "De" (Fonte tam 6 | Centralizada nos Centavos | 5mm Abaixo) ---
+        # --- E) Unidade "De" (Fonte tam 6 | 3mm Abaixo | +4mm a Direita) ---
         tam_fonte_un_de = int(6 * scale)
         c.setFont("Arial-Black", tam_fonte_un_de)
-        x_centro_centavos_de = x_centavos_de + (largura_centavos_de / 2.0)
-        y_un_de = y_centavos_de - (5.0 * mm * scale)
-        c.drawCentredString(x_centro_centavos_de, y_un_de, item["un"])
+        x_un_de = x_centavos_de + (largura_centavos_de / 2.0) + (4.0 * mm * scale)
+        y_un_de = y_centavos_de - (3.0 * mm * scale)
+        c.drawCentredString(x_un_de, y_un_de, item["un"])
 
         # --- F) Risco Diagonal (Linha de 2pt com sobra de 0.5mm) ---
         x_inicio_risco = x_reais_de - (0.5 * mm * scale)
@@ -169,12 +169,12 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
 
-        # --- I) Unidade "Por" (Fonte tam 10 | Centralizada nos Centavos | 5mm Abaixo) ---
+        # --- I) Unidade "Por" (Fonte tam 10 | 6mm Abaixo | +4mm a Direita) ---
         tam_fonte_un_por = int(10 * scale)
         c.setFont("Arial-Black", tam_fonte_un_por)
-        x_centro_centavos_por = x_centavos_por + (largura_centavos_por / 2.0)
-        y_un_por = y_centavos_por - (5.0 * mm * scale)
-        c.drawCentredString(x_centro_centavos_por, y_un_por, item["un"])
+        x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (4.0 * mm * scale)
+        y_un_por = y_centavos_por - (6.0 * mm * scale)
+        c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
         # --- MODO PREÇO ÚNICO ---
@@ -205,9 +205,9 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         tam_fonte_un_por = int(10 * scale)
         c.setFont("Arial-Black", tam_fonte_un_por)
-        x_centro_centavos_por = x_centavos_por + (largura_centavos_por / 2.0)
-        y_un_por = y_centavos_por - (5.0 * mm * scale)
-        c.drawCentredString(x_centro_centavos_por, y_un_por, item["un"])
+        x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (4.0 * mm * scale)
+        y_un_por = y_centavos_por - (6.0 * mm * scale)
+        c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     # -------------------------------------------------------------------
     # 3. TARJA / AVISO DE REBAIXA (VALIDADE)
