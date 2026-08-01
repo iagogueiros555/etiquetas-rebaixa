@@ -112,7 +112,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         # --- E) Unidade "De" (Fonte tam 6 | 3mm Abaixo | +4mm a Direita) ---
         tam_fonte_un_de = int(6 * scale)
         c.setFont("Arial-Black", tam_fonte_un_de)
-        x_un_de = x_centavos_de + (largura_centavos_de / 2.0) + (2.5 * mm * scale)
+        x_un_de = x_centavos_de + (largura_centavos_de / 2.0) + (2 * mm * scale)
         y_un_de = y_centavos_de - (3.0 * mm * scale)
         c.drawCentredString(x_un_de, y_un_de, item["un"])
 
@@ -172,7 +172,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
         # --- I) Unidade "Por" (Fonte tam 10 | 6mm Abaixo | +4mm a Direita) ---
         tam_fonte_un_por = int(10 * scale)
         c.setFont("Arial-Black", tam_fonte_un_por)
-        x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (4.0 * mm * scale)
+        x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (3.5 * mm * scale)
         y_un_por = y_centavos_por - (6.0 * mm * scale)
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
