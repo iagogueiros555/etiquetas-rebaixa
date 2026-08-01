@@ -36,7 +36,7 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
     # -------------------------------------------------------------------
     # 1. DESCRIÇÃO DO PRODUTO (Arial-Black 14pt | Distância de 40.8mm do topo)
     # -------------------------------------------------------------------
-    tam_fonte_desc = int(14 * scale)
+    tam_fonte_desc = int(16 * scale)
     c.setFont("Arial-Black", tam_fonte_desc)
 
     y_primeira_linha = topo_etiqueta - (40.8 * mm * scale)
