@@ -109,11 +109,11 @@ def desenhar_etiqueta(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
 
-        # --- E) Unidade "De" (Fonte tam 6 | Centralizada nos Centavos | 2mm Abaixo) ---
+        # --- E) Unidade "De" (Fonte tam 6 | Centralizada nos Centavos | 5mm Abaixo) ---
         tam_fonte_un_de = int(6 * scale)
         c.setFont("Arial-Black", tam_fonte_un_de)
         x_centro_centavos_de = x_centavos_de + (largura_centavos_de / 2.0)
-        y_un_de = y_centavos_de - (2.0 * mm * scale)
+        y_un_de = y_centavos_de - (5.0 * mm * scale)
         c.drawCentredString(x_centro_centavos_de, y_un_de, item["un"])
 
         # --- F) Risco Diagonal (Linha de 2pt com sobra de 0.5mm) ---
