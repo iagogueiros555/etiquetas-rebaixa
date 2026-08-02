@@ -197,9 +197,9 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (0.0 * mm * scale)
 
-        # 1. Desenha R$ (20pt - Posição 55.0mm para ficar bem no alto do '1')
+        # 1. Desenha R$ (20pt - Posição 48.0mm para metade do R$ ficar acima do bracinho do '1')
         c.setFont("Arial-Black", tam_fonte_rs)
-        y_rs = topo_etiqueta - (55.0 * mm * scale)
+        y_rs = topo_etiqueta - (48.0 * mm * scale)
         c.drawString(x_rs, y_rs, "R$")
 
         # 2. Desenha Reais (84pt)
