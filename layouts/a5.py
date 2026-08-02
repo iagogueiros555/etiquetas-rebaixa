@@ -256,7 +256,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFillColor(HexColor("#000000"))
 
         # Validade: Fonte Arial-Black 28pt (no centro da caixa cinza)
-        tam_fonte_val = int(28 * scale)
+        tam_fonte_val = int(32 * scale)
         c.setFont("Arial-Black", tam_fonte_val)
         y_val = y_caixa + (2.5 * mm * scale)
         c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
