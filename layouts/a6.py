@@ -189,7 +189,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             + largura_centavos_por
         )
 
-        # Ponto X inicial para centralizar perfeitamente no meio da etiqueta
+        # Ponto X inicial para centralizar no meio da etiqueta
         x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
 
         # Posições X encadeadas
@@ -197,22 +197,22 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (1.0 * mm * scale)
 
-        # 1. Desenha R$ (20pt)
+        # 1. Desenha R$ (20pt - Subiu 2mm)
         c.setFont("Arial-Black", tam_fonte_rs)
-        y_rs = topo_etiqueta - (66.0 * mm * scale)
+        y_rs = topo_etiqueta - (64.0 * mm * scale)
         c.drawString(x_rs, y_rs, "R$")
 
-        # 2. Desenha Reais (84pt)
+        # 2. Desenha Reais (84pt - Baixou 4mm)
         c.setFont("Arial-Black", tam_fonte_reais_por)
-        y_reais_por = topo_etiqueta - (70.5 * mm * scale)
+        y_reais_por = topo_etiqueta - (74.5 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
-        # 3. Desenha Centavos (40pt)
+        # 3. Desenha Centavos (40pt - Baixou 4mm)
         c.setFont("Arial-Black", tam_fonte_centavos_por)
-        y_centavos_por = topo_etiqueta - (58.5 * mm * scale)
+        y_centavos_por = topo_etiqueta - (62.5 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        # 4. Desenha Unidade (12pt - abaixo dos centavos)
+        # 4. Desenha Unidade (12pt - acompanha os centavos baixados)
         c.setFont("Arial-Black", tam_fonte_un_por)
         x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
         y_un_por = y_centavos_por - (7.0 * mm * scale)
