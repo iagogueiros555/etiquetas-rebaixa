@@ -164,11 +164,29 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             reais_por_str = val_por_raw
             centavos_por_str = ",00"
 
-        # Fontes definidas: R$ 20pt | Reais 84pt | Centavos 40pt
-        tam_fonte_rs = int(20 * scale)
-        tam_fonte_reais_por = int(84 * scale)
-        tam_fonte_centavos_por = int(40 * scale)
-        tam_fonte_un_por = int(12 * scale)
+        # Define fontes e posições de acordo com a presença de rebaixa/validade
+        if not item["e_rebaixa"]:
+            # Preço Único Normal (Sem Rebaixa) -> Fonte Gigante (104pt Reais / 52pt Centavos)
+            tam_fonte_rs = int(20 * scale)
+            tam_fonte_reais_por = int(104 * scale)
+            tam_fonte_centavos_por = int(52 * scale)
+            tam_fonte_un_por = int(14 * scale)
+
+            y_offset_rs = 58.0 * mm * scale
+            y_offset_reais = 78.0 * mm * scale
+            y_offset_centavos = 61.5 * mm * scale
+            dist_un = 8.0 * mm * scale
+        else:
+            # Preço Único em Rebaixa (Com Validade no rodapé) -> Fonte Compacta (84pt Reais / 40pt Centavos)
+            tam_fonte_rs = int(20 * scale)
+            tam_fonte_reais_por = int(84 * scale)
+            tam_fonte_centavos_por = int(40 * scale)
+            tam_fonte_un_por = int(12 * scale)
+
+            y_offset_rs = 48.0 * mm * scale
+            y_offset_reais = 74.5 * mm * scale
+            y_offset_centavos = 62.5 * mm * scale
+            dist_un = 7.0 * mm * scale
 
         # Medição física das larguras
         c.setFont("Arial-Black", tam_fonte_rs)
@@ -197,25 +215,25 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (0.0 * mm * scale)
 
-        # 1. Desenha R$ (20pt - Posição 48.0mm para metade do R$ ficar acima do bracinho do '1')
+        # 1. Desenha R$ (20pt)
         c.setFont("Arial-Black", tam_fonte_rs)
-        y_rs = topo_etiqueta - (48.0 * mm * scale)
+        y_rs = topo_etiqueta - y_offset_rs
         c.drawString(x_rs, y_rs, "R$")
 
-        # 2. Desenha Reais (84pt)
+        # 2. Desenha Reais
         c.setFont("Arial-Black", tam_fonte_reais_por)
-        y_reais_por = topo_etiqueta - (74.5 * mm * scale)
+        y_reais_por = topo_etiqueta - y_offset_reais
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
-        # 3. Desenha Centavos (40pt)
+        # 3. Desenha Centavos
         c.setFont("Arial-Black", tam_fonte_centavos_por)
-        y_centavos_por = topo_etiqueta - (62.5 * mm * scale)
+        y_centavos_por = topo_etiqueta - y_offset_centavos
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        # 4. Desenha Unidade (12pt - abaixo dos centavos)
+        # 4. Desenha Unidade (Abaixo dos centavos)
         c.setFont("Arial-Black", tam_fonte_un_por)
         x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
-        y_un_por = y_centavos_por - (7.0 * mm * scale)
+        y_un_por = y_centavos_por - dist_un
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     # -------------------------------------------------------------------
