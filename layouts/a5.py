@@ -116,7 +116,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
         x_por = x_base + (95.0 * mm * scale)
-        y_por = topo_etiqueta - (94 * mm * scale)
+        y_por = topo_etiqueta - (93 * mm * scale)
 
         x_rs_por = x_por
         y_rs_por = y_por - (11 * mm * scale)
