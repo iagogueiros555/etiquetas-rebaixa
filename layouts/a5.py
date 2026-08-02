@@ -38,10 +38,10 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO DE PREÇOS ("DE / POR" OU "PREÇO ÚNICO")
+    # 2. BLOCO DE PREÇOS (PROMOCIONAL OU UNITÁRIO)
     # -------------------------------------------------------------------
     if item["de"]:
-        # --- MODO PROMOCIONAL (DE / POR) ---
+        # --- PREÇO PROMOCIONAL (DE / POR) ---
         
         val_de_raw = item["de"].replace(".", ",")
         if "," in val_de_raw:
@@ -58,27 +58,27 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             x_de_pos = 28.0
             fonte_reais_de = 64
             fonte_centavos_de = 35
-            offset_y_reais_de = 43.0
-            offset_y_centavos_de = 34.0
+            offset_y_reais_de = 47.0  # Afastado um pouco mais para baixo
+            offset_y_centavos_de = 38.0
         elif num_digitos_de == 2:
             x_de_pos = 14.0
             fonte_reais_de = 52
             fonte_centavos_de = 28
-            offset_y_reais_de = 41.0
-            offset_y_centavos_de = 34.0
+            offset_y_reais_de = 45.0
+            offset_y_centavos_de = 38.0
         else:
             x_de_pos = 8.0
             fonte_reais_de = 40
             fonte_centavos_de = 22
-            offset_y_reais_de = 39.0
-            offset_y_centavos_de = 32.0
+            offset_y_reais_de = 43.0
+            offset_y_centavos_de = 36.0
 
-        # Rótulos "De" e "R$"
+        # Rótulos "De" e "R$" (Ajustados 4mm para baixo)
         tam_fonte_de = int(20 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
 
         x_de = x_base + (x_de_pos * mm * scale)
-        y_de = topo_etiqueta - (93.0 * mm * scale)
+        y_de = topo_etiqueta - (97.0 * mm * scale)
         y_rs_de = y_de - (7.5 * mm * scale)
 
         c.drawString(x_de, y_de, "De")
@@ -136,18 +136,18 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         if num_digitos_reais <= 1:
             fonte_reais = 144
             fonte_centavos = 72
-            offset_y_reais = 57.0
-            offset_y_centavos = 38.0
+            offset_y_reais = 61.0  # Afastado para baixo
+            offset_y_centavos = 42.0
         elif num_digitos_reais == 2:
             fonte_reais = 110
             fonte_centavos = 55
-            offset_y_reais = 52.0
-            offset_y_centavos = 38.0
+            offset_y_reais = 56.0
+            offset_y_centavos = 42.0
         else:
             fonte_reais = 85
             fonte_centavos = 42
-            offset_y_reais = 46.0
-            offset_y_centavos = 38.0
+            offset_y_reais = 50.0
+            offset_y_centavos = 42.0
 
         tam_fonte_reais_por = int(fonte_reais * scale)
         tam_fonte_centavos_por = int(fonte_centavos * scale)
@@ -156,7 +156,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
         x_por = x_base + ((90.0 if num_digitos_reais >= 2 else 95.0) * mm * scale)
-        y_por = topo_etiqueta - (93.0 * mm * scale)
+        y_por = topo_etiqueta - (97.0 * mm * scale)  # Desceu 4mm
         x_rs_por = x_por
         y_rs_por = y_por - (11.0 * mm * scale)
 
@@ -184,7 +184,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- MODO PREÇO ÚNICO (PROPORCIONAL PARA 3 DÍGITOS E AUTO-AJUSTÁVEL PARA 4+) ---
+        # --- PREÇO UNITÁRIO (AFASTADO DA DESCRIÇÃO E CENTRALIZADO) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -196,22 +196,21 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         num_digitos_reais = len(reais_por_str)
 
-        # Definição dos tamanhos base de acordo com os dígitos
         if num_digitos_reais <= 2:
             fonte_reais = 144
             fonte_centavos = 72
-            offset_y_reais = 57.0
-            offset_y_centavos = 38.0
+            offset_y_reais = 61.0  # Desceu para afastar da descrição
+            offset_y_centavos = 42.0
         elif num_digitos_reais == 3:
-            fonte_reais = 110  # Mantém o tamanho ótimo que você aprovou para 3 dígitos!
+            fonte_reais = 110
             fonte_centavos = 55
-            offset_y_reais = 52.0
-            offset_y_centavos = 38.0
-        else:  # 4 ou mais dígitos (começa em 85 e reduz se estourar a margem)
+            offset_y_reais = 56.0
+            offset_y_centavos = 42.0
+        else:
             fonte_reais = 85
             fonte_centavos = 42
-            offset_y_reais = 46.0
-            offset_y_centavos = 38.0
+            offset_y_reais = 50.0
+            offset_y_centavos = 42.0
 
         tam_fonte_rs = int(30 * scale)
         tam_fonte_reais_por = int(fonte_reais * scale)
@@ -220,7 +219,6 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_util_maxima = col_w - (9.0 * mm * scale)
 
-        # Loop de segurança contra estouro de margem (especialmente útil para 4+ dígitos)
         while True:
             c.setFont("Arial-Black", tam_fonte_rs)
             largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
@@ -252,7 +250,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (4.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
 
-        y_rs = y_primeira_linha - (34.0 * mm * scale)
+        # R$ e preços ajustados para ficarem perfeitamente no meio da folha
+        y_rs = y_primeira_linha - (38.0 * mm * scale)
         y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
         y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
 
