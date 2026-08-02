@@ -54,7 +54,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         x_de = x_base + (30.2 * mm * scale)
         y_de = topo_etiqueta - (98.8 * mm * scale)
-        y_rs_de = y_de - (3.0 * mm * scale)
+        y_rs_de = y_de - (7.0 * mm * scale)
 
         c.drawString(x_de, y_de, "De")
         c.drawString(x_de, y_rs_de, "R$")
