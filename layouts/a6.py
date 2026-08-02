@@ -7,24 +7,29 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     topo_etiqueta = y_base + row_h  # Borda superior de cada etiqueta (0 a 99mm)
 
     # -------------------------------------------------------------------
-    # 1. DESCRIÇÃO DO PRODUTO (Arial-Black 16pt | 40.8mm do topo)
+    # 1. DESCRIÇÃO DO PRODUTO (Margem exata de 2mm em cada lado = 4mm total)
     # -------------------------------------------------------------------
     tam_fonte_desc = int(16 * scale)
     c.setFont("Arial-Black", tam_fonte_desc)
 
+    # Caixa de texto: Largura total da etiqueta - 4mm de margem total (2mm esq + 2mm dir)
+    max_largura_texto = col_w - (4.0 * mm * scale)
+
     y_primeira_linha = topo_etiqueta - (40.8 * mm * scale)
     desc = item["desc"]
 
-    if len(desc) <= 31:
+    # Se a descrição inteira couber dentro da caixa de 2mm de margem, imprime em 1 linha
+    if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
         c.drawCentredString(x_center, y_primeira_linha, desc)
     else:
+        # Quebra em 2 linhas respeitando o limite físico da caixa de texto
         palavras = desc.split()
         linha1 = ""
         linha2 = ""
 
         for palavra in palavras:
             teste_linha1 = f"{linha1} {palavra}".strip()
-            if len(teste_linha1) <= 31 and not linha2:
+            if c.stringWidth(teste_linha1, "Arial-Black", tam_fonte_desc) <= max_largura_texto and not linha2:
                 linha1 = teste_linha1
             else:
                 linha2 = f"{linha2} {palavra}".strip()
