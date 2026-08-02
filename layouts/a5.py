@@ -8,19 +8,22 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     topo_etiqueta = y_base + row_h  # Borda superior de cada etiqueta (0 a 148.5mm)
 
     # -------------------------------------------------------------------
-    # 1. DESCRIÇÃO DO PRODUTO (Margem de 4mm em cada lado = 8mm total)
+    # 1. DESCRIÇÃO DO PRODUTO (Margem exata de 4.5mm em cada lado = 9mm total)
     # -------------------------------------------------------------------
-    tam_fonte_desc = int(24 * scale)
+    tam_fonte_desc = int(36 * scale)
     c.setFont("Arial-Black", tam_fonte_desc)
 
-    max_largura_texto = col_w - (8.0 * mm * scale)
+    # Caixa de texto: Largura total (210mm) - 9mm de margem total (4.5mm esq + 4.5mm dir)
+    max_largura_texto = col_w - (9.0 * mm * scale)
 
     y_primeira_linha = topo_etiqueta - (25.0 * mm * scale)
     desc = item["desc"]
 
+    # Se a descrição inteira couber dentro da caixa de 4.5mm de margem, imprime em 1 linha
     if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
         c.drawCentredString(x_center, y_primeira_linha, desc)
     else:
+        # Quebra em 2 linhas respeitando o limite físico da caixa de texto
         palavras = desc.split()
         linha1 = ""
         linha2 = ""
@@ -32,7 +35,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             else:
                 linha2 = f"{linha2} {palavra}".strip()
 
-        espacamento_linhas = (tam_fonte_desc * 0.35 + 2.5) * mm
+        espacamento_linhas = (tam_fonte_desc * 0.35 + 3.0) * mm
         y_segunda_linha = y_primeira_linha - espacamento_linhas
 
         c.drawCentredString(x_center, y_primeira_linha, linha1)
