@@ -216,7 +216,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_rs = int(30 * scale)
         tam_fonte_reais_por = int(fonte_reais * scale)
         tam_fonte_centavos_por = int(fonte_centavos * scale)
-        tam_fonte_un_por = int(20 * scale)
+        tam_fonte_un_por = int(16 * scale)
 
         # Medição física para centralizar perfeitamente o bloco inteiro (R$ + Reais + Centavos)
         c.setFont("Arial-Black", tam_fonte_rs)
