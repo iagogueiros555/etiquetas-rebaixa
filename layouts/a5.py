@@ -53,7 +53,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_de)
 
         x_de = x_base + (30.2 * mm * scale)
-        y_de = topo_etiqueta - (90 * mm * scale)
+        y_de = topo_etiqueta - (93 * mm * scale)
         y_rs_de = y_de - (7.5 * mm * scale)
 
         c.drawString(x_de, y_de, "De")
@@ -75,7 +75,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_rs_de = c.stringWidth("R$", "Arial-Black", tam_fonte_de)
         x_reais_de = x_de + largura_rs_de + (2.0 * mm * scale)
-        y_reais_de = y_primeira_linha - (40 * mm * scale)
+        y_reais_de = y_primeira_linha - (43 * mm * scale)
         c.drawString(x_reais_de, y_reais_de, reais_de_str)
 
         largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
@@ -85,7 +85,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_de)
 
         x_centavos_de = x_reais_de + largura_reais_de + (1.5 * mm * scale)
-        y_centavos_de = y_primeira_linha - (31 * mm * scale)
+        y_centavos_de = y_primeira_linha - (34 * mm * scale)
         c.drawString(x_centavos_de, y_centavos_de, centavos_de_str)
 
         largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
