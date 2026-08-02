@@ -180,12 +180,12 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_por)
         largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
 
-        # Largura total: R$ + 2mm + REAIS + 1mm + CENTAVOS
+        # Largura total: R$ + 2mm + REAIS + 0mm + CENTAVOS (Aproximou 1mm)
         largura_total_bloco = (
             largura_rs
             + (2.0 * mm * scale)
             + largura_reais_por
-            + (1.0 * mm * scale)
+            + (0.0 * mm * scale)
             + largura_centavos_por
         )
 
@@ -195,24 +195,24 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         # Posições X encadeadas
         x_rs = x_inicio_bloco
         x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
-        x_centavos_por = x_reais_por + largura_reais_por + (1.0 * mm * scale)
+        x_centavos_por = x_reais_por + largura_reais_por + (0.0 * mm * scale)
 
-        # 1. Desenha R$ (20pt - Subiu 2mm)
+        # 1. Desenha R$ (20pt - Subiu 1.5mm)
         c.setFont("Arial-Black", tam_fonte_rs)
-        y_rs = topo_etiqueta - (64.0 * mm * scale)
+        y_rs = topo_etiqueta - (62.5 * mm * scale)
         c.drawString(x_rs, y_rs, "R$")
 
-        # 2. Desenha Reais (84pt - Baixou 4mm)
+        # 2. Desenha Reais (84pt)
         c.setFont("Arial-Black", tam_fonte_reais_por)
         y_reais_por = topo_etiqueta - (74.5 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
-        # 3. Desenha Centavos (40pt - Baixou 4mm)
+        # 3. Desenha Centavos (40pt)
         c.setFont("Arial-Black", tam_fonte_centavos_por)
         y_centavos_por = topo_etiqueta - (62.5 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        # 4. Desenha Unidade (12pt - acompanha os centavos baixados)
+        # 4. Desenha Unidade (12pt - abaixo dos centavos)
         c.setFont("Arial-Black", tam_fonte_un_por)
         x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
         y_un_por = y_centavos_por - (7.0 * mm * scale)
