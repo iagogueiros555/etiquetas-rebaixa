@@ -19,6 +19,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
         c.drawCentredString(x_center, y_primeira_linha, desc)
+        tem_duas_linhas = False
     else:
         palavras = desc.split()
         linha1 = ""
@@ -36,20 +37,21 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         c.drawCentredString(x_center, y_primeira_linha, linha1)
         c.drawCentredString(x_center, y_segunda_linha, linha2)
+        tem_duas_linhas = True
 
     # -------------------------------------------------------------------
-    # DEFINIÇÃO DE ALTURA INTELIGENTE (Com Rebaixa vs. Sem Rebaixa)
+    # DEFINIÇÃO DA "LINHA IMAGINÁRIA" DO MEIO (Com Rebaixa vs. Sem Rebaixa)
     # -------------------------------------------------------------------
     tem_rebaixa = item["e_rebaixa"]
 
     if tem_rebaixa:
-        # Mais perto da descrição para não encostar na caixa cinza de validade
-        offset_base_de_y = 93.0
-        offset_rs_unico_y = 34.0
-        offset_reais_padrao = 52.0
-        offset_centavos_padrao = 38.0
+        # Ponto exato no meio entre a descrição e a tarja cinza de validade
+        offset_base_de_y = 100.0
+        offset_rs_unico_y = 41.0
+        offset_reais_padrao = 59.0
+        offset_centavos_padrao = 45.0
     else:
-        # Mais abaixo, centralizado e respirando na folha inteira (sem rebaixa)
+        # Centralizado perfeitamente na folha inteira (sem rebaixa)
         offset_base_de_y = 103.0
         offset_rs_unico_y = 44.0
         offset_reais_padrao = 62.0
@@ -202,7 +204,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- PREÇO UNITÁRIO INTELIGENTE ---
+        # --- PREÇO UNITÁRIO NA LINHA IMAGINÁRIA DO MEIO ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
