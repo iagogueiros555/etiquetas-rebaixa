@@ -202,10 +202,10 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         # Cor do texto em Preto (#000000)
         c.setFillColor(HexColor("#000000"))
 
-        # Validade: Fonte Arial-Black 20pt, centralizada horizontal e verticalmente
+        # Validade: Fonte Arial-Black 20pt
         tam_fonte_val = int(20 * scale)
         c.setFont("Arial-Black", tam_fonte_val)
-        y_val = y_caixa + (1.8 * mm * scale)
+        y_val = y_caixa + (1.5 * mm * scale)
         c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
 
         # Mensagem de Aviso (Logo acima da caixa cinza)
