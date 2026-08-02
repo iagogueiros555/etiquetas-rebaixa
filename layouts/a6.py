@@ -1,3 +1,4 @@
+from reportlab.lib.colors import HexColor
 from reportlab.lib.units import mm
 
 def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
@@ -65,7 +66,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             reais_de_str = val_de_raw
             centavos_de_str = ",00"
 
-        # Reais DE (Mantido em 14.5mm)
+        # Reais DE
         tam_fonte_reais_de = int(26 * scale)
         c.setFont("Arial-Black", tam_fonte_reais_de)
 
@@ -115,7 +116,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
 
-        # Preço POR (Mantido em 56.6mm)
+        # Preço POR
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -185,16 +186,31 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     # -------------------------------------------------------------------
-    # 3. TARJA / AVISO DE REBAIXA (VALIDADE NO RODAPÉ)
+    # 3. TARJA / AVISO DE REBAIXA (CAIXA CINZA NO RODAPÉ)
     # -------------------------------------------------------------------
     if item["e_rebaixa"]:
-        c.setFont("Arial-Black", int(9.5 * scale))
-        y_aviso1 = topo_etiqueta - (83.0 * mm * scale)
-        y_aviso2 = topo_etiqueta - (87.5 * mm * scale)
+        # Caixa Cinza (#CCCCCC): 2mm da borda inferior, 8mm de altura, 104.4mm de largura
+        x_caixa = x_base + (2.0 * mm * scale)
+        y_caixa = y_base + (2.0 * mm * scale)
+        largura_caixa = 104.4 * mm * scale
+        altura_caixa = 8.0 * mm * scale
+
+        # Desenha o retângulo preenchido
+        c.setFillColor(HexColor("#CCCCCC"))
+        c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, fill=1, stroke=0)
+
+        # Restaura cor do texto para Preto (#000000)
+        c.setFillColor(HexColor("#000000"))
+
+        # Validade (Centralizada dentro da caixa cinza)
+        c.setFont("Arial-Black", int(12 * scale))
+        y_val = y_caixa + (2.2 * mm * scale)
+        c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
+
+        # Mensagem de Aviso (Logo acima da caixa cinza)
+        c.setFont("Arial-Black", int(8.5 * scale))
+        y_aviso2 = y_caixa + altura_caixa + (1.5 * mm * scale)
+        y_aviso1 = y_aviso2 + (3.8 * mm * scale)
 
         c.drawCentredString(x_center, y_aviso1, "PRODUTO PRÓXIMO")
         c.drawCentredString(x_center, y_aviso2, "A DATA DE VENCIMENTO")
-
-        c.setFont("Arial-Black", int(13 * scale))
-        y_val = topo_etiqueta - (93.5 * mm * scale)
-        c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
