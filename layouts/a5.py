@@ -139,7 +139,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_reais_por)
 
         x_reais_por = x_base + (115.9 * mm * scale)
-        y_reais_por = y_primeira_linha - (13.0 * mm * scale)
+        y_reais_por = y_primeira_linha - (50 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
         largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
