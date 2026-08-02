@@ -16,7 +16,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     # Caixa de texto: Largura total (210mm) - 9mm de margem total (4.5mm esq + 4.5mm dir)
     max_largura_texto = col_w - (9.0 * mm * scale)
 
-    y_primeira_linha = topo_etiqueta - (25.0 * mm * scale)
+    # Distância exata de 64.4mm a partir da borda superior
+    y_primeira_linha = topo_etiqueta - (64.4 * mm * scale)
     desc = item["desc"]
 
     # Se a descrição inteira couber dentro da caixa de 4.5mm de margem, imprime em 1 linha
@@ -52,8 +53,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_de)
 
         x_de = x_base + (12.0 * mm * scale)
-        y_de = topo_etiqueta - (60.0 * mm * scale)
-        y_rs_de = topo_etiqueta - (67.0 * mm * scale)
+        y_de = topo_etiqueta - (85.0 * mm * scale)
+        y_rs_de = topo_etiqueta - (92.0 * mm * scale)
 
         c.drawString(x_de, y_de, "De")
         c.drawString(x_de, y_rs_de, "R$")
@@ -72,7 +73,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_reais_de)
 
         x_reais_de = x_base + (24.0 * mm * scale)
-        y_reais_de = topo_etiqueta - (67.0 * mm * scale)
+        y_reais_de = topo_etiqueta - (92.0 * mm * scale)
         c.drawString(x_reais_de, y_reais_de, reais_de_str)
 
         largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
@@ -82,7 +83,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_de)
 
         x_centavos_de = x_reais_de + largura_reais_de + (0.5 * mm * scale)
-        y_centavos_de = topo_etiqueta - (62.0 * mm * scale)
+        y_centavos_de = topo_etiqueta - (87.0 * mm * scale)
         c.drawString(x_centavos_de, y_centavos_de, centavos_de_str)
 
         largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
@@ -109,10 +110,10 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
         x_por = x_base + (90.0 * mm * scale)
-        y_por = topo_etiqueta - (56.0 * mm * scale)
+        y_por = topo_etiqueta - (81.0 * mm * scale)
 
         x_rs_por = x_base + (93.0 * mm * scale)
-        y_rs_por = topo_etiqueta - (67.0 * mm * scale)
+        y_rs_por = topo_etiqueta - (92.0 * mm * scale)
 
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
@@ -131,7 +132,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_reais_por)
 
         x_reais_por = x_base + (110.0 * mm * scale)
-        y_reais_por = topo_etiqueta - (74.0 * mm * scale)
+        y_reais_por = topo_etiqueta - (99.0 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
         largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
@@ -140,7 +141,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_por)
 
         x_centavos_por = x_reais_por + largura_reais_por + (0.5 * mm * scale)
-        y_centavos_por = topo_etiqueta - (66.0 * mm * scale)
+        y_centavos_por = topo_etiqueta - (91.0 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
         largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
@@ -164,26 +165,26 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             centavos_por_str = ",00"
 
         if not item["e_rebaixa"]:
-            # Preço Único Normal (Sem Rebaixa) -> Fonte Gigante (150pt Reais / 75pt Centavos)
+            # Preço Único Normal (Sem Rebaixa) -> Fonte 150pt
             tam_fonte_rs = int(32 * scale)
             tam_fonte_reais_por = int(150 * scale)
             tam_fonte_centavos_por = int(75 * scale)
             tam_fonte_un_por = int(20 * scale)
 
-            y_offset_rs = 88.0 * mm * scale
-            y_offset_reais = 120.0 * mm * scale
-            y_offset_centavos = 98.0 * mm * scale
+            y_offset_rs = 95.0 * mm * scale
+            y_offset_reais = 127.0 * mm * scale
+            y_offset_centavos = 105.0 * mm * scale
             dist_un = 12.0 * mm * scale
         else:
-            # Preço Único em Rebaixa (Com Validade) -> Fonte Compacta (120pt Reais / 60pt Centavos)
+            # Preço Único em Rebaixa (Com Validade) -> Fonte 120pt
             tam_fonte_rs = int(28 * scale)
             tam_fonte_reais_por = int(120 * scale)
             tam_fonte_centavos_por = int(60 * scale)
             tam_fonte_un_por = int(18 * scale)
 
-            y_offset_rs = 80.0 * mm * scale
-            y_offset_reais = 105.0 * mm * scale
-            y_offset_centavos = 88.0 * mm * scale
+            y_offset_rs = 88.0 * mm * scale
+            y_offset_reais = 112.0 * mm * scale
+            y_offset_centavos = 95.0 * mm * scale
             dist_un = 10.0 * mm * scale
 
         # Medição física das larguras
