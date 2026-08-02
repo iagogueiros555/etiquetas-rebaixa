@@ -184,7 +184,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- MODO PREÇO ÚNICO (PADRÃO GIGANTE CENTRALIZADO COM R$ TAMANHO 30) ---
+        # --- MODO PREÇO ÚNICO (PADRÃO GIGANTE CENTRALIZADO COM R$ MAIS ALTO) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -196,7 +196,6 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         num_digitos_reais = len(reais_por_str)
 
-        # Ajuste dinâmico de tamanho para preço único também não estourar se tiver 2+ dígitos
         if num_digitos_reais <= 1:
             fonte_reais = 144
             fonte_centavos = 72
@@ -216,9 +215,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_rs = int(30 * scale)
         tam_fonte_reais_por = int(fonte_reais * scale)
         tam_fonte_centavos_por = int(fonte_centavos * scale)
-        tam_fonte_un_por = int(16 * scale)
+        tam_fonte_un_por = int(20 * scale)
 
-        # Medição física para centralizar perfeitamente o bloco inteiro (R$ + Reais + Centavos)
+        # Medição física para centralizar perfeitamente o bloco inteiro
         c.setFont("Arial-Black", tam_fonte_rs)
         largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
 
@@ -230,9 +229,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_total_bloco = (
             largura_rs
-            + (4.0 * mm * scale)  # Espaço entre R$ e os Reais
+            + (4.0 * mm * scale)
             + largura_reais_por
-            + (1.5 * mm * scale)  # Espaço fixo entre Reais e Centavos
+            + (1.5 * mm * scale)
             + largura_centavos_por
         )
 
@@ -242,12 +241,12 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (4.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
 
-        # Alturas consistentes com o modo POR
-        y_rs = y_primeira_linha - (48.0 * mm * scale)
+        # R$ puxado mais para cima (ajustado de 48mm para 40mm a partir da descrição)
+        y_rs = y_primeira_linha - (40.0 * mm * scale)
         y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
         y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
 
-        # 1. Desenha R$ (Fonte 30)
+        # 1. Desenha R$ (Mais alto)
         c.setFont("Arial-Black", tam_fonte_rs)
         c.drawString(x_rs, y_rs, "R$")
 
