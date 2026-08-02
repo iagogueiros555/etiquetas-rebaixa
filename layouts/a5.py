@@ -184,7 +184,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- MODO PREÇO ÚNICO (PADRÃO GIGANTE CENTRALIZADO COM R$ MAIS ALTO) ---
+        # --- MODO PREÇO ÚNICO INTELIGENTE (COM AJUSTE AUTOMÁTICO DE MARGEM) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -196,6 +196,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         num_digitos_reais = len(reais_por_str)
 
+        # Seleção de tamanhos iniciais com base na quantidade de dígitos
         if num_digitos_reais <= 1:
             fonte_reais = 144
             fonte_centavos = 72
@@ -206,9 +207,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             fonte_centavos = 55
             offset_y_reais = 52.0
             offset_y_centavos = 38.0
-        else:
-            fonte_reais = 85
-            fonte_centavos = 42
+        else:  # 3 ou mais dígitos (ex: 111,97)
+            fonte_reais = 80
+            fonte_centavos = 40
             offset_y_reais = 46.0
             offset_y_centavos = 38.0
 
@@ -217,36 +218,50 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_centavos_por = int(fonte_centavos * scale)
         tam_fonte_un_por = int(20 * scale)
 
-        # Medição física para centralizar perfeitamente o bloco inteiro
-        c.setFont("Arial-Black", tam_fonte_rs)
-        largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
+        # Verificação de segurança de largura máxima permitida na etiqueta
+        # Largura útil total da etiqueta menos 9mm de margem total (4.5mm de cada lado)
+        largura_util_maxima = col_w - (9.0 * mm * scale)
 
-        c.setFont("Arial-Black", tam_fonte_reais_por)
-        largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
+        # Loop de segurança: se a largura total calculada ultrapassar o limite da etiqueta, reduz o tamanho proporcionalmente
+        while True:
+            c.setFont("Arial-Black", tam_fonte_rs)
+            largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
 
-        c.setFont("Arial-Black", tam_fonte_centavos_por)
-        largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
+            c.setFont("Arial-Black", tam_fonte_reais_por)
+            largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
 
-        largura_total_bloco = (
-            largura_rs
-            + (4.0 * mm * scale)
-            + largura_reais_por
-            + (1.5 * mm * scale)
-            + largura_centavos_por
-        )
+            c.setFont("Arial-Black", tam_fonte_centavos_por)
+            largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
 
+            largura_total_bloco = (
+                largura_rs
+                + (4.0 * mm * scale)
+                + largura_reais_por
+                + (1.5 * mm * scale)
+                + largura_centavos_por
+            )
+
+            # Se coube na largura útil ou se a fonte já chegou num limite seguro mínimo, sai do loop
+            if largura_total_bloco <= largura_util_maxima or tam_fonte_reais_por <= 50:
+                break
+
+            # Se ainda estiver passando, reduz um pouco os tamanhos das fontes e tenta de novo
+            tam_fonte_reais_por = int(tam_fonte_reais_por * 0.90)
+            tam_fonte_centavos_por = int(tam_fonte_centavos_por * 0.90)
+            tam_fonte_rs = int(tam_fonte_rs * 0.90)
+
+        # Posicionamento centralizado dinâmico com a largura final garantida
         x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
 
         x_rs = x_inicio_bloco
         x_reais_por = x_rs + largura_rs + (4.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
 
-        # R$ puxado mais para cima (ajustado de 48mm para 40mm a partir da descrição)
-        y_rs = y_primeira_linha - (34 * mm * scale)
+        y_rs = y_primeira_linha - (34.0 * mm * scale)
         y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
         y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
 
-        # 1. Desenha R$ (Mais alto)
+        # 1. Desenha R$
         c.setFont("Arial-Black", tam_fonte_rs)
         c.drawString(x_rs, y_rs, "R$")
 
@@ -258,7 +273,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_por)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        # 4. Desenha Unidade
+        # 4. Desenha Unidade (abaixo dos centavos)
         c.setFont("Arial-Black", tam_fonte_un_por)
         x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
         y_un_por = y_centavos_por - (12.0 * mm * scale)
