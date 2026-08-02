@@ -208,10 +208,11 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         y_val = y_caixa + (1.5 * mm * scale)
         c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
 
-        # Mensagem de Aviso (Logo acima da caixa cinza)
-        c.setFont("Arial-Black", int(8.5 * scale))
-        y_aviso2 = y_caixa + altura_caixa + (1.5 * mm * scale)
-        y_aviso1 = y_aviso2 + (3.8 * mm * scale)
+        # Mensagem de Aviso: Fonte Arial-Black 15pt (Logo acima da caixa cinza)
+        tam_fonte_aviso = int(15 * scale)
+        c.setFont("Arial-Black", tam_fonte_aviso)
+        y_aviso2 = y_caixa + altura_caixa + (2.0 * mm * scale)
+        y_aviso1 = y_aviso2 + (5.5 * mm * scale)
 
         c.drawCentredString(x_center, y_aviso1, "PRODUTO PRÓXIMO")
         c.drawCentredString(x_center, y_aviso2, "A DATA DE VENCIMENTO")
