@@ -166,18 +166,18 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
         # Define fontes e posições de acordo com a presença de rebaixa/validade
         if not item["e_rebaixa"]:
-            # Preço Único Normal (Sem Rebaixa) -> Fonte Gigante (104pt Reais / 52pt Centavos)
+            # Preço Único Normal (Sem Rebaixa) -> Fonte 104pt baixada para ocupar o centro
             tam_fonte_rs = int(20 * scale)
             tam_fonte_reais_por = int(104 * scale)
             tam_fonte_centavos_por = int(52 * scale)
             tam_fonte_un_por = int(14 * scale)
 
-            y_offset_rs = 58.0 * mm * scale
-            y_offset_reais = 78.0 * mm * scale
-            y_offset_centavos = 61.5 * mm * scale
-            dist_un = 8.0 * mm * scale
+            y_offset_rs = 58.5 * mm * scale
+            y_offset_reais = 85.0 * mm * scale
+            y_offset_centavos = 68.5 * mm * scale
+            dist_un = 8.5 * mm * scale
         else:
-            # Preço Único em Rebaixa (Com Validade no rodapé) -> Fonte Compacta (84pt Reais / 40pt Centavos)
+            # Preço Único em Rebaixa (Com Validade no rodapé) -> Fonte Compacta (84pt)
             tam_fonte_rs = int(20 * scale)
             tam_fonte_reais_por = int(84 * scale)
             tam_fonte_centavos_por = int(40 * scale)
