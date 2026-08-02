@@ -85,7 +85,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_de)
 
         x_centavos_de = x_reais_de + largura_reais_de + (1.5 * mm * scale)
-        y_centavos_de = y_primeira_linha - (17.5 * mm * scale)
+        y_centavos_de = y_primeira_linha - (45 * mm * scale)
         c.drawString(x_centavos_de, y_centavos_de, centavos_de_str)
 
         largura_centavos_de = c.stringWidth(centavos_de_str, "Arial-Black", tam_fonte_centavos_de)
