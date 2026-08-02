@@ -109,24 +109,34 @@ with st.form("form_produto", clear_on_submit=True):
         with col_p2:
             unidade = st.text_input("Unidade:", value="1 UN").upper()
 
-    if e_rebaixa:
-        validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
-    else:
-        validade = ""
+    # Linha para Validade (se for rebaixa) e Quantidade de Cópias
+    col_bottom1, col_bottom2 = st.columns([2, 1])
+    with col_bottom1:
+        if e_rebaixa:
+            validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+        else:
+            validade = ""
+    with col_bottom2:
+        qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
 
     btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
 
     if btn_adicionar:
         if desc and por:
-            st.session_state.lista_itens.append({
+            item_dados = {
                 "desc": desc,
                 "de": de.replace(".", ",").strip(),
                 "por": por.replace(".", ",").strip(),
                 "un": unidade,
                 "val": validade,
                 "e_rebaixa": e_rebaixa,
-            })
-            st.success(f"Produto '{desc}' adicionado!")
+            }
+            
+            # Adiciona o produto na lista a quantidade de vezes solicitada
+            for _ in range(int(qtd_copias)):
+                st.session_state.lista_itens.append(item_dados)
+
+            st.success(f"{qtd_copias} etiqueta(s) do produto '{desc}' adicionada(s)!")
             st.rerun()
         else:
             st.warning("Preencha ao menos a Descrição e o Preço POR!")
