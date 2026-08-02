@@ -80,7 +80,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
 
-        # 3. Centavos DE (Fonte 30pt, 34mm abaixo da descrição, 1.5mm do preço em Reais)
+        # 3. Centavos DE (Fonte 35pt, 34mm abaixo da descrição, 1.5mm do preço em Reais)
         tam_fonte_centavos_de = int(35 * scale)
         c.setFont("Arial-Black", tam_fonte_centavos_de)
 
@@ -111,15 +111,15 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         # BLOCO "POR" PROMOCIONAL
         # -------------------------------------------------------------------
 
-        # 4. Rótulos "Por" e "R$" (Fonte 30pt, x=95mm, y=97.4mm do topo, R$ 4mm abaixo)
+        # 4. Rótulos "Por" e "R$" (Fonte 30pt)
         tam_fonte_por_rotulo = int(30 * scale)
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
         x_por = x_base + (95.0 * mm * scale)
-        y_por = topo_etiqueta - (93 * mm * scale)
+        y_por = topo_etiqueta - (93.0 * mm * scale)
 
         x_rs_por = x_por
-        y_rs_por = y_por - (11 * mm * scale)
+        y_rs_por = y_por - (11.0 * mm * scale)
 
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
@@ -134,22 +134,22 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             reais_por_str = val_por_raw
             centavos_por_str = ",00"
 
-        # 5. Reais POR (Fonte 144pt, x=115.9mm, 13mm abaixo da descrição)
+        # 5. Reais POR (Fonte 144pt, x=115.9mm)
         tam_fonte_reais_por = int(144 * scale)
         c.setFont("Arial-Black", tam_fonte_reais_por)
 
         x_reais_por = x_base + (115.9 * mm * scale)
-        y_reais_por = y_primeira_linha - (57 * mm * scale)
+        y_reais_por = y_primeira_linha - (57.0 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
         largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
 
-        # 6. Centavos POR (Fonte 72pt, 13mm abaixo da descrição, a 1.5mm do preço em Reais)
+        # 6. Centavos POR (Fonte 72pt)
         tam_fonte_centavos_por = int(72 * scale)
         c.setFont("Arial-Black", tam_fonte_centavos_por)
 
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
-        y_centavos_por = y_primeira_linha - (38 * mm * scale)
+        y_centavos_por = y_primeira_linha - (38.0 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
         largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
@@ -244,10 +244,10 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     # 3. TARJA / AVISO DE REBAIXA (CAIXA CINZA NO RODAPÉ)
     # -------------------------------------------------------------------
     if item["e_rebaixa"]:
-        # Caixa Cinza: 4mm da borda inferior, 12mm de altura, 202mm de largura
-        x_caixa = x_base + (4.0 * mm * scale)
-        y_caixa = y_base + (4.0 * mm * scale)
-        largura_caixa = 202.0 * mm * scale
+        # Caixa Cinza: 4mm da borda inferior, 12mm de altura, 202mm de largura (respeita margem 4.5mm)
+        x_caixa = x_base + (4.5 * mm * scale)
+        y_caixa = y_base + (4.5 * mm * scale)
+        largura_caixa = col_w - (9.0 * mm * scale)  # 201mm de largura útil
         altura_caixa = 12.0 * mm * scale
 
         c.setFillColor(HexColor("#CCCCCC"))
@@ -255,17 +255,15 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         c.setFillColor(HexColor("#000000"))
 
-        # Validade: Fonte Arial-Black 28pt
+        # Validade: Fonte Arial-Black 28pt (no centro da caixa cinza)
         tam_fonte_val = int(28 * scale)
         c.setFont("Arial-Black", tam_fonte_val)
         y_val = y_caixa + (2.5 * mm * scale)
         c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
 
-        # Mensagem de Aviso (Logo acima da caixa cinza)
-        tam_fonte_aviso = int(22 * scale)
+        # Mensagem de Aviso em UMA ÚNICA LINHA (Fonte 16pt, logo acima da caixa cinza)
+        tam_fonte_aviso = int(16 * scale)
         c.setFont("Arial-Black", tam_fonte_aviso)
-        y_aviso2 = y_caixa + altura_caixa + (3.0 * mm * scale)
-        y_aviso1 = y_aviso2 + (8.0 * mm * scale)
+        y_aviso = y_caixa + altura_caixa + (3.0 * mm * scale)
 
-        c.drawCentredString(x_center, y_aviso1, "PRODUTO PRÓXIMO")
-        c.drawCentredString(x_center, y_aviso2, "A DATA DE VENCIMENTO")
+        c.drawCentredString(x_center, y_aviso, "PRODUTO PRÓXIMO A DATA DE VENCIMENTO")
