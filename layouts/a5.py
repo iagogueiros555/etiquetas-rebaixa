@@ -242,7 +242,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
 
         # R$ puxado mais para cima (ajustado de 48mm para 40mm a partir da descrição)
-        y_rs = y_primeira_linha - (40.0 * mm * scale)
+        y_rs = y_primeira_linha - (37 * mm * scale)
         y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
         y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
 
