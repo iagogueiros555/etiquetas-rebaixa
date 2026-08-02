@@ -44,11 +44,11 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     # 2. BLOCO DE PREÇOS ("DE" E "POR")
     # -------------------------------------------------------------------
     if item["de"]:
-        # Rótulo "De" e "R$"
+        # Rótulo "De" e "R$" (Afastados 2mm para a esquerda)
         tam_fonte_de = int(12 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
 
-        x_de = x_base + (9.2 * mm * scale)
+        x_de = x_base + (7.2 * mm * scale)
         y_de = topo_etiqueta - (62.2 * mm * scale)
         y_rs_de = topo_etiqueta - (66.5 * mm * scale)
 
@@ -65,7 +65,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             reais_de_str = val_de_raw
             centavos_de_str = ",00"
 
-        # Reais DE
+        # Reais DE (Mantido em 14.5mm)
         tam_fonte_reais_de = int(26 * scale)
         c.setFont("Arial-Black", tam_fonte_reais_de)
 
@@ -102,20 +102,20 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.setLineWidth(2.0 * scale)
         c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
 
-        # Rótulos "Por" e "R$"
+        # Rótulos "Por" e "R$" (Afastados 2mm para a esquerda)
         tam_fonte_por_rotulo = int(18 * scale)
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
-        x_por = x_base + (46.3 * mm * scale)
+        x_por = x_base + (44.3 * mm * scale)
         y_por = topo_etiqueta - (60.0 * mm * scale)
 
-        x_rs_por = x_base + (48.4 * mm * scale)
+        x_rs_por = x_base + (46.4 * mm * scale)
         y_rs_por = topo_etiqueta - (67.1 * mm * scale)
 
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
 
-        # Preço POR
+        # Preço POR (Mantido em 56.6mm)
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -171,6 +171,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
         tam_fonte_centavos_por = int(32 * scale)
         c.setFont("Arial-Black", tam_fonte_centavos_por)
+
         x_centavos_por = x_reais_por + largura_reais_por + (0.3 * mm * scale)
         y_centavos_por = topo_etiqueta - (65.5 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
