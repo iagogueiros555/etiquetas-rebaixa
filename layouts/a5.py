@@ -81,7 +81,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
 
         # 3. Centavos DE (Fonte 30pt, 34mm abaixo da descrição, 1.5mm do preço em Reais)
-        tam_fonte_centavos_de = int(30 * scale)
+        tam_fonte_centavos_de = int(35 * scale)
         c.setFont("Arial-Black", tam_fonte_centavos_de)
 
         x_centavos_de = x_reais_de + largura_reais_de + (1.5 * mm * scale)
@@ -149,7 +149,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_por)
 
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
-        y_centavos_por = y_primeira_linha - (30 * mm * scale)
+        y_centavos_por = y_primeira_linha - (35 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
         largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
