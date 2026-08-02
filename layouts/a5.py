@@ -119,7 +119,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         y_por = topo_etiqueta - (97.4 * mm * scale)
 
         x_rs_por = x_por
-        y_rs_por = y_por - (8 * mm * scale)
+        y_rs_por = y_por - (11 * mm * scale)
 
         c.drawString(x_por, y_por, "Por")
         c.drawString(x_rs_por, y_rs_por, "R$")
