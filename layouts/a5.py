@@ -184,7 +184,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- MODO PREÇO ÚNICO (1 E 2 DÍGITOS COM 144PT, 3+ DÍGITOS AUTO-AJUSTÁVEL) ---
+        # --- MODO PREÇO ÚNICO (PROPORCIONAL PARA 3 DÍGITOS E AUTO-AJUSTÁVEL PARA 4+) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -196,13 +196,18 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         num_digitos_reais = len(reais_por_str)
 
-        # 1 e 2 dígitos usam o tamanho máximo de 144pt e 72pt
+        # Definição dos tamanhos base de acordo com os dígitos
         if num_digitos_reais <= 2:
             fonte_reais = 144
             fonte_centavos = 72
             offset_y_reais = 57.0
             offset_y_centavos = 38.0
-        else:  # 3 ou mais dígitos começam num tamanho menor para o algoritmo ajustar
+        elif num_digitos_reais == 3:
+            fonte_reais = 110  # Mantém o tamanho ótimo que você aprovou para 3 dígitos!
+            fonte_centavos = 55
+            offset_y_reais = 52.0
+            offset_y_centavos = 38.0
+        else:  # 4 ou mais dígitos (começa em 85 e reduz se estourar a margem)
             fonte_reais = 85
             fonte_centavos = 42
             offset_y_reais = 46.0
@@ -215,7 +220,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_util_maxima = col_w - (9.0 * mm * scale)
 
-        # Loop de segurança apenas se necessário (para preços de 3+ dígitos)
+        # Loop de segurança contra estouro de margem (especialmente útil para 4+ dígitos)
         while True:
             c.setFont("Arial-Black", tam_fonte_rs)
             largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
@@ -234,7 +239,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
                 + largura_centavos_por
             )
 
-            if largura_total_bloco <= largura_util_maxima or tam_fonte_reais_por <= 50:
+            if largura_total_bloco <= largura_util_maxima or tam_fonte_reais_por <= 40:
                 break
 
             tam_fonte_reais_por = int(tam_fonte_reais_por * 0.90)
