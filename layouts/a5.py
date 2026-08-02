@@ -52,7 +52,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_de = int(20 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
 
-        x_de = x_base + (30.2 * mm * scale)
+        x_de = x_base + (28 * mm * scale)
         y_de = topo_etiqueta - (93 * mm * scale)
         y_rs_de = y_de - (7.5 * mm * scale)
 
