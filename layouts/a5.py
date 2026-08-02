@@ -184,7 +184,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- MODO PREÇO ÚNICO INTELIGENTE (COM AJUSTE AUTOMÁTICO DE MARGEM) ---
+        # --- MODO PREÇO ÚNICO (1 E 2 DÍGITOS COM 144PT, 3+ DÍGITOS AUTO-AJUSTÁVEL) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -196,20 +196,15 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         num_digitos_reais = len(reais_por_str)
 
-        # Seleção de tamanhos iniciais com base na quantidade de dígitos
-        if num_digitos_reais <= 1:
+        # 1 e 2 dígitos usam o tamanho máximo de 144pt e 72pt
+        if num_digitos_reais <= 2:
             fonte_reais = 144
             fonte_centavos = 72
             offset_y_reais = 57.0
             offset_y_centavos = 38.0
-        elif num_digitos_reais == 2:
-            fonte_reais = 110
-            fonte_centavos = 55
-            offset_y_reais = 52.0
-            offset_y_centavos = 38.0
-        else:  # 3 ou mais dígitos (ex: 111,97)
-            fonte_reais = 80
-            fonte_centavos = 40
+        else:  # 3 ou mais dígitos começam num tamanho menor para o algoritmo ajustar
+            fonte_reais = 85
+            fonte_centavos = 42
             offset_y_reais = 46.0
             offset_y_centavos = 38.0
 
@@ -218,11 +213,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_centavos_por = int(fonte_centavos * scale)
         tam_fonte_un_por = int(20 * scale)
 
-        # Verificação de segurança de largura máxima permitida na etiqueta
-        # Largura útil total da etiqueta menos 9mm de margem total (4.5mm de cada lado)
         largura_util_maxima = col_w - (9.0 * mm * scale)
 
-        # Loop de segurança: se a largura total calculada ultrapassar o limite da etiqueta, reduz o tamanho proporcionalmente
+        # Loop de segurança apenas se necessário (para preços de 3+ dígitos)
         while True:
             c.setFont("Arial-Black", tam_fonte_rs)
             largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
@@ -241,16 +234,13 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
                 + largura_centavos_por
             )
 
-            # Se coube na largura útil ou se a fonte já chegou num limite seguro mínimo, sai do loop
             if largura_total_bloco <= largura_util_maxima or tam_fonte_reais_por <= 50:
                 break
 
-            # Se ainda estiver passando, reduz um pouco os tamanhos das fontes e tenta de novo
             tam_fonte_reais_por = int(tam_fonte_reais_por * 0.90)
             tam_fonte_centavos_por = int(tam_fonte_centavos_por * 0.90)
             tam_fonte_rs = int(tam_fonte_rs * 0.90)
 
-        # Posicionamento centralizado dinâmico com a largura final garantida
         x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
 
         x_rs = x_inicio_bloco
@@ -273,7 +263,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_centavos_por)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        # 4. Desenha Unidade (abaixo dos centavos)
+        # 4. Desenha Unidade
         c.setFont("Arial-Black", tam_fonte_un_por)
         x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
         y_un_por = y_centavos_por - (12.0 * mm * scale)
