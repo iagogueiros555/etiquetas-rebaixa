@@ -16,8 +16,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     # Caixa de texto: Largura total (210mm) - 9mm de margem total (4.5mm esq + 4.5mm dir)
     max_largura_texto = col_w - (9.0 * mm * scale)
 
-    # Distância exata de 64.4mm a partir da borda superior
-    y_primeira_linha = topo_etiqueta - (64.4 * mm * scale)
+    # Distância exata de 62mm a partir da borda superior
+    y_primeira_linha = topo_etiqueta - (62.0 * mm * scale)
     desc = item["desc"]
 
     # Se a descrição inteira couber dentro da caixa de 4.5mm de margem, imprime em 1 linha
