@@ -166,7 +166,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
         # Define fontes e posições de acordo com a presença de rebaixa/validade
         if not item["e_rebaixa"]:
-            # Preço Único Normal (Sem Rebaixa) -> Fonte 104pt centralizada na folha
+            # Preço Único Normal (Sem Rebaixa) -> Fonte 104pt
             tam_fonte_rs = int(20 * scale)
             tam_fonte_reais_por = int(104 * scale)
             tam_fonte_centavos_por = int(52 * scale)
@@ -183,7 +183,8 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             tam_fonte_centavos_por = int(40 * scale)
             tam_fonte_un_por = int(12 * scale)
 
-            y_offset_rs = 48.0 * mm * scale
+            # Ajustado para 60.0mm para não encostar na linha 2 de descrições longas
+            y_offset_rs = 60.0 * mm * scale
             y_offset_reais = 74.5 * mm * scale
             y_offset_centavos = 62.5 * mm * scale
             dist_un = 7.0 * mm * scale
@@ -215,7 +216,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (0.0 * mm * scale)
 
-        # 1. Desenha R$ (20pt - Acompanha a descida do 104pt)
+        # 1. Desenha R$ (20pt)
         c.setFont("Arial-Black", tam_fonte_rs)
         y_rs = topo_etiqueta - y_offset_rs
         c.drawString(x_rs, y_rs, "R$")
