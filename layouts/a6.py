@@ -42,9 +42,11 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
-    # 2. BLOCO DE PREÇOS ("DE" E "POR")
+    # 2. BLOCO DE PREÇOS ("DE / POR" OU "PREÇO ÚNICO")
     # -------------------------------------------------------------------
     if item["de"]:
+        # --- MODO PROMOCIONAL (DE / POR) ---
+        
         # Rótulo "De" e "R$" (Afastados 2mm para a esquerda)
         tam_fonte_de = int(12 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
@@ -152,7 +154,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # Modo Preço Único
+        # --- MODO PREÇO ÚNICO (DINAMICAMENTE CENTRALIZADO) ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -162,27 +164,58 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
             reais_por_str = val_por_raw
             centavos_por_str = ",00"
 
-        tam_fonte_reais_por = int(58 * scale)
+        # Fontes definidas: R$ 20pt | Reais 84pt | Centavos 40pt
+        tam_fonte_rs = int(20 * scale)
+        tam_fonte_reais_por = int(84 * scale)
+        tam_fonte_centavos_por = int(40 * scale)
+        tam_fonte_un_por = int(12 * scale)
+
+        # Medição física das larguras
+        c.setFont("Arial-Black", tam_fonte_rs)
+        largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
+
         c.setFont("Arial-Black", tam_fonte_reais_por)
-        x_reais_por = x_base + (56.6 * mm * scale)
+        largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
+
+        c.setFont("Arial-Black", tam_fonte_centavos_por)
+        largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
+
+        # Largura total: R$ + 2mm + REAIS + 1mm + CENTAVOS
+        largura_total_bloco = (
+            largura_rs
+            + (2.0 * mm * scale)
+            + largura_reais_por
+            + (1.0 * mm * scale)
+            + largura_centavos_por
+        )
+
+        # Ponto X inicial para centralizar perfeitamente no meio da etiqueta
+        x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
+
+        # Posições X encadeadas
+        x_rs = x_inicio_bloco
+        x_reais_por = x_rs + largura_rs + (2.0 * mm * scale)
+        x_centavos_por = x_reais_por + largura_reais_por + (1.0 * mm * scale)
+
+        # 1. Desenha R$ (20pt)
+        c.setFont("Arial-Black", tam_fonte_rs)
+        y_rs = topo_etiqueta - (66.0 * mm * scale)
+        c.drawString(x_rs, y_rs, "R$")
+
+        # 2. Desenha Reais (84pt)
+        c.setFont("Arial-Black", tam_fonte_reais_por)
         y_reais_por = topo_etiqueta - (70.5 * mm * scale)
         c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
-        largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
-
-        tam_fonte_centavos_por = int(32 * scale)
+        # 3. Desenha Centavos (40pt)
         c.setFont("Arial-Black", tam_fonte_centavos_por)
-
-        x_centavos_por = x_reais_por + largura_reais_por + (0.3 * mm * scale)
-        y_centavos_por = topo_etiqueta - (65.5 * mm * scale)
+        y_centavos_por = topo_etiqueta - (58.5 * mm * scale)
         c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
-        largura_centavos_por = c.stringWidth(centavos_por_str, "Arial-Black", tam_fonte_centavos_por)
-
-        tam_fonte_un_por = int(12 * scale)
+        # 4. Desenha Unidade (12pt - abaixo dos centavos)
         c.setFont("Arial-Black", tam_fonte_un_por)
-        x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (4.0 * mm * scale)
-        y_un_por = y_centavos_por - (6.0 * mm * scale)
+        x_un_por = x_centavos_por + (largura_centavos_por / 2.0)
+        y_un_por = y_centavos_por - (7.0 * mm * scale)
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     # -------------------------------------------------------------------
