@@ -262,7 +262,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
 
         # Mensagem de Aviso em UMA ÚNICA LINHA (Fonte 16pt, logo acima da caixa cinza)
-        tam_fonte_aviso = int(16 * scale)
+        tam_fonte_aviso = int(20 * scale)
         c.setFont("Arial-Black", tam_fonte_aviso)
         y_aviso = y_caixa + altura_caixa + (3.0 * mm * scale)
 
