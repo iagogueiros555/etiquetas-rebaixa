@@ -38,6 +38,24 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_segunda_linha, linha2)
 
     # -------------------------------------------------------------------
+    # DEFINIÇÃO DE ALTURA INTELIGENTE (Com Rebaixa vs. Sem Rebaixa)
+    # -------------------------------------------------------------------
+    tem_rebaixa = item["e_rebaixa"]
+
+    if tem_rebaixa:
+        # Mais perto da descrição para não encostar na caixa cinza de validade
+        offset_base_de_y = 93.0
+        offset_rs_unico_y = 34.0
+        offset_reais_padrao = 52.0
+        offset_centavos_padrao = 38.0
+    else:
+        # Mais abaixo, centralizado e respirando na folha inteira (sem rebaixa)
+        offset_base_de_y = 103.0
+        offset_rs_unico_y = 44.0
+        offset_reais_padrao = 62.0
+        offset_centavos_padrao = 48.0
+
+    # -------------------------------------------------------------------
     # 2. BLOCO DE PREÇOS (PROMOCIONAL OU UNITÁRIO)
     # -------------------------------------------------------------------
     if item["de"]:
@@ -58,27 +76,27 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
             x_de_pos = 28.0
             fonte_reais_de = 64
             fonte_centavos_de = 35
-            offset_y_reais_de = 47.0  # Afastado um pouco mais para baixo
-            offset_y_centavos_de = 38.0
+            offset_y_reais_de = offset_reais_padrao - 9.0
+            offset_y_centavos_de = offset_centavos_padrao - 4.0
         elif num_digitos_de == 2:
             x_de_pos = 14.0
             fonte_reais_de = 52
             fonte_centavos_de = 28
-            offset_y_reais_de = 45.0
-            offset_y_centavos_de = 38.0
+            offset_y_reais_de = offset_reais_padrao - 11.0
+            offset_y_centavos_de = offset_centavos_padrao - 4.0
         else:
             x_de_pos = 8.0
             fonte_reais_de = 40
             fonte_centavos_de = 22
-            offset_y_reais_de = 43.0
-            offset_y_centavos_de = 36.0
+            offset_y_reais_de = offset_reais_padrao - 13.0
+            offset_y_centavos_de = offset_centavos_padrao - 6.0
 
-        # Rótulos "De" e "R$" (Ajustados 4mm para baixo)
+        # Rótulos "De" e "R$"
         tam_fonte_de = int(20 * scale)
         c.setFont("Arial-Black", tam_fonte_de)
 
         x_de = x_base + (x_de_pos * mm * scale)
-        y_de = topo_etiqueta - (97.0 * mm * scale)
+        y_de = topo_etiqueta - (offset_base_de_y * mm * scale)
         y_rs_de = y_de - (7.5 * mm * scale)
 
         c.drawString(x_de, y_de, "De")
@@ -136,19 +154,19 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         if num_digitos_reais <= 1:
             fonte_reais = 144
             fonte_centavos = 72
-            offset_y_reais = 61.0  # Afastado para baixo
-            offset_y_centavos = 42.0
+            offset_y_reais = offset_reais_padrao
+            offset_y_centavos = offset_centavos_padrao
         elif num_digitos_reais == 2:
             fonte_reais = 110
             fonte_centavos = 55
-            offset_y_reais = 56.0
-            offset_y_centavos = 42.0
+            offset_y_reais = offset_reais_padrao - 5.0
+            offset_y_centavos = offset_centavos_padrao
         else:
             fonte_reais = 85
             fonte_centavos = 42
-            offset_y_reais = 50.0
-            offset_y_centavos = 42.0
-
+            offset_y_reais = offset_reais_padrao - 11.0
+            offset_y_centavos = offset_centavos_padrao
+            
         tam_fonte_reais_por = int(fonte_reais * scale)
         tam_fonte_centavos_por = int(fonte_centavos * scale)
 
@@ -156,7 +174,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.setFont("Arial-Black", tam_fonte_por_rotulo)
 
         x_por = x_base + ((90.0 if num_digitos_reais >= 2 else 95.0) * mm * scale)
-        y_por = topo_etiqueta - (97.0 * mm * scale)  # Desceu 4mm
+        y_por = topo_etiqueta - (offset_base_de_y * mm * scale)
         x_rs_por = x_por
         y_rs_por = y_por - (11.0 * mm * scale)
 
@@ -184,7 +202,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_un_por, y_un_por, item["un"])
 
     else:
-        # --- PREÇO UNITÁRIO (AFASTADO DA DESCRIÇÃO E CENTRALIZADO) ---
+        # --- PREÇO UNITÁRIO INTELIGENTE ---
         val_por_raw = item["por"].replace(".", ",")
         if "," in val_por_raw:
             partes_por = val_por_raw.split(",")
@@ -199,18 +217,18 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         if num_digitos_reais <= 2:
             fonte_reais = 144
             fonte_centavos = 72
-            offset_y_reais = 61.0  # Desceu para afastar da descrição
-            offset_y_centavos = 42.0
+            offset_y_reais = offset_reais_padrao
+            offset_y_centavos = offset_centavos_padrao
         elif num_digitos_reais == 3:
             fonte_reais = 110
             fonte_centavos = 55
-            offset_y_reais = 56.0
-            offset_y_centavos = 42.0
+            offset_y_reais = offset_reais_padrao - 5.0
+            offset_y_centavos = offset_centavos_padrao
         else:
             fonte_reais = 85
             fonte_centavos = 42
-            offset_y_reais = 50.0
-            offset_y_centavos = 42.0
+            offset_y_reais = offset_reais_padrao - 11.0
+            offset_y_centavos = offset_centavos_padrao
 
         tam_fonte_rs = int(30 * scale)
         tam_fonte_reais_por = int(fonte_reais * scale)
@@ -250,8 +268,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         x_reais_por = x_rs + largura_rs + (4.0 * mm * scale)
         x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
 
-        # R$ e preços ajustados para ficarem perfeitamente no meio da folha
-        y_rs = y_primeira_linha - (38.0 * mm * scale)
+        y_rs = y_primeira_linha - (offset_rs_unico_y * mm * scale)
         y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
         y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
 
