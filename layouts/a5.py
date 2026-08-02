@@ -75,7 +75,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_rs_de = c.stringWidth("R$", "Arial-Black", tam_fonte_de)
         x_reais_de = x_de + largura_rs_de + (2.0 * mm * scale)
-        y_reais_de = y_primeira_linha - (30 * mm * scale)
+        y_reais_de = y_primeira_linha - (100 * mm * scale)
         c.drawString(x_reais_de, y_reais_de, reais_de_str)
 
         largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
