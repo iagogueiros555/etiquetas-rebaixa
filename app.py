@@ -1,4 +1,5 @@
 import base64
+import importlib
 import io
 import streamlit as st
 import streamlit.components.v1 as components
@@ -7,7 +8,14 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-# Importa os módulos de desenho da pasta layouts
+# --- IMPORTS DOS LAYOUTS COM RELOAD (Evita cache antigo do Streamlit) ---
+import layouts.a5 as a5
+import layouts.a6 as a6
+
+importlib.reload(a6)
+importlib.reload(a5)
+
+from layouts.a5 import desenhar_etiqueta_a5
 from layouts.a6 import desenhar_etiqueta_a6
 
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
@@ -18,7 +26,7 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
-st.caption("Ajuste Fino - Modelo A6 Vertical")
+st.caption("Ajuste Fino - Modelos A6 e A5 Vertical")
 
 # --- MAPEAMENTO DE LAYOUTS ---
 LAYOUTS = {
@@ -29,8 +37,13 @@ LAYOUTS = {
         "scale": 1.0,
         "draw_func": desenhar_etiqueta_a6,
     },
-    # Futuramente adicionaremos aqui:
-    # "A5 Vertical (2 por A4)": {"size": A4, "cols": 1, "rows": 2, "scale": 1.55, "draw_func": desenhar_etiqueta_a5},
+    "A5 Vertical (2 por A4)": {
+        "size": A4,
+        "cols": 1,
+        "rows": 2,
+        "scale": 1.0,
+        "draw_func": desenhar_etiqueta_a5,
+    },
 }
 
 
@@ -59,7 +72,7 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
         x_base = col * col_w
         y_base = page_h - ((row + 1) * row_h)
 
-        # Chama a função de desenho específica do modelo selecionado
+        # Chama a função de desenho específica do modelo selecionado (A6 ou A5)
         draw_func(c, item, x_base, y_base, col_w, row_h, scale)
 
     c.save()
@@ -131,7 +144,7 @@ with st.form("form_produto", clear_on_submit=True):
                 "val": validade,
                 "e_rebaixa": e_rebaixa,
             }
-            
+
             # Adiciona o produto na lista a quantidade de vezes solicitada
             for _ in range(int(qtd_copias)):
                 st.session_state.lista_itens.append(item_dados)
