@@ -8,15 +8,17 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-# --- IMPORTS DOS LAYOUTS COM RELOAD (Evita cache antigo do Streamlit) ---
-import layouts.a5 as a5
-import layouts.a6 as a6
+# --- IMPORTAÇÃO E RELOAD DOS MÓDULOS DE LAYOUT ---
+from layouts import a5, a6
+from layouts.a4 import fardo_caixa, promocional, promocional_validade, unitario, unitario_validade
 
 importlib.reload(a6)
 importlib.reload(a5)
-
-from layouts.a5 import desenhar_etiqueta_a5
-from layouts.a6 import desenhar_etiqueta_a6
+importlib.reload(promocional)
+importlib.reload(promocional_validade)
+importlib.reload(unitario)
+importlib.reload(unitario_validade)
+importlib.reload(fardo_caixa)
 
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
@@ -26,25 +28,74 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
-st.caption("Ajuste Fino - Modelos A6 e A5 Vertical")
+st.caption("Ajuste Fino - Modelos A6, A5 e A4/A3")
 
-# --- MAPEAMENTO DE LAYOUTS ---
+# --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
 LAYOUTS = {
     "A6 Vertical (6 por A4)": {
         "size": A4,
         "cols": 2,
         "rows": 3,
         "scale": 1.0,
-        "draw_func": desenhar_etiqueta_a6,
+        "tipo_pasta": "a6",
     },
     "A5 Vertical (2 por A4)": {
         "size": A4,
         "cols": 1,
         "rows": 2,
         "scale": 1.0,
-        "draw_func": desenhar_etiqueta_a5,
+        "tipo_pasta": "a5",
+    },
+    "A4 Vertical (1 por A4)": {
+        "size": A4,
+        "cols": 1,
+        "rows": 1,
+        "scale": 1.5,
+        "tipo_pasta": "a4",
+    },
+    "A3 Vertical (1 por A3)": {
+        "size": A3,
+        "cols": 1,
+        "rows": 1,
+        "scale": 2.1,
+        "tipo_pasta": "a4", # Utiliza a mesma base de desenho do A4 escalada proporcionalmente
     },
 }
+
+
+def selecionar_funcao_desenho(modelo_chave, item):
+    """Seleciona de forma inteligente qual arquivo específico desenhará a etiqueta"""
+    cfg = LAYOUTS[modelo_chave]
+    pasta = cfg["tipo_pasta"]
+
+    # Se for Fardo / Caixa de Atacado
+    if item.get("e_fardo"):
+        if pasta == "a4":
+            return fardo_caixa.desenhar_etiqueta_a4
+        elif pasta == "a5":
+            return fardo_caixa.desenhar_etiqueta_a5 # Se criar no futuro, caso contrário usa fallback
+        else:
+            return fardo_caixa.desenhar_etiqueta_a4
+
+    # Regras por comportamento (Promocional, Unitário, com ou sem Validade)
+    tem_de = bool(item.get("de"))
+    tem_rebaixa = item.get("e_rebaixa")
+
+    if pasta == "a4":
+        if tem_de and tem_rebaixa:
+            return promocional_validade.desenhar_etiqueta_a4
+        elif tem_de and not tem_rebaixa:
+            return promocional.desenhar_etiqueta_a4
+        elif not tem_de and tem_rebaixa:
+            return unitario_validade.desenhar_etiqueta_a4
+        else:
+            return unitario.desenhar_etiqueta_a4
+
+    elif pasta == "a5":
+        return a5.desenhar_etiqueta_a5  # Mantém o A5 modularizado atual
+
+    else:  # a6
+        return a6.desenhar_etiqueta_a6  # Mantém o A6 modularizado atual
 
 
 def gerar_pdf_etiquetas(itens, modelo_chave):
@@ -52,7 +103,6 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
     page_w, page_h = cfg["size"]
     cols, rows = cfg["cols"], cfg["rows"]
     scale = cfg["scale"]
-    draw_func = cfg["draw_func"]
 
     cap_pagina = cols * rows
     col_w = page_w / cols
@@ -72,7 +122,8 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
         x_base = col * col_w
         y_base = page_h - ((row + 1) * row_h)
 
-        # Chama a função de desenho específica do modelo selecionado (A6 ou A5)
+        # Descobre dinamicamente a função de desenho correta para o item
+        draw_func = selecionar_funcao_desenho(modelo_chave, item)
         draw_func(c, item, x_base, y_base, col_w, row_h, scale)
 
     c.save()
@@ -90,71 +141,111 @@ modelo_selecionado = st.selectbox(
 )
 
 st.divider()
-
 st.markdown("### 📝 Dados do Produto")
 
-col_t1, col_t2 = st.columns(2)
-with col_t1:
-    tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
-with col_t2:
-    e_rebaixa = st.checkbox(
-        "Etiqueta de Rebaixa (Próximo à Validade)", value=True
-    )
+# Verificação se é formato grande (A4/A3) para habilitar a opção de Caixa/Fardo
+e_fardo_caixa = False
+if "A4" in modelo_selecionado or "A3" in modelo_selecionado:
+    e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
-with st.form("form_produto", clear_on_submit=True):
-    desc = st.text_input(
-        "Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE"
-    ).upper()
+if e_fardo_caixa:
+    # --- MODO CAIXA / FARDO ---
+    with st.form("form_fardo", clear_on_submit=True):
+        desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
+        
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            qtd_fardo = st.number_input("Qtd. na Caixa/Fardo:", min_value=1, value=12, step=1)
+        with col_f2:
+            preco_unitario_base = st.number_input("Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f")
+        with col_f3:
+            unidade = st.text_input("Unidade:", value="UN").upper()
 
-    if tem_desconto:
-        col_p1, col_p2, col_p3 = st.columns(3)
-        with col_p1:
-            de = st.text_input("Preço DE (R$):", placeholder="Ex: 5,58")
-        with col_p2:
-            por = st.text_input("Preço POR (R$):", placeholder="Ex: 1,97")
-        with col_p3:
-            unidade = st.text_input("Unidade:", value="1 UN").upper()
-    else:
-        col_p1, col_p2 = st.columns([2, 1])
-        with col_p1:
-            por = st.text_input("Preço Único (R$):", placeholder="Ex: 1,97")
-            de = ""
-        with col_p2:
-            unidade = st.text_input("Unidade:", value="1 UN").upper()
+        # Cálculo automático do preço total da caixa/fardo
+        preco_calculado = preco_unitario_base * qtd_fardo
+        st.info(f"💡 Preço Calculado da Caixa Fechada: **R$ {preco_calculado:.2f}**")
 
-    # Linha para Validade (se for rebaixa) e Quantidade de Cópias
-    col_bottom1, col_bottom2 = st.columns([2, 1])
-    with col_bottom1:
-        if e_rebaixa:
-            validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+        qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
+        btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
+
+        if btn_adicionar_fardo:
+            if desc:
+                item_dados = {
+                    "desc": desc,
+                    "de": "",
+                    "por": f"{preco_calculado:.2f}".replace(".", ","),
+                    "un": unidade,
+                    "val": "",
+                    "e_rebaixa": False,
+                    "e_fardo": True,
+                    "qtd_fardo": qtd_fardo,
+                }
+                for _ in range(int(qtd_copias)):
+                    st.session_state.lista_itens.append(item_dados)
+                st.success(f"{qtd_copias} etiqueta(s) de caixa adicionada(s)!")
+                st.rerun()
+            else:
+                st.warning("Preencha a Descrição do Produto!")
+else:
+    # --- MODOS NORMAIS (PROMOCIONAL OU UNITÁRIO) ---
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
+    with col_t2:
+        e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
+
+    with st.form("form_produto", clear_on_submit=True):
+        desc = st.text_input(
+            "Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE"
+        ).upper()
+
+        if tem_desconto:
+            col_p1, col_p2, col_p3 = st.columns(3)
+            with col_p1:
+                de = st.text_input("Preço DE (R$):", placeholder="Ex: 5,58")
+            with col_p2:
+                por = st.text_input("Preço POR (R$):", placeholder="Ex: 1,97")
+            with col_p3:
+                unidade = st.text_input("Unidade:", value="1 UN").upper()
         else:
-            validade = ""
-    with col_bottom2:
-        qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
+            col_p1, col_p2 = st.columns([2, 1])
+            with col_p1:
+                por = st.text_input("Preço Único (R$):", placeholder="Ex: 1,97")
+                de = ""
+            with col_p2:
+                unidade = st.text_input("Unidade:", value="1 UN").upper()
 
-    btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
+        col_bottom1, col_bottom2 = st.columns([2, 1])
+        with col_bottom1:
+            if e_rebaixa:
+                validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+            else:
+                validade = ""
+        with col_bottom2:
+            qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
 
-    if btn_adicionar:
-        if desc and por:
-            item_dados = {
-                "desc": desc,
-                "de": de.replace(".", ",").strip(),
-                "por": por.replace(".", ",").strip(),
-                "un": unidade,
-                "val": validade,
-                "e_rebaixa": e_rebaixa,
-            }
+        btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
 
-            # Adiciona o produto na lista a quantidade de vezes solicitada
-            for _ in range(int(qtd_copias)):
-                st.session_state.lista_itens.append(item_dados)
+        if btn_adicionar:
+            if desc and por:
+                item_dados = {
+                    "desc": desc,
+                    "de": de.replace(".", ",").strip(),
+                    "por": por.replace(".", ",").strip(),
+                    "un": unidade,
+                    "val": validade,
+                    "e_rebaixa": e_rebaixa,
+                    "e_fardo": False,
+                }
+                for _ in range(int(qtd_copias)):
+                    st.session_state.lista_itens.append(item_dados)
 
-            st.success(f"{qtd_copias} etiqueta(s) do produto '{desc}' adicionada(s)!")
-            st.rerun()
-        else:
-            st.warning("Preencha ao menos a Descrição e o Preço POR!")
+                st.success(f"{qtd_copias} etiqueta(s) do produto '{desc}' adicionada(s)!")
+                st.rerun()
+            else:
+                st.warning("Preencha ao menos a Descrição e o Preço POR!")
 
-# Tabela e Ação de Impressão
+# --- TABELA E AÇÃO DE IMPRESSÃO ---
 if st.session_state.lista_itens:
     st.divider()
     st.markdown("### 📋 Lista para Impressão")
@@ -174,21 +265,11 @@ if st.session_state.lista_itens:
 
         components.html(
             f"""
-            <button onclick="openPDF()" style="
-                background-color: #FF4B4B;
-                color: white;
-                padding: 10px 16px;
-                border: none;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 15px;
-                cursor: pointer;
-                width: 100%;
-                font-family: sans-serif;
-            ">
+            <button onclick="openPDF()" style=
+                "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
+            >
                 🖨️ ABRIR PDF EM NOVA ABA
             </button>
-
             <script>
             function openPDF() {{
                 const base64Data = "{base64_pdf}";
