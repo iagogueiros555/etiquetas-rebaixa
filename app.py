@@ -28,7 +28,7 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
-st.caption("Ajuste Fino - Modelos A6, A5 e A4")
+st.caption("Ajuste Fino - Modelos A6, A5 e A4/A3")
 
 # --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
 LAYOUTS = {
@@ -46,7 +46,7 @@ LAYOUTS = {
         "scale": 1.0,
         "tipo_pasta": "a5",
     },
-    "A4 Vertical (1 por A4)": {
+    "A4 / A3 Vertical (1 por folha)": {
         "size": A4,
         "cols": 1,
         "rows": 1,
@@ -125,9 +125,9 @@ modelo_selecionado = st.selectbox(
 st.divider()
 st.markdown("### 📝 Dados do Produto")
 
-# Verificação restrita: a opção de Caixa/Fardo SÓ aparece se o formato A4 estiver selecionado
+# Verificação restrita: a opção de Caixa/Fardo SÓ aparece se o formato A4/A3 estiver selecionado
 e_fardo_caixa = False
-if modelo_selecionado == "A4 Vertical (1 por A4)":
+if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
     e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
 if e_fardo_caixa:
