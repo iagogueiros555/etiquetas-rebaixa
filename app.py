@@ -30,7 +30,7 @@ st.set_page_config(
 st.title("🏷️ Gerador de Etiquetas")
 st.caption("Ajuste Fino - Modelos A6, A5 e A4/A3")
 
-# --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
+# --- MAPEAMENTO DE LAYOUTS E DIMENSÕES (A4 e A3 juntos) ---
 LAYOUTS = {
     "A6 Vertical (6 por A4)": {
         "size": A4,
@@ -46,38 +46,23 @@ LAYOUTS = {
         "scale": 1.0,
         "tipo_pasta": "a5",
     },
-    "A4 Vertical (1 por A4)": {
-        "size": A4,
+    "A4 / A3 Vertical (1 por folha)": {
+        "size": A4,  # Valor padrão inicial, trataremos o A3 dinamicamente
         "cols": 1,
         "rows": 1,
         "scale": 1.5,
         "tipo_pasta": "a4",
     },
-    "A3 Vertical (1 por A3)": {
-        "size": A3,
-        "cols": 1,
-        "rows": 1,
-        "scale": 2.1,
-        "tipo_pasta": "a4", # Utiliza a mesma base de desenho do A4 escalada proporcionalmente
-    },
 }
 
 
 def selecionar_funcao_desenho(modelo_chave, item):
-    """Seleciona de forma inteligente qual arquivo específico desenhará a etiqueta"""
     cfg = LAYOUTS[modelo_chave]
     pasta = cfg["tipo_pasta"]
 
-    # Se for Fardo / Caixa de Atacado
     if item.get("e_fardo"):
-        if pasta == "a4":
-            return fardo_caixa.desenhar_etiqueta_a4
-        elif pasta == "a5":
-            return fardo_caixa.desenhar_etiqueta_a5 # Se criar no futuro, caso contrário usa fallback
-        else:
-            return fardo_caixa.desenhar_etiqueta_a4
+        return fardo_caixa.desenhar_etiqueta_a4
 
-    # Regras por comportamento (Promocional, Unitário, com ou sem Validade)
     tem_de = bool(item.get("de"))
     tem_rebaixa = item.get("e_rebaixa")
 
@@ -90,19 +75,26 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_validade.desenhar_etiqueta_a4
         else:
             return unitario.desenhar_etiqueta_a4
-
     elif pasta == "a5":
-        return a5.desenhar_etiqueta_a5  # Mantém o A5 modularizado atual
+        return a5.desenhar_etiqueta_a5
+    else:
+        return a6.desenhar_etiqueta_a6
 
-    else:  # a6
-        return a6.desenhar_etiqueta_a6  # Mantém o A6 modularizado atual
 
+def gerar_pdf_etiquetas(itens, modelo_chave, tamanho_folha_escolhido):
+    cfg = LAYOUTS[modelo_chave].copy()
+    
+    # Se for a opção unificada A4/A3, ajustamos o tamanho do papel com base no rádio da tela
+    if modelo_chave == "A4 / A3 Vertical (1 por folha)":
+        if tamanho_folha_escolhido == "A3":
+            cfg["size"] = A3
+            cfg["scale"] = 2.1
+        else:
+            cfg["size"] = A4
+            cfg["scale"] = 1.5
 
-def gerar_pdf_etiquetas(itens, modelo_chave):
-    cfg = LAYOUTS[modelo_chave]
     page_w, page_h = cfg["size"]
     cols, rows = cfg["cols"], cfg["rows"]
-    scale = cfg["scale"]
 
     cap_pagina = cols * rows
     col_w = page_w / cols
@@ -122,9 +114,8 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
         x_base = col * col_w
         y_base = page_h - ((row + 1) * row_h)
 
-        # Descobre dinamicamente a função de desenho correta para o item
         draw_func = selecionar_funcao_desenho(modelo_chave, item)
-        draw_func(c, item, x_base, y_base, col_w, row_h, scale)
+        draw_func(c, item, x_base, y_base, col_w, row_h, cfg["scale"])
 
     c.save()
     buffer.seek(0)
@@ -140,12 +131,17 @@ modelo_selecionado = st.selectbox(
     "Selecione o Formato da Folha:", list(LAYOUTS.keys())
 )
 
+# Se escolher A4/A3, abre um seletor interno discreto para escolher entre A4 ou A3 real
+tamanho_a4_a3 = "A4"
+if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
+    tamanho_a4_a3 = st.radio("Escolha o tamanho do papel:", ["A4", "A3"], horizontal=True)
+
 st.divider()
 st.markdown("### 📝 Dados do Produto")
 
-# Verificação se é formato grande (A4/A3) para habilitar a opção de Caixa/Fardo
+# Verificação restrita: a opção de Caixa/Fardo SÓ aparece se o formato selecionado for A4/A3
 e_fardo_caixa = False
-if "A4" in modelo_selecionado or "A3" in modelo_selecionado:
+if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
     e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
 if e_fardo_caixa:
@@ -161,7 +157,6 @@ if e_fardo_caixa:
         with col_f3:
             unidade = st.text_input("Unidade:", value="UN").upper()
 
-        # Cálculo automático do preço total da caixa/fardo
         preco_calculado = preco_unitario_base * qtd_fardo
         st.info(f"💡 Preço Calculado da Caixa Fechada: **R$ {preco_calculado:.2f}**")
 
@@ -259,7 +254,7 @@ if st.session_state.lista_itens:
 
     with c2:
         pdf_buffer = gerar_pdf_etiquetas(
-            st.session_state.lista_itens, modelo_selecionado
+            st.session_state.lista_itens, modelo_selecionado, tamanho_a4_a3
         )
         base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
