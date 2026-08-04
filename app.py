@@ -141,8 +141,8 @@ if e_fardo_caixa:
         with col_f2:
             unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
 
-        # Checkbox para alternar entre manual e automático
-        modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente", value=False, on_change=st.rerun)
+        # Checkbox sem o on_change para respeitar as regras do st.form
+        modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente", value=False)
 
         if modo_manual:
             preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
