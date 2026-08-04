@@ -125,14 +125,11 @@ modelo_selecionado = st.selectbox(
 st.divider()
 st.markdown("### 📝 Dados do Produto")
 
-# Verificação restrita: a opção de Caixa/Fardo SÓ aparece se o formato A4/A3 estiver selecionado
 e_fardo_caixa = False
 if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
     e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
 if e_fardo_caixa:
-    # --- MODO CAIXA / FARDO ---
-    # A caixa de seleção manual fica FORA do form para atualizar a tela instantaneamente
     modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)", value=False)
 
     with st.form("form_fardo", clear_on_submit=True):
@@ -159,17 +156,26 @@ if e_fardo_caixa:
             if desc:
                 if modo_manual:
                     if preco_manual_input:
-                        valor_final_str = preco_manual_input.replace(".", ",").strip()
+                        valor_caixa_str = preco_manual_input.replace(".", ",").strip()
+                        # Tenta calcular o unitario proporcional para exibir no cartaz
+                        try:
+                            val_float = float(preco_manual_input.replace(",", "."))
+                            unit_calc = val_float / qtd_fardo
+                            valor_unit_str = f"{unit_calc:.2f}".replace(".", ",")
+                        except:
+                            valor_unit_str = "0,00"
                     else:
                         st.warning("Informe o preço manual da caixa!")
                         st.stop()
                 else:
-                    valor_final_str = f"{preco_calculado:.2f}".replace(".", ",")
+                    valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
+                    valor_unit_str = f"{preco_unitario_base:.2f}".replace(".", ",")
 
                 item_dados = {
                     "desc": desc,
                     "de": "",
-                    "por": valor_final_str,
+                    "por": valor_caixa_str,          # Preço principal da caixa
+                    "preco_unit": valor_unit_str,    # Preço unitário proporcional
                     "un": unidade,
                     "val": "",
                     "e_rebaixa": False,
