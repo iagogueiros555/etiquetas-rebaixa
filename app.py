@@ -130,6 +130,7 @@ if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
     e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
 if e_fardo_caixa:
+    # Checkbox fora do form para atualizar instantaneamente
     modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)", value=False)
 
     with st.form("form_fardo", clear_on_submit=True):
@@ -141,12 +142,17 @@ if e_fardo_caixa:
         with col_f2:
             unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
 
+        # O preço unitário base aparece SEMPRE
+        preco_unitario_base = st.number_input("Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f")
+
         if modo_manual:
+            # Se marcado, exibe a caixa para digitar o total da caixa manualmente
             preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
-            preco_calculado = 0.0
+            valor_caixa_str = ""
         else:
-            preco_unitario_base = st.number_input("Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f")
+            # Se desmarcado, calcula automaticamente
             preco_calculado = preco_unitario_base * qtd_fardo
+            valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
             preco_manual_input = ""
 
         qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
@@ -157,25 +163,17 @@ if e_fardo_caixa:
                 if modo_manual:
                     if preco_manual_input:
                         valor_caixa_str = preco_manual_input.replace(".", ",").strip()
-                        # Tenta calcular o unitario proporcional para exibir no cartaz
-                        try:
-                            val_float = float(preco_manual_input.replace(",", "."))
-                            unit_calc = val_float / qtd_fardo
-                            valor_unit_str = f"{unit_calc:.2f}".replace(".", ",")
-                        except:
-                            valor_unit_str = "0,00"
                     else:
                         st.warning("Informe o preço manual da caixa!")
                         st.stop()
-                else:
-                    valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
-                    valor_unit_str = f"{preco_unitario_base:.2f}".replace(".", ",")
+
+                valor_unit_str = f"{preco_unitario_base:.2f}".replace(".", ",")
 
                 item_dados = {
                     "desc": desc,
                     "de": "",
                     "por": valor_caixa_str,          # Preço principal da caixa
-                    "preco_unit": valor_unit_str,    # Preço unitário proporcional
+                    "preco_unit": valor_unit_str,    # Preço unitário base
                     "un": unidade,
                     "val": "",
                     "e_rebaixa": False,
