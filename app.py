@@ -132,6 +132,9 @@ if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
 
 if e_fardo_caixa:
     # --- MODO CAIXA / FARDO ---
+    # A caixa de seleção manual fica FORA do form para atualizar a tela instantaneamente
+    modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)", value=False)
+
     with st.form("form_fardo", clear_on_submit=True):
         desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
         
@@ -140,9 +143,6 @@ if e_fardo_caixa:
             qtd_fardo = st.number_input("Qtd. na Caixa/Fardo:", min_value=1, value=12, step=1)
         with col_f2:
             unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
-
-        # Checkbox sem o on_change para respeitar as regras do st.form
-        modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente", value=False)
 
         if modo_manual:
             preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
