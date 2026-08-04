@@ -131,7 +131,7 @@ if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
     e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
 if e_fardo_caixa:
-    # --- MODO CAIXA / FARDO COM ESCOLHA DE CÁLCULO OU MANUAL ---
+    # --- MODO CAIXA / FARDO ---
     with st.form("form_fardo", clear_on_submit=True):
         desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
         
@@ -141,15 +141,16 @@ if e_fardo_caixa:
         with col_f2:
             unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
 
-        # Caixa para desligar a calculadora e permitir digitação manual do valor fechado
-        modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)")
+        # Checkbox para alternar entre manual e automático
+        modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente", value=False, on_change=st.rerun)
 
         if modo_manual:
             preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
+            preco_calculado = 0.0
         else:
             preco_unitario_base = st.number_input("Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f")
             preco_calculado = preco_unitario_base * qtd_fardo
-            st.info(f"💡 Preço Calculado Automaticamente: **R$ {preco_calculado:.2f}**")
+            preco_manual_input = ""
 
         qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
         btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
