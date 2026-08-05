@@ -28,7 +28,6 @@ st.set_page_config(
 )
 
 st.title("🏷️ Gerador de Etiquetas")
-st.caption("Ajuste Fino - Modelos A6, A5 e A4/A3")
 
 # --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
 LAYOUTS = {
