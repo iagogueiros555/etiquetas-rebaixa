@@ -99,36 +99,34 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. RÓTULOS 'DE' E 'POR' TOTALMENTE CONGELADOS NA PÁGINA ---
+  # --- 3. RÓTULOS FIXOS "DE" E "POR" (CONFIGURAÇÃO EXATA DO SEU CÓDIGO) ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  # POSIÇÕES Y FIXAS APENAS PARA O TEXTO "De" E "Por" (NÃO MUDAM NUNCA)
-  y_rotulo_por = limite_inferior_preco + 18 * mm
-  y_rotulo_de = y_rotulo_por + 50 * mm
+  y_linha_por = limite_inferior_preco + 27 * mm
+  y_linha_de = y_linha_por + 58 * mm
 
   f_rotulo = 40
   c.setFont("Arial-Black", f_rotulo)
-  c.drawString(x_alinhado_linha_1, y_rotulo_de, "De")
-  c.drawString(x_alinhado_linha_1, y_rotulo_por, "Por")
+  c.drawString(x_alinhado_linha_1, y_linha_de, "De")
+  c.drawString(x_alinhado_linha_1, y_linha_por, "Por")
 
-  # Quadro de centralização dos valores
+  # Quadro para centralização exclusiva dos valores
   x_inicio_quadro = x_alinhado_linha_1 + 24 * mm
   x_fim_quadro = page_w - x_margem_estatica
   largura_quadro = x_fim_quadro - x_inicio_quadro
 
-  # --- 4. PREÇO "DE" (VALOR MÓVEL) ---
+  # --- 4. PREÇO "DE" (VALOR CENTRALIZADO NO QUADRO) ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   if "," in de_raw:
     de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
   else:
     de_int, de_cent = de_raw, "00"
 
-  f_de, f_de_cent, f_de_rs, f_de_un = 76, 36, 22, 14
-  y_valor_de = y_rotulo_de - 10  # Ajuste vertical fino EXCLUSIVO do número De
+  f_de, f_de_cent, f_de_rs, f_de_un = 80, 38, 22, 14
 
   w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
   w_de_real = calcular_largura_inteiro_forcado(c, de_int, "Arial-Black", f_de)
@@ -139,17 +137,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # R$ De
   c.setFont("Arial-Black", f_de_rs)
-  c.drawString(x_de_bloco_inicio, y_valor_de + (f_de * 0.65), "R$")
+  c.drawString(x_de_bloco_inicio, y_linha_de + (f_de * 0.65), "R$")
 
   # Valor De
   x_de_num = x_de_bloco_inicio + w_de_rs
   x_de_fim = desenhar_inteiro_forcado(
-      c, de_int, x_de_num, y_valor_de, "Arial-Black", f_de
+      c, de_int, x_de_num, y_linha_de, "Arial-Black", f_de
   )
 
   # Centavos De
   x_de_cent = x_de_fim - 6
-  y_de_cent = y_valor_de + f_de - f_de_cent - (f_de * 0.12)
+  y_de_cent = y_linha_de + f_de - f_de_cent - (f_de * 0.12)
   c.setFont("Arial-Black", f_de_cent)
   c.drawString(x_de_cent, y_de_cent, f",{de_cent}")
 
@@ -164,13 +162,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setLineWidth(3.5)
   c.line(
       x_de_bloco_inicio - 2 * mm,
-      y_valor_de - 2 * mm,
+      y_linha_de - 2 * mm,
       x_de_cent + w_de_cent + 2 * mm,
-      y_valor_de + f_de + 2 * mm,
+      y_linha_de + f_de + 2 * mm,
   )
   c.setLineWidth(1)
 
-  # --- 5. PREÇO "POR" (VALOR MÓVEL) ---
+  # --- 5. PREÇO "POR" (VALOR CENTRALIZADO NO QUADRO) ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
   if "," in por_raw:
     por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
@@ -179,16 +177,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_por = len(por_int)
   if num_por <= 2:
-    f_por, f_por_cent, f_por_rs, f_por_un = 150, 70, 32, 20
-    folga_por_cent = -22
+    f_por, f_por_cent, f_por_rs, f_por_un = 160, 75, 34, 22
+    folga_por_cent = -24
   elif num_por == 3:
-    f_por, f_por_cent, f_por_rs, f_por_un = 125, 58, 28, 18
+    f_por, f_por_cent, f_por_rs, f_por_un = 130, 62, 28, 18
     folga_por_cent = -18
   else:
     f_por, f_por_cent, f_por_rs, f_por_un = 100, 48, 24, 16
     folga_por_cent = -14
-
-  y_valor_por = y_rotulo_por - 8  # Ajuste vertical fino EXCLUSIVO do número Por
 
   w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
   w_por_real = (
@@ -220,17 +216,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # R$ Por
   c.setFont("Arial-Black", f_por_rs)
-  c.drawString(x_por_bloco_inicio, y_valor_por + (f_por * 0.75), "R$")
+  c.drawString(x_por_bloco_inicio, y_linha_por + (f_por * 0.75), "R$")
 
   # Valor Por
   x_por_num = x_por_bloco_inicio + w_por_rs
   x_por_fim = desenhar_inteiro_forcado(
-      c, por_int, x_por_num, y_valor_por, "Arial-Black", f_por
+      c, por_int, x_por_num, y_linha_por, "Arial-Black", f_por
   )
 
   # Centavos Por
   x_por_cent = x_por_fim + folga_por_cent
-  y_por_cent = y_valor_por + f_por - f_por_cent - (f_por * 0.12)
+  y_por_cent = y_linha_por + f_por - f_por_cent - (f_por * 0.12)
   c.setFont("Arial-Black", f_por_cent)
   c.drawString(x_por_cent, y_por_cent, f",{por_cent}")
 
