@@ -15,7 +15,6 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
-      # Ajustado para 0.78 para dar respiro nas serifas e nao grudar
       x_atual += largura_char * 0.78
     elif i + 1 < total_chars and texto[i + 1] == "1":
       x_atual += largura_char * 0.85
@@ -81,13 +80,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   if num_digitos <= 2:
     f_real, f_cent, f_rs, f_un = 310, 145, 52, 40
+    folga_centavos = -45  # Recuo forte de 45pt para encostar a vírgula
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
+    folga_centavos = -30
   else:
     f_real, f_cent, f_rs, f_un = 140, 65, 32, 20
+    folga_centavos = -18
 
-  w_real = calcular_largura_inteiro_forcado(
-      c, inteiro_str, "Arial-Black", f_real
+  w_real = (
+      calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
+      + folga_centavos
   )
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
@@ -98,9 +101,11 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_cent = int(f_cent * fator_red)
     f_rs = int(f_rs * fator_red)
     f_un = int(f_un * fator_red)
+    folga_centavos = int(folga_centavos * fator_red)
 
-    w_real = calcular_largura_inteiro_forcado(
-        c, inteiro_str, "Arial-Black", f_real
+    w_real = (
+        calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
+        + folga_centavos
     )
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
@@ -118,8 +123,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS
-  x_centavos = x_final_real + 4
+  # C) CENTAVOS (Recuados 45pt para a esquerda)
+  x_centavos = x_final_real + folga_centavos
   y_centavos = y_linha_base_preco + (f_real - f_cent) - 48
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
