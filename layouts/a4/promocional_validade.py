@@ -119,7 +119,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   x_fim_quadro = page_w - x_margem_estatica
   largura_quadro = x_fim_quadro - x_inicio_quadro
 
-  # --- 4. PREÇO "DE" (ALINHADO COM A LINHA DO MEIO DA PALAVRA) ---
+  # --- 4. PREÇO "DE" ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   if "," in de_raw:
     de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
@@ -127,7 +127,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     de_int, de_cent = de_raw, "00"
 
   f_de, f_de_cent, f_de_rs, f_de_un = 80, 38, 22, 14
-  # Alinha a base do número exatamente no meio visual da palavra "De" (subtraindo metade da altura da fonte)
   y_valor_de = y_linha_de - (f_de * 0.35)
 
   w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
@@ -153,6 +152,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_de_cent)
   c.drawString(x_de_cent, y_de_cent, f",{de_cent}")
 
+  w_de_cent = c.stringWidth(f",{de_cent}", "Arial-Black", f_de_cent)
   c.setFont("Arial-Black", f_de_un)
   c.drawCentredString(
       x_de_cent + (w_de_cent / 2),
@@ -160,17 +160,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # Risco do De
-  c.setLineWidth(3.5)
+  # NOVA LINHA DE RISCO (Estilo Encarte: mais grossa, cobrindo do R$ até os centavos)
+  c.setLineWidth(5.5)
   c.line(
-      x_de_bloco_inicio - 2 * mm,
-      y_valor_de - 2 * mm,
-      x_de_cent + w_de_cent + 2 * mm,
-      y_valor_de + f_de + 2 * mm,
+      x_de_bloco_inicio - 3 * mm,
+      y_valor_de - 3 * mm,
+      x_de_cent + w_de_cent + 4 * mm,
+      y_valor_de + f_de + 4 * mm,
   )
   c.setLineWidth(1)
 
-  # --- 5. PREÇO "POR" (ALINHADO COM A LINHA DO MEIO DA PALAVRA) ---
+  # --- 5. PREÇO "POR" ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
   if "," in por_raw:
     por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
@@ -188,7 +188,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_por, f_por_cent, f_por_rs, f_por_un = 100, 48, 24, 16
     folga_por_cent = -14
 
-  # Alinha a base do número exatamente no meio visual da palavra "Por"
   y_valor_por = y_linha_por - (f_por * 0.35)
 
   w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
