@@ -25,7 +25,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual  # Ponto onde termina a descrição
+  limite_superior_preco = y_atual
 
   # --- 3. BLOCO INFERIOR FIXO (CAIXA CINZA, VALIDADE E AVISO) ---
   largura_caixa = 202.3 * mm
@@ -62,7 +62,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_linha_aviso, linha)
     y_linha_aviso += f_aviso + 2
 
-  limite_inferior_preco = y_linha_aviso  # Ponto onde começa o aviso do topo
+  limite_inferior_preco = y_linha_aviso
 
   # --- 4. BLOCO DO PREÇO CENTRALIZADO DINAMICAMENTE NO ESPAÇO DISPONÍVEL ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
@@ -98,9 +98,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = (w_real - 8) + w_cent
 
-  # Cálculo do Ponto Central Vertical
+  # Ajuste fino vertical (+45 pts) para descolar da palavra "PRODUTO"
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 2) + 10
+  y_linha_base_preco = centro_area_livre - (f_real / 2) + 45
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
