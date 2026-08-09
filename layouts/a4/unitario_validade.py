@@ -4,7 +4,6 @@ from reportlab.lib.utils import simpleSplit
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
-  """Desenha caractere por caractere aplicando kerning calibrado para o número 1."""
   x_atual = x_inicial
   c.setFont(fonte, tamanho)
   total_chars = len(texto)
@@ -16,7 +15,7 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
-      x_atual += largura_char * 0.78  # Folga para as serifas nao grudarem
+      x_atual += largura_char * 0.78
     elif i + 1 < total_chars and texto[i + 1] == "1":
       x_atual += largura_char * 0.85
     else:
@@ -26,7 +25,6 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
 
 
 def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
-  """Calcula a largura total exata do texto considerando o kerning do número 1."""
   largura = 0
   total_chars = len(texto)
   for i, char in enumerate(texto):
@@ -66,7 +64,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 3. BLOCO INFERIOR FIXO (SEU CÓDIGO INTACTO) ---
+  # --- 3. BLOCO INFERIOR FIXO ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
@@ -103,7 +101,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 4. BLOCO DO PREÇO MAXIMIZADO NA ÁREA LIVRE ---
+  # --- 4. BLOCO DO PREÇO MAXIMIZADO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -116,16 +114,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_digitos = len(inteiro_str)
 
-  # Fontes expandidas ao limite do espaço entre a descrição e o aviso
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 230, 105, 46, 30
-    folga_centavos = -35
+    f_real, f_cent, f_rs, f_un = 270, 128, 50, 34
+    folga_centavos = -40
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 185, 86, 40, 26
-    folga_centavos = -25
+    f_real, f_cent, f_rs, f_un = 220, 104, 42, 28
+    folga_centavos = -30
   else:
-    f_real, f_cent, f_rs, f_un = 145, 68, 32, 20
-    folga_centavos = -18
+    f_real, f_cent, f_rs, f_un = 175, 82, 34, 22
+    folga_centavos = -22
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -134,6 +131,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
+  # Trava de segurança para respeitar a largura útil de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -150,7 +148,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     largura_total_preco = w_real + w_cent
 
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 2) + 20
+  y_linha_base_preco = centro_area_livre - (f_real / 2) + 15
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
