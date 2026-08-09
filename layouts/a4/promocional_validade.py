@@ -47,7 +47,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_lateral_geral = 8 * mm
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
-  # --- 1. DESCRIÇÃO DO PRODUTO (NÃO MUDOU) ---
+  # --- 1. DESCRIÇÃO DO PRODUTO ---
   y_atual = page_h - (69 * mm)
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
@@ -62,11 +62,11 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 2. RODAPÉ DE VALIDADE (Abaixado para 8mm da borda) ---
+  # --- 2. RODAPÉ DE VALIDADE (8mm do fundo) ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
-  y_caixa = 8 * mm  # Ajustado para 8mm do fundo
+  y_caixa = 8 * mm
 
   # Caixa Cinza
   c.setFillColor(lightgrey)
@@ -99,11 +99,11 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. BLOCO DO PREÇO "DE / POR" (PROMOCIONAL) ---
+  # --- 3. BLOCO DO PREÇO "DE / POR" ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
-  # A) ESTRUTURA DO PREÇO "POR" (INFERIOR - MAIOR)
+  # A) PREÇO "POR" (INFERIOR - MAIOR)
   if "," in por_raw:
     partes_por = por_raw.split(",")
     por_int, por_cent = partes_por[0], partes_por[1][:2]
@@ -118,7 +118,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_por, f_por_cent, f_por_rs, f_por_un = 160, 75, 32, 20
     folga_por_cent = -24
   else:
-    f_por, f_por_cent, f_por_rs, f_un = 130, 60, 28, 18
+    f_por, f_por_cent, f_por_rs, f_por_un = 130, 60, 28, 18
     folga_por_cent = -18
 
   w_por_real = (
@@ -128,20 +128,19 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
   largura_total_por = w_por_real + w_por_cent
 
-  # Posicionamento vertical do bloco
   centro_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_por_base = centro_livre - 60  # Puxa o 'Por' levemente para baixo
+  y_por_base = centro_livre - 60
   x_por_inicio = (page_w - largura_total_por) / 2 + 15 * mm
 
   # R$ Por
   c.setFont("Arial-Black", f_por_rs)
   c.drawString(x_por_inicio - (25 * mm), y_por_base + (f_por * 0.75), "R$")
 
-  # Rótulo "Por" na esquerda
+  # Rótulo "Por"
   c.setFont("Arial-Black", 38)
   c.drawString(15 * mm, y_por_base + 10, "Por")
 
-  # Valor Por (Inteiro, Centavos e Unidade)
+  # Valor Por
   x_por_fim = desenhar_inteiro_forcado(
       c, por_int, x_por_inicio, y_por_base, "Arial-Black", f_por
   )
@@ -157,7 +156,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # B) ESTRUTURA DO PREÇO "DE" (SUPERIOR - MENOR COM RISCO)
+  # B) PREÇO "DE" (SUPERIOR - MENOR COM RISCO)
   if "," in de_raw:
     partes_de = de_raw.split(",")
     de_int, de_cent = partes_de[0], partes_de[1][:2]
@@ -174,7 +173,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   y_de_base = y_por_base + f_por + (10 * mm)
   x_de_inicio = x_por_inicio
 
-  # Rótulo "De" na esquerda
+  # Rótulo "De"
   c.setFont("Arial-Black", 38)
   c.drawString(15 * mm, y_de_base + 10, "De")
 
@@ -182,7 +181,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_de_rs)
   c.drawString(x_de_inicio - (18 * mm), y_de_base + (f_de * 0.75), "R$")
 
-  # Valor De (Inteiro + Centavos)
+  # Valor De
   x_de_fim = desenhar_inteiro_forcado(
       c, de_int, x_de_inicio, y_de_base, "Arial-Black", f_de
   )
