@@ -47,7 +47,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   w_real = c.stringWidth(inteiro_str, "Arial-Black", f_real)
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-  largura_total_preco = w_real + w_cent
+
+  # Ajuste na largura total considerando a aproximação dos centavos (-8pts)
+  largura_total_preco = (w_real - 8) + w_cent
 
   if largura_total_preco > largura_util:
     fator_red = largura_util / largura_total_preco
@@ -57,28 +59,28 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_un = int(f_un * fator_red)
     w_real = c.stringWidth(inteiro_str, "Arial-Black", f_real)
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-    largura_total_preco = largura_util
+    largura_total_preco = (w_real - 8) + w_cent
 
   x_inicio_real = (page_w - largura_total_preco) / 2
   y_linha_base_preco = y_atual - f_real + 50
 
-  # A) R$: Colado logo acima do número inteiro
+  # A) R$: Subiu 2mm (~5.6 pts) em relação à posição anterior
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 45, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
 
   # B) VALOR REAL (Inteiro)
   c.setFont("Arial-Black", f_real)
   c.drawString(x_inicio_real, y_linha_base_preco, inteiro_str)
 
-  # C) CENTAVOS (,XX): Alinhados no topo do número principal
-  x_centavos = x_inicio_real + w_real
+  # C) CENTAVOS (,XX): Puxados 8px para a esquerda (mais próximos do número real)
+  x_centavos = x_inicio_real + w_real - 8
   y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE: Subiu para encaixar certinho logo abaixo dos centavos
+  # D) UNIDADE: Afastada mais 4mm (~11.3 pts) para baixo dos centavos
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 25
+  y_unidade = y_centavos - 36
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
