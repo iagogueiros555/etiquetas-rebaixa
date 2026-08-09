@@ -47,10 +47,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_lateral_geral = 8 * mm
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
-  # --- 1. MARGEM SUPERIOR DE 69 MM ATÉ A DESCRIÇÃO ---
+  # --- 1. MARGEM SUPERIOR E DESCRIÇÃO ---
   y_atual = page_h - (69 * mm)
 
-  # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt) ---
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
@@ -62,15 +61,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual
+  limite_superior_preco = y_atual  # Ponto inferior da descrição
 
-  # --- 3. BLOCO INFERIOR FIXO ---
+  # --- 2. BLOCO INFERIOR FIXO (AVISO + VALIDADE) ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
   y_caixa = 15 * mm
 
-  # Caixa Cinza
+  # Caixa Cinza da Validade
   c.setFillColor(lightgrey)
   c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
 
@@ -99,9 +98,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_linha_aviso, linha)
     y_linha_aviso += f_aviso + 2
 
-  limite_inferior_preco = y_linha_aviso
+  limite_inferior_preco = y_linha_aviso  # Ponto superior do aviso ANVISA
 
-  # --- 4. BLOCO DO PREÇO MAXIMIZADO ---
+  # --- 3. BLOCO DO PREÇO CENTRALIZADO PERFEITO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -131,7 +130,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
-  # Trava de segurança para respeitar a largura útil de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -147,8 +145,11 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
+  # Centralização Vertical no meio exato da área útil livre
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 2) + 15
+  y_linha_base_preco = centro_area_livre - (f_real / 3) + 10
+
+  # Centralização Horizontal cravada no centro da página
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
