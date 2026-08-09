@@ -65,7 +65,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   limite_superior_preco = y_atual
   limite_inferior_preco = 15 * mm
 
-  # --- 3. BLOCO DO PREÇO PROPORCIONAL E ALINHADO ---
+  # --- 3. BLOCO DO PREÇO COM ESCALA OTIMIZADA ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -85,8 +85,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
     folga_centavos = -28
   else:
-    f_real, f_cent, f_rs, f_un = 140, 65, 32, 20
-    folga_centavos = -18
+    # Aumentado para 180pt para milhar (4 dígitos) não ficar pequeno
+    f_real, f_cent, f_rs, f_un = 180, 85, 36, 24
+    folga_centavos = -22
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -95,6 +96,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
+  # Só reduz se ultrapassar a margem lateral útil
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -114,7 +116,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   y_linha_base_preco = centro_area - (f_real / 2) + 20
   x_inicio_real = (page_w - largura_total_preco) / 2
 
-  # A) R$: Alinhado dinamicamente ao topo do inteiro
+  # A) R$
   c.setFont("Arial-Black", f_rs)
   c.drawString(x_inicio_real, y_linha_base_preco + (f_real * 0.81), "R$")
 
@@ -123,13 +125,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS: Alinhamento de topo proporcional exato ao inteiro
+  # C) CENTAVOS
   x_centavos = x_final_real + folga_centavos
   y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE: Distância proporcional aos centavos
+  # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
   y_unidade = y_centavos - f_un - (10 * mm)
   c.setFont("Arial-Black", f_un)
