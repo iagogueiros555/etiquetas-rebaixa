@@ -126,7 +126,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   else:
     de_int, de_cent = de_raw, "00"
 
-  f_de, f_de_cent, f_de_rs, f_de_un = 80, 38, 22, 14
+  # Lógica de escala de fonte para o "De"
+  num_de = len(de_int)
+  if num_de <= 2:
+    f_de, f_de_cent, f_de_rs, f_de_un = 110, 50, 26, 16
+  elif num_de == 3:
+    f_de, f_de_cent, f_de_rs, f_de_un = 90, 42, 24, 15
+  else:
+    f_de, f_de_cent, f_de_rs, f_de_un = 75, 36, 20, 14
+
   y_valor_de = y_linha_de - (f_de * 0.35)
 
   w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
@@ -136,17 +144,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   x_de_bloco_inicio = x_inicio_quadro + (largura_quadro - largura_total_de) / 2
 
-  # R$ De
   c.setFont("Arial-Black", f_de_rs)
   c.drawString(x_de_bloco_inicio, y_valor_de + (f_de * 0.65), "R$")
 
-  # Valor De
   x_de_num = x_de_bloco_inicio + w_de_rs
   x_de_fim = desenhar_inteiro_forcado(
       c, de_int, x_de_num, y_valor_de, "Arial-Black", f_de
   )
 
-  # Centavos De
   x_de_cent = x_de_fim - 6
   y_de_cent = y_valor_de + f_de - f_de_cent - (f_de * 0.12)
   c.setFont("Arial-Black", f_de_cent)
@@ -160,7 +165,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE CORTE EXATA (Do número até os centavos, igual ao seu exemplo do vetor)
   c.setLineWidth(4.5)
   c.line(
       x_de_num - 2 * mm,
@@ -179,64 +183,37 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_por = len(por_int)
   if num_por <= 2:
-    f_por, f_por_cent, f_por_rs, f_por_un = 160, 75, 34, 22
-    folga_por_cent = -24
+    f_por, f_por_cent, f_por_rs, f_por_un = 180, 85, 38, 26
   elif num_por == 3:
-    f_por, f_por_cent, f_por_rs, f_por_un = 130, 62, 28, 18
-    folga_por_cent = -18
+    f_por, f_por_cent, f_por_rs, f_por_un = 150, 70, 32, 22
   else:
-    f_por, f_por_cent, f_por_rs, f_por_un = 100, 48, 24, 16
-    folga_por_cent = -14
+    f_por, f_por_cent, f_por_rs, f_por_un = 120, 55, 28, 18
 
   y_valor_por = y_linha_por - (f_por * 0.35)
 
   w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
-  w_por_real = (
-      calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
-      + folga_por_cent
-  )
+  w_por_real = calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
   w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
   largura_total_por = w_por_rs + w_por_real + w_por_cent
 
-  if largura_total_por > largura_quadro:
-    fator_red = largura_quadro / largura_total_por
-    f_por = int(f_por * fator_red)
-    f_por_cent = int(f_por_cent * fator_red)
-    f_por_rs = int(f_por_rs * fator_red)
-    f_por_un = int(f_por_un * fator_red)
-    folga_por_cent = int(folga_por_cent * fator_red)
+  x_por_bloco_inicio = x_inicio_quadro + (largura_quadro - largura_total_por) / 2
 
-    w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
-    w_por_real = (
-        calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
-        + folga_por_cent
-    )
-    w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
-    largura_total_por = w_por_rs + w_por_real + w_por_cent
-
-  x_por_bloco_inicio = (
-      x_inicio_quadro + (largura_quadro - largura_total_por) / 2
-  )
-
-  # R$ Por
   c.setFont("Arial-Black", f_por_rs)
   c.drawString(x_por_bloco_inicio, y_valor_por + (f_por * 0.75), "R$")
 
-  # Valor Por
   x_por_num = x_por_bloco_inicio + w_por_rs
   x_por_fim = desenhar_inteiro_forcado(
       c, por_int, x_por_num, y_valor_por, "Arial-Black", f_por
   )
 
-  # Centavos Por
-  x_por_cent = x_por_fim + folga_por_cent
-  y_por_cent = y_valor_por + f_por - f_por_cent - (f_por * 0.12)
+  x_por_cent = x_por_fim - 8
+  y_por_cent = y_valor_por + f_por - f_por_cent - (f_por * 0.15)
   c.setFont("Arial-Black", f_por_cent)
   c.drawString(x_por_cent, y_por_cent, f",{por_cent}")
 
   c.setFont("Arial-Black", f_por_un)
   c.drawCentredString(
-      x_por_cent + (w_por_cent / 2),
+      x_por_cent + (c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent) / 2),
       y_por_cent - f_por_un - (5 * mm),
       item.get("un", "1 UN"),
   )
