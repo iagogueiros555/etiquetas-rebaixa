@@ -8,11 +8,13 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   c.setFont(fonte, tamanho)
   total_chars = len(texto)
 
+  # Aplica uma leve compressao horizontal (90%) para imitar fonte condensada
+  c.setHorizontalScaling(90)
+
   for i, char in enumerate(texto):
     c.drawString(x_atual, y, char)
-    largura_char = c.stringWidth(char, fonte, tamanho)
+    largura_char = c.stringWidth(char, fonte, tamanho) * 0.90
 
-    # Se for o último dígito, não corta a borda direita para não atropelar a vírgula
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
@@ -22,6 +24,7 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     else:
       x_atual += largura_char
 
+  c.setHorizontalScaling(100)  # Reseta a escala para os demais elementos
   return x_atual
 
 
@@ -29,7 +32,7 @@ def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
   largura = 0
   total_chars = len(texto)
   for i, char in enumerate(texto):
-    l_char = c.stringWidth(char, fonte, tamanho)
+    l_char = c.stringWidth(char, fonte, tamanho) * 0.90
     if i == total_chars - 1:
       largura += l_char
     elif char == "1":
@@ -63,7 +66,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  # --- 3. BLOCO DO PREÇO COM ESPAÇAMENTO AJUSTADO ---
+  # --- 3. BLOCO DO PREÇO REALMENTE GIGANTE (IGUAL AO AFFINITY) ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -77,16 +80,16 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   num_digitos = len(inteiro_str)
 
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 280, 120, 52, 32
+    f_real, f_cent, f_rs, f_un = 336, 168, 52, 48
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 200, 90, 42, 24
+    f_real, f_cent, f_rs, f_un = 220, 110, 42, 30
   else:
-    f_real, f_cent, f_rs, f_un = 140, 65, 32, 20
+    f_real, f_cent, f_rs, f_un = 150, 75, 32, 22
 
   w_real = calcular_largura_inteiro_forcado(
       c, inteiro_str, "Arial-Black", f_real
   )
-  w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
+  w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent) * 0.90
   largura_total_preco = w_real + w_cent
 
   if largura_total_preco > largura_util_geral:
@@ -99,31 +102,33 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_real = calcular_largura_inteiro_forcado(
         c, inteiro_str, "Arial-Black", f_real
     )
-    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
+    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent) * 0.90
     largura_total_preco = w_real + w_cent
 
-  # Posicionamento vertical proporcional
-  y_linha_base_preco = y_atual - f_real + 50
+  # Posicionamento vertical para a fonte 336pt descer sem bater no texto
+  y_linha_base_preco = page_h - (170.7 * mm)
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 55, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 80, "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS (Com folga de 6pt para a vírgula respirar)
-  x_centavos = x_final_real + 6
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 45
+  # C) CENTAVOS (Com compressão de 90%)
+  x_centavos = x_final_real + 4
+  y_centavos = y_linha_base_preco + (f_real - f_cent) - 60
   c.setFont("Arial-Black", f_cent)
+  c.setHorizontalScaling(90)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
+  c.setHorizontalScaling(100)
 
   # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 48
+  y_unidade = y_centavos - 55
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
