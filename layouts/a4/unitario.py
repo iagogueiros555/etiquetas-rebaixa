@@ -123,9 +123,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE (Recuo de +4mm para descolar dos centavos)
+  # D) UNIDADE (Abaixado 10mm em relação aos centavos)
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 48 - (4 * mm)
+  y_unidade = y_centavos - 48 - (10 * mm)
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
