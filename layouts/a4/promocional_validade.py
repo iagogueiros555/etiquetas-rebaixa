@@ -160,13 +160,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE RISCO DIRECIONADA AOS CENTAVOS (Corta do R$ até atravessar os centavos perfeitamente)
+  # LINHA DE RISCO PERFEITA (Começa antes do R$ e termina cruzando o meio exato dos centavos)
   c.setLineWidth(5)
   c.line(
       x_de_bloco_inicio - 2 * mm,
       y_valor_de - 2 * mm,
-      (x_de_cent + w_de_cent) + 4 * mm,
-      y_de_cent + (f_de_cent * 0.8),
+      x_de_cent + (w_de_cent * 0.7),
+      y_de_cent + (f_de_cent * 0.7),
   )
   c.setLineWidth(1)
 
