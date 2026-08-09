@@ -24,22 +24,6 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   return x_atual
 
 
-def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
-  largura = 0
-  total_chars = len(texto)
-  for i, char in enumerate(texto):
-    l_char = c.stringWidth(char, fonte, tamanho)
-    if i == total_chars - 1:
-      largura += l_char
-    elif char == "1":
-      largura += l_char * 0.78
-    elif i + 1 < total_chars and texto[i + 1] == "1":
-      largura += l_char * 0.85
-    else:
-      largura += l_char
-  return largura
-
-
 def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   page_w = col_w
   page_h = row_h
@@ -62,7 +46,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 2. RODAPÉ DE VALIDADE (8MM DO FUNDO) ---
+  # --- 2. RODAPÉ DE VALIDADE ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
@@ -81,9 +65,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
   c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
 
-  # Frase Aviso ANVISA
+  # Frase Aviso ANVISA (Define a margem de alinhamento)
   f_aviso = 44
-  margem_aviso = 5.3 * mm
+  margem_aviso = 5.3 * mm  # <--- ANCORA DA MARGEM ESQUERDA
   largura_util_aviso = page_w - (2 * margem_aviso)
   c.setFont("Arial-Black", f_aviso)
 
@@ -99,24 +83,25 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. ÂNCORAS FIXAS (POSIÇÕES ESTÁTICAS ABSOLUTAS) ---
-  # Posições de Y cravadas na folha
+  # --- 3. ÂNCORAS ABSOLUTAS COM ALINHAMENTO CRAVADO ---
   y_linha_por = limite_inferior_preco + 12 * mm
   y_linha_de = y_linha_por + 50 * mm
 
-  # Posições de X cravadas na folha (ESTÁTICAS)
-  x_pos_rotulo = 22 * mm  # Posições dos textos "De" e "Por"
-  x_pos_rs = 48 * mm  # Posição fixa do R$
-  x_pos_valor = 68 * mm  # Posição fixa onde o número começa
+  # Posições X com ancoragem na frase do aviso legal
+  x_pos_rotulo = margem_aviso  # Alinhado cravado com a frase da ANVISA
+  x_pos_rs = 48 * mm  # Posição do R$
+  x_pos_valor = (
+      70 * mm
+  )  # Posição onde os números começam (afastado para não trombar no R$)
 
   f_rotulo = 40
   c.setFont("Arial-Black", f_rotulo)
 
-  # RÓTULOS IMPERMEÁVEIS A MUDANÇAS DE DÍGITOS
+  # RÓTULOS FIXOS NA MESMA LINHA DA ANVISA
   c.drawString(x_pos_rotulo, y_linha_de, "De")
   c.drawString(x_pos_rotulo, y_linha_por, "Por")
 
-  # --- 4. EXIBIÇÃO DO PREÇO "DE" (ESTÁTICO) ---
+  # --- 4. PREÇO "DE" ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   if "," in de_raw:
     de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
@@ -158,7 +143,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   )
   c.setLineWidth(1)
 
-  # --- 5. EXIBIÇÃO DO PREÇO "POR" (ESTÁTICO COM ADAPTAÇÃO DE FONTE) ---
+  # --- 5. PREÇO "POR" ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
   if "," in por_raw:
     por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
@@ -180,7 +165,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_por_rs)
   c.drawString(x_pos_rs, y_linha_por + (f_por * 0.75), "R$")
 
-  # Valor Por (Começa no mesmo X fixo)
+  # Valor Por
   x_por_fim = desenhar_inteiro_forcado(
       c, por_int, x_pos_valor, y_linha_por, "Arial-Black", f_por
   )
