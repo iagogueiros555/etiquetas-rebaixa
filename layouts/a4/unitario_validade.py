@@ -47,10 +47,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_lateral_geral = 8 * mm
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
-  # --- 1. MARGEM SUPERIOR ATÉ A DESCRIÇÃO ---
+  # --- 1. DESCRIÇÃO DO PRODUTO ---
   y_atual = page_h - (69 * mm)
 
-  # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt) ---
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
@@ -64,24 +63,23 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 3. RODAPÉ DE VALIDADE (PRODUTO PRÓXIMO A DATA DE VENCIMENTO) ---
-  limite_inferior_preco = 78 * mm  # Reserva espaço para o bloco de aviso
+  # --- 2. RODAPÉ FIXO DE VALIDADE (DESTAQUE MÁXIMO E VISÍVEL) ---
+  limite_inferior_preco = 88 * mm  # Reserva espaço vertical para a mensagem
 
-  # Desenha o bloco fixo do rodapé de validade
-  c.setFont("Arial-Black", 32)
-  c.drawCentredString(page_w / 2, 60 * mm, "PRODUTO PRÓXIMO A")
-  c.drawCentredString(page_w / 2, 48 * mm, "DATA DE VENCIMENTO")
+  c.setFont("Arial-Black", 38)
+  c.drawCentredString(page_w / 2, 68 * mm, "PRODUTO PRÓXIMO A")
+  c.drawCentredString(page_w / 2, 54 * mm, "DATA DE VENCIMENTO")
 
-  # Faixa cinza da Validade
+  # Caixa da Validade
   c.setFillColorRGB(0.9, 0.9, 0.9)
-  c.rect(margem_lateral_geral, 20 * mm, largura_util_geral, 22 * mm, fill=1)
+  c.rect(margem_lateral_geral, 20 * mm, largura_util_geral, 25 * mm, fill=1)
   c.setFillColor(black)
 
-  c.setFont("Arial-Black", 36)
+  c.setFont("Arial-Black", 42)
   val_str = f"VALIDADE: {item.get('val', '')}"
-  c.drawCentredString(page_w / 2, 26 * mm, val_str)
+  c.drawCentredString(page_w / 2, 27 * mm, val_str)
 
-  # --- 4. BLOCO DO PREÇO MAXIMIZADO NA ÁREA LIVRE ---
+  # --- 3. BLOCO DO PREÇO MAXIMIZADO NO ESPAÇO UTIL ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -95,14 +93,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   num_digitos = len(inteiro_str)
 
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 260, 120, 48, 34
-    folga_centavos = -38
+    f_real, f_cent, f_rs, f_un = 240, 112, 44, 30
+    folga_centavos = -35
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
+    f_real, f_cent, f_rs, f_un = 200, 94, 38, 26
     folga_centavos = -28
   else:
-    f_real, f_cent, f_rs, f_un = 170, 80, 34, 22
-    folga_centavos = -22
+    f_real, f_cent, f_rs, f_un = 160, 75, 32, 22
+    folga_centavos = -20
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -111,7 +109,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
-  # Trava automática para respeitar as margens de 8mm
+  # Validação de segurança das margens de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -128,7 +126,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     largura_total_preco = w_real + w_cent
 
   centro_area = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area - (f_real / 2) + 15
+  y_linha_base_preco = centro_area - (f_real / 2) + 12
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
@@ -140,15 +138,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS (Bem próximos do valor real)
+  # C) CENTAVOS
   x_centavos = x_final_real + folga_centavos
   y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE (Baixado 10mm dos centavos)
+  # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - f_un - (10 * mm)
+  y_unidade = y_centavos - f_un - (8 * mm)
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
