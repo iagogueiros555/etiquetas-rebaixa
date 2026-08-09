@@ -8,8 +8,8 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   c.setFont(fonte, tamanho)
   total_chars = len(texto)
 
-  # Aplica uma leve compressao horizontal (90%) para imitar fonte condensada
-  c.setHorizontalScaling(90)
+  # Sintaxe correta no ReportLab para compressao horizontal
+  c.setHorizScaling(90)
 
   for i, char in enumerate(texto):
     c.drawString(x_atual, y, char)
@@ -24,7 +24,7 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     else:
       x_atual += largura_char
 
-  c.setHorizontalScaling(100)  # Reseta a escala para os demais elementos
+  c.setHorizScaling(100)  # Reseta para 100%
   return x_atual
 
 
@@ -66,7 +66,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  # --- 3. BLOCO DO PREÇO REALMENTE GIGANTE (IGUAL AO AFFINITY) ---
+  # --- 3. BLOCO DO PREÇO GIGANTE ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -105,7 +105,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent) * 0.90
     largura_total_preco = w_real + w_cent
 
-  # Posicionamento vertical para a fonte 336pt descer sem bater no texto
   y_linha_base_preco = page_h - (170.7 * mm)
   x_inicio_real = (page_w - largura_total_preco) / 2
 
@@ -118,13 +117,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS (Com compressão de 90%)
+  # C) CENTAVOS
   x_centavos = x_final_real + 4
   y_centavos = y_linha_base_preco + (f_real - f_cent) - 60
   c.setFont("Arial-Black", f_cent)
-  c.setHorizontalScaling(90)
+  c.setHorizScaling(90)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
-  c.setHorizontalScaling(100)
+  c.setHorizScaling(100)
 
   # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
