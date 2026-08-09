@@ -160,13 +160,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE RISCO DINÂMICA (Acompanha perfeitamente qualquer quantidade de dígitos)
+  # LINHA DE RISCO CORRIGIDA (Atravessa o número inteiro e os centavos em qualquer quantidade de dígitos)
   c.setLineWidth(5)
   c.line(
-      x_de_bloco_inicio - 2 * mm,
+      x_de_num - 3 * mm,
       y_valor_de - 2 * mm,
-      (x_de_cent + w_de_cent) + 5 * mm,
-      y_valor_de + f_de + 3 * mm,
+      x_de_cent + w_de_cent + 14 * mm,
+      y_valor_de + f_de + 4 * mm,
   )
   c.setLineWidth(1)
 
