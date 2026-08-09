@@ -83,18 +83,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- CALCULA A MARGEM ESQUERDA DA PRIMEIRA LINHA ("PRODUTO PRÓXIMO A") ---
+  # --- ALINHAMENTO COM A PRIMEIRA LINHA ("PRODUTO PRÓXIMO A") ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  # --- 3. ÂNCORAS AJUSTADAS (+5MM NO POR, +10MM NO DE) ---
-  y_linha_por = limite_inferior_preco + 17 * mm  # Subiu 5mm
-  y_linha_de = y_linha_por + 60 * mm  # Subiu +10mm de distância
+  # --- 3. ÂNCORAS SUBIDAS PARA CENTRALIZAR O BLOCO ---
+  y_linha_por = limite_inferior_preco + 27 * mm  # Subiu +10mm (de 17mm para 27mm)
+  y_linha_de = y_linha_por + 58 * mm  # Subiu junto mantendo bom respiro
 
-  # Posições X cravadas a partir do 'P' da primeira linha
   x_pos_rotulo = x_alinhado_linha_1
   x_pos_rs = x_pos_rotulo + 26 * mm
   x_pos_valor = x_pos_rs + 22 * mm
@@ -102,7 +101,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   f_rotulo = 40
   c.setFont("Arial-Black", f_rotulo)
 
-  # RÓTULOS ALINHADOS NA MESMA PRUMADA DA PRIMEIRA LINHA
+  # RÓTULOS
   c.drawString(x_pos_rotulo, y_linha_de, "De")
   c.drawString(x_pos_rotulo, y_linha_por, "Por")
 
