@@ -90,9 +90,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  # --- 3. ÂNCORAS ABSOLUTAS ALINHADAS NA 1ª LINHA ---
-  y_linha_por = limite_inferior_preco + 12 * mm
-  y_linha_de = y_linha_por + 50 * mm
+  # --- 3. ÂNCORAS AJUSTADAS (+5MM NO POR, +10MM NO DE) ---
+  y_linha_por = limite_inferior_preco + 17 * mm  # Subiu 5mm
+  y_linha_de = y_linha_por + 60 * mm  # Subiu +10mm de distância
 
   # Posições X cravadas a partir do 'P' da primeira linha
   x_pos_rotulo = x_alinhado_linha_1
