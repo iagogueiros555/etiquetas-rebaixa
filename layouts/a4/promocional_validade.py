@@ -160,14 +160,11 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE CORTE MILIMÉTRICA: Começa 2mm antes do real e termina 2mm depois dos centavos
-  x_inicio_risco = x_de_bloco_inicio - 2 * mm
-  x_fim_risco = (x_de_cent + w_de_cent) + 2 * mm
-  y_inicio_risco = y_valor_de - 1 * mm
-  y_fim_risco = y_valor_de + f_de + 1 * mm
-
+  # LINHA DE CORTE EXATA (Começa no número e termina nos centavos, igual ao seu exemplo)
   c.setLineWidth(4.5)
-  c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
+  c.line(
+      x_de_num, y_valor_de, x_de_cent + w_de_cent, y_valor_de + f_de
+  )
   c.setLineWidth(1)
 
   # --- 5. PREÇO "POR" ---
