@@ -56,7 +56,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  # --- 3. BLOCO DO PREÇO (MANTENDO AS PROPORÇÕES E FONTES DO MODELO ORIGINAL) ---
+  # --- 3. BLOCO DO PREÇO COM AS MEDIDAS EXATAS ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -67,57 +67,65 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     inteiro_str = por_raw
     centavos_str = "00"
 
-  num_digitos = len(inteiro_str)
+  # Medidas de referência fornecidas (em mm convertidas para pontos Y do ReportLab):
+  # No ReportLab o ponto Y=0 fica no rodapé, então Y_reportlab = page_h - Y_medida
+  x_rs = 17.2 * mm
+  y_rs = page_h - (154.5 * mm)
+  f_rs = 52
 
-  if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 208, 92, 42, 21
-  elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 160, 72, 36, 18
-  else:
-    f_real, f_cent, f_rs, f_un = 120, 54, 28, 16
+  x_real = 26.2 * mm
+  y_real = page_h - (170.7 * mm)
+  f_real = 336
 
+  x_cent = 88.4 * mm
+  y_cent = page_h - (176.0 * mm)
+  f_cent = 168
+
+  x_un = 118.7 * mm
+  y_un = page_h - (244.6 * mm)
+  f_un = 48
+
+  # Cálculo da largura ocupada pelo inteiro e centavos
   w_real = calcular_largura_inteiro_forcado(
       c, inteiro_str, "Arial-Black", f_real
   )
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-  largura_total_preco = w_real + w_cent
 
-  if largura_total_preco > largura_util_geral:
-    fator_red = largura_util_geral / largura_total_preco
+  # Posição onde o bloco do preço termina
+  x_fim_total = x_real + w_real + w_cent
+
+  # Verificação da margem lateral direita (não pode ultrapassar page_w - 8mm)
+  limite_direita = page_w - margem_lateral_geral
+
+  if x_fim_total > limite_direita:
+    # Fator de redução dinâmico para caber na folha
+    fator_red = (limite_direita - x_real) / (w_real + w_cent)
     f_real = int(f_real * fator_red)
     f_cent = int(f_cent * fator_red)
     f_rs = int(f_rs * fator_red)
     f_un = int(f_un * fator_red)
 
+    # Recalcula larguras reduzidas
     w_real = calcular_largura_inteiro_forcado(
         c, inteiro_str, "Arial-Black", f_real
     )
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-    largura_total_preco = w_real + w_cent
 
-  # Como não há bloco de validade na base, o Y da linha base fica ligeiramente mais baixo
-  # para centralizar o preço no espaço restante do cartaz
-  y_linha_base_preco = (y_atual / 2) - 30
-  x_inicio_real = (page_w - largura_total_preco) / 2
-
-  # A) R$
+  # A) R$: Estático no ponto estipulado
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
+  c.drawString(x_rs, y_rs, "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
-      c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
+      c, inteiro_str, x_real, y_real, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS
-  x_centavos = x_final_real
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
+  # C) CENTAVOS (Inicia logo onde o valor real termina ou no X relativo)
+  x_pos_cent = max(x_cent, x_final_real)
   c.setFont("Arial-Black", f_cent)
-  c.drawString(x_centavos, y_centavos, f",{centavos_str}")
+  c.drawString(x_pos_cent, y_cent, f",{centavos_str}")
 
   # D) UNIDADE
-  x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 36
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
-  c.drawCentredString(x_unidade, y_unidade, un_str)
+  c.drawString(x_un, y_un, un_str)
