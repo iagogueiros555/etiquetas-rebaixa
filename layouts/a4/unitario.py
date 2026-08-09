@@ -1,11 +1,9 @@
-
 from reportlab.lib.colors import black
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
-  """Desenha caractere por caractere aplicando recuo forçado para o número 1."""
   x_atual = x_inicial
   c.setFont(fonte, tamanho)
 
@@ -24,7 +22,6 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
 
 
 def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
-  """Calcula a largura total exata do texto considerando o recuo do número 1."""
   largura = 0
   for i, char in enumerate(texto):
     l_char = c.stringWidth(char, fonte, tamanho)
@@ -59,10 +56,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual  # Fim da descrição
-  limite_inferior_preco = 25 * mm  # Margem de segurança da borda inferior
-
-  # --- 3. BLOCO DO PREÇO CENTRALIZADO E COM FONTE MAIOR ---
+  # --- 3. BLOCO DO PREÇO (MANTENDO AS PROPORÇÕES E FONTES DO MODELO ORIGINAL) ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -75,13 +69,12 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_digitos = len(inteiro_str)
 
-  # Fontes expandidas devido ao espaço extra (sem o bloco de validade)
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 240, 105, 48, 24
+    f_real, f_cent, f_rs, f_un = 208, 92, 42, 21
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 180, 80, 40, 20
+    f_real, f_cent, f_rs, f_un = 160, 72, 36, 18
   else:
-    f_real, f_cent, f_rs, f_un = 135, 60, 32, 18
+    f_real, f_cent, f_rs, f_un = 120, 54, 28, 16
 
   w_real = calcular_largura_inteiro_forcado(
       c, inteiro_str, "Arial-Black", f_real
@@ -89,7 +82,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
-  # Ajuste dinâmico para não estourar a largura útil da folha
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -103,29 +95,29 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  # Centralização vertical no espaço livre central da folha
-  centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 2) + 20
+  # Como não há bloco de validade na base, o Y da linha base fica ligeiramente mais baixo
+  # para centralizar o preço no espaço restante do cartaz
+  y_linha_base_preco = (y_atual / 2) - 30
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 42, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
 
-  # B) VALOR REAL (Inteiro)
+  # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
   # C) CENTAVOS
   x_centavos = x_final_real
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 40
+  y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
   # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 42
+  y_unidade = y_centavos - 36
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
