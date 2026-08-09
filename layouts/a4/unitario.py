@@ -8,23 +8,19 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   c.setFont(fonte, tamanho)
   total_chars = len(texto)
 
-  # Sintaxe correta no ReportLab para compressao horizontal
-  c.setHorizScaling(90)
-
   for i, char in enumerate(texto):
     c.drawString(x_atual, y, char)
-    largura_char = c.stringWidth(char, fonte, tamanho) * 0.90
+    largura_char = c.stringWidth(char, fonte, tamanho)
 
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
-      x_atual += largura_char * 0.65
+      x_atual += largura_char * 0.58
     elif i + 1 < total_chars and texto[i + 1] == "1":
-      x_atual += largura_char * 0.80
+      x_atual += largura_char * 0.75
     else:
       x_atual += largura_char
 
-  c.setHorizScaling(100)  # Reseta para 100%
   return x_atual
 
 
@@ -32,13 +28,13 @@ def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
   largura = 0
   total_chars = len(texto)
   for i, char in enumerate(texto):
-    l_char = c.stringWidth(char, fonte, tamanho) * 0.90
+    l_char = c.stringWidth(char, fonte, tamanho)
     if i == total_chars - 1:
       largura += l_char
     elif char == "1":
-      largura += l_char * 0.65
+      largura += l_char * 0.58
     elif i + 1 < total_chars and texto[i + 1] == "1":
-      largura += l_char * 0.80
+      largura += l_char * 0.75
     else:
       largura += l_char
   return largura
@@ -80,7 +76,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   num_digitos = len(inteiro_str)
 
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 336, 168, 52, 48
+    f_real, f_cent, f_rs, f_un = 310, 150, 52, 44
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 220, 110, 42, 30
   else:
@@ -89,7 +85,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_real = calcular_largura_inteiro_forcado(
       c, inteiro_str, "Arial-Black", f_real
   )
-  w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent) * 0.90
+  w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
   if largura_total_preco > largura_util_geral:
@@ -102,7 +98,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_real = calcular_largura_inteiro_forcado(
         c, inteiro_str, "Arial-Black", f_real
     )
-    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent) * 0.90
+    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
   y_linha_base_preco = page_h - (170.7 * mm)
@@ -110,7 +106,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 80, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 75, "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
@@ -119,15 +115,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # C) CENTAVOS
   x_centavos = x_final_real + 4
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 60
+  y_centavos = y_linha_base_preco + (f_real - f_cent) - 55
   c.setFont("Arial-Black", f_cent)
-  c.setHorizScaling(90)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
-  c.setHorizScaling(100)
 
   # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 55
+  y_unidade = y_centavos - 50
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
