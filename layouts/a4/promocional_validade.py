@@ -160,15 +160,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE RISCO DINÂMICA E DIMINUÍDA
-  # Começa no R$, termina exatamente no final dos centavos
+  # LINHA DE CORTE MILIMÉTRICA: Começa 2mm antes do real e termina 2mm depois dos centavos
+  x_inicio_risco = x_de_bloco_inicio - 2 * mm
+  x_fim_risco = (x_de_cent + w_de_cent) + 2 * mm
+  y_inicio_risco = y_valor_de - 1 * mm
+  y_fim_risco = y_valor_de + f_de + 1 * mm
+
   c.setLineWidth(4.5)
-  c.line(
-      x_de_bloco_inicio - 1 * mm,
-      y_valor_de - 1 * mm,
-      (x_de_cent + w_de_cent) + 1 * mm,
-      y_valor_de + f_de + 1 * mm,
-  )
+  c.line(x_inicio_risco, y_inicio_risco, x_fim_risco, y_fim_risco)
   c.setLineWidth(1)
 
   # --- 5. PREÇO "POR" ---
