@@ -100,7 +100,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. BLOCO DO PREÇO CENTRALIZADO ---
+  # --- 3. BLOCO DO PREÇO EXPANDIDO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -117,11 +117,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_real, f_cent, f_rs, f_un = 240, 112, 46, 32
     folga_centavos = -35
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 200, 94, 38, 26
-    folga_centavos = -28
+    # Aumentado para 235pt para dar impacto visual no milhar/centena
+    f_real, f_cent, f_rs, f_un = 235, 110, 44, 30
+    folga_centavos = -32
   else:
-    f_real, f_cent, f_rs, f_un = 160, 75, 32, 22
-    folga_centavos = -20
+    # Aumentado para 190pt
+    f_real, f_cent, f_rs, f_un = 190, 90, 36, 24
+    folga_centavos = -24
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -130,6 +132,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
+  # Trava de segurança para não ultrapassar as margens de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
@@ -145,7 +148,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  # Ponto médio geométrico cravado no meio do espaço livre
+  # Ponto médio geométrico
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
   y_linha_base_preco = centro_area_livre - (f_real * 0.35)
   x_inicio_real = (page_w - largura_total_preco) / 2
