@@ -99,7 +99,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. RÓTULOS 'DE' E 'POR' FIXOS (INTOCÁVEIS) ---
+  # --- 3. RÓTULOS 'DE' E 'POR' FIXOS ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
@@ -114,7 +114,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.drawString(x_alinhado_linha_1, y_linha_de, "De")
   c.drawString(x_alinhado_linha_1, y_linha_por, "Por")
 
-  # Delimitação do quadro à direita para centralizar os valores
+  # Delimitação do quadro à direita
   x_inicio_quadro = x_alinhado_linha_1 + 24 * mm
   x_fim_quadro = page_w - x_margem_estatica
   largura_quadro = x_fim_quadro - x_inicio_quadro
@@ -160,13 +160,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE RISCO PERFEITA (Começa antes do R$ e termina cruzando o meio exato dos centavos)
-  c.setLineWidth(5)
+  # LINHA DE RISCO DINÂMICA E DIMINUÍDA
+  # Começa no R$, termina exatamente no final dos centavos
+  c.setLineWidth(4.5)
   c.line(
-      x_de_bloco_inicio - 2 * mm,
-      y_valor_de - 2 * mm,
-      x_de_cent + (w_de_cent * 0.7),
-      y_de_cent + (f_de_cent * 0.7),
+      x_de_bloco_inicio - 1 * mm,
+      y_valor_de - 1 * mm,
+      (x_de_cent + w_de_cent) + 1 * mm,
+      y_valor_de + f_de + 1 * mm,
   )
   c.setLineWidth(1)
 
