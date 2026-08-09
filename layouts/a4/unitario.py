@@ -65,7 +65,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   limite_superior_preco = y_atual
   limite_inferior_preco = 15 * mm
 
-  # --- 3. BLOCO DO PREÇO COM ESCALA OTIMIZADA ---
+  # --- 3. BLOCO DO PREÇO GIGANTE ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -82,10 +82,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_real, f_cent, f_rs, f_un = 310, 145, 52, 40
     folga_centavos = -45
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
-    folga_centavos = -28
+    # Aumentado para 250pt para os 3 dígitos preencherem bem a folha
+    f_real, f_cent, f_rs, f_un = 250, 118, 48, 32
+    folga_centavos = -35
   else:
-    # Aumentado para 180pt para milhar (4 dígitos) não ficar pequeno
     f_real, f_cent, f_rs, f_un = 180, 85, 36, 24
     folga_centavos = -22
 
@@ -96,7 +96,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
-  # Só reduz se ultrapassar a margem lateral útil
+  # Trava automática para garantir que nunca ultrapasse as margens de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
