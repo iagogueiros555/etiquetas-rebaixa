@@ -15,9 +15,10 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
-      x_atual += largura_char * 0.60
+      # Ajustado para 0.78 para dar respiro nas serifas e nao grudar
+      x_atual += largura_char * 0.78
     elif i + 1 < total_chars and texto[i + 1] == "1":
-      x_atual += largura_char * 0.75
+      x_atual += largura_char * 0.85
     else:
       x_atual += largura_char
 
@@ -32,9 +33,9 @@ def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
     if i == total_chars - 1:
       largura += l_char
     elif char == "1":
-      largura += l_char * 0.60
+      largura += l_char * 0.78
     elif i + 1 < total_chars and texto[i + 1] == "1":
-      largura += l_char * 0.75
+      largura += l_char * 0.85
     else:
       largura += l_char
   return largura
@@ -123,7 +124,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE (Abaixado 10mm em relação aos centavos)
+  # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
   y_unidade = y_centavos - 48 - (10 * mm)
   c.setFont("Arial-Black", f_un)
