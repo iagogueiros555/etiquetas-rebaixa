@@ -15,7 +15,7 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
     if i == total_chars - 1:
       x_atual += largura_char
     elif char == "1":
-      x_atual += largura_char * 0.58
+      x_atual += largura_char * 0.60
     elif i + 1 < total_chars and texto[i + 1] == "1":
       x_atual += largura_char * 0.75
     else:
@@ -32,7 +32,7 @@ def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
     if i == total_chars - 1:
       largura += l_char
     elif char == "1":
-      largura += l_char * 0.58
+      largura += l_char * 0.60
     elif i + 1 < total_chars and texto[i + 1] == "1":
       largura += l_char * 0.75
     else:
@@ -62,7 +62,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  # --- 3. BLOCO DO PREÇO GIGANTE ---
+  # --- 3. BLOCO DO PREÇO FIXADO PELA PARTE INFERIOR ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -76,11 +76,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   num_digitos = len(inteiro_str)
 
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 310, 150, 52, 44
+    f_real, f_cent, f_rs, f_un = 220, 100, 46, 26
+    # Ancoragem do Y da linha base a 35mm da borda inferior do papel
+    y_linha_base_preco = 35 * mm
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 220, 110, 42, 30
+    f_real, f_cent, f_rs, f_un = 170, 78, 38, 22
+    y_linha_base_preco = 45 * mm
   else:
-    f_real, f_cent, f_rs, f_un = 150, 75, 32, 22
+    f_real, f_cent, f_rs, f_un = 130, 60, 30, 18
+    y_linha_base_preco = 55 * mm
 
   w_real = calcular_largura_inteiro_forcado(
       c, inteiro_str, "Arial-Black", f_real
@@ -101,27 +105,26 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  y_linha_base_preco = page_h - (170.7 * mm)
   x_inicio_real = (page_w - largura_total_preco) / 2
 
-  # A) R$
+  # A) R$: Posicionado em relação ao topo do número principal
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 75, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 42, "R$")
 
-  # B) VALOR REAL
+  # B) VALOR REAL (Inteiro)
   x_final_real = desenhar_inteiro_forcado(
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS
+  # C) CENTAVOS: Alinhados no topo do número
   x_centavos = x_final_real + 4
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 55
+  y_centavos = y_linha_base_preco + (f_real - f_cent) - 36
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE
+  # D) UNIDADE: Abaixo dos centavos
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 50
+  y_unidade = y_centavos - 36
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
