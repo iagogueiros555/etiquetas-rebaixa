@@ -11,8 +11,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_topo_pts = 69 * mm
   y_atual = page_h - margem_topo_pts
 
-  # --- 2. DESCRIÇÃO DO PRODUTO (Fonte Fixa 58pt e Margens de 8mm) ---
-  tamanho_fonte_desc = 58  # Tamanho real em pontos, sem multiplicar por scale
+  # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt e Margens de 8mm) ---
+  tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
 
@@ -24,9 +24,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   for linha in linhas_desc:
     c.drawCentredString(page_w / 2, y_atual, linha)
-    y_atual -= (
-        tamanho_fonte_desc + 4
-    )  # Espaçamento de linha justo para fonte 58
+    y_atual -= tamanho_fonte_desc + 2  # Espaçamento de linha justo para fonte 56
 
   # Espaço de transição para o preço
   y_atual -= 20
