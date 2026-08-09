@@ -24,6 +24,22 @@ def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   return x_atual
 
 
+def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
+  largura = 0
+  total_chars = len(texto)
+  for i, char in enumerate(texto):
+    l_char = c.stringWidth(char, fonte, tamanho)
+    if i == total_chars - 1:
+      largura += l_char
+    elif char == "1":
+      largura += l_char * 0.78
+    elif i + 1 < total_chars and texto[i + 1] == "1":
+      largura += l_char * 0.85
+    else:
+      largura += l_char
+  return largura
+
+
 def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   page_w = col_w
   page_h = row_h
@@ -83,29 +99,28 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- ALINHAMENTO COM A PRIMEIRA LINHA ("PRODUTO PRÓXIMO A") ---
+  # --- 3. DELIMITAÇÃO DA CAIXA QUADRO DE CONTEÚDO ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  # --- 3. ÂNCORAS SUBIDAS PARA CENTRALIZAR O BLOCO ---
-  y_linha_por = limite_inferior_preco + 27 * mm  # Subiu +10mm (de 17mm para 27mm)
-  y_linha_de = y_linha_por + 58 * mm  # Subiu junto mantendo bom respiro
+  y_linha_por = limite_inferior_preco + 27 * mm
+  y_linha_de = y_linha_por + 58 * mm
 
-  x_pos_rotulo = x_alinhado_linha_1
-  x_pos_rs = x_pos_rotulo + 26 * mm
-  x_pos_valor = x_pos_rs + 22 * mm
-
+  # Rótulos Fixos
   f_rotulo = 40
   c.setFont("Arial-Black", f_rotulo)
+  c.drawString(x_alinhado_linha_1, y_linha_de, "De")
+  c.drawString(x_alinhado_linha_1, y_linha_por, "Por")
 
-  # RÓTULOS
-  c.drawString(x_pos_rotulo, y_linha_de, "De")
-  c.drawString(x_pos_rotulo, y_linha_por, "Por")
+  # Limites da caixa interna para centralizar os números (Quadro da imagem)
+  x_inicio_quadro = x_alinhado_linha_1 + 24 * mm
+  x_fim_quadro = page_w - x_margem_estatica
+  largura_quadro = x_fim_quadro - x_inicio_quadro
 
-  # --- 4. PREÇO "DE" ---
+  # --- 4. PREÇO "DE" CENTRALIZADO NO QUADRO ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   if "," in de_raw:
     de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
@@ -114,13 +129,22 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   f_de, f_de_cent, f_de_rs, f_de_un = 80, 38, 22, 14
 
+  w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
+  w_de_real = calcular_largura_inteiro_forcado(c, de_int, "Arial-Black", f_de)
+  w_de_cent = c.stringWidth(f",{de_cent}", "Arial-Black", f_de_cent)
+  largura_total_de = w_de_rs + w_de_real + w_de_cent
+
+  # Posição X inicial para centralizar todo o bloco "De" no quadro
+  x_de_bloco_inicio = x_inicio_quadro + (largura_quadro - largura_total_de) / 2
+
   # R$ De
   c.setFont("Arial-Black", f_de_rs)
-  c.drawString(x_pos_rs, y_linha_de + (f_de * 0.65), "R$")
+  c.drawString(x_de_bloco_inicio, y_linha_de + (f_de * 0.65), "R$")
 
   # Valor De
+  x_de_num = x_de_bloco_inicio + w_de_rs
   x_de_fim = desenhar_inteiro_forcado(
-      c, de_int, x_pos_valor, y_linha_de, "Arial-Black", f_de
+      c, de_int, x_de_num, y_linha_de, "Arial-Black", f_de
   )
 
   # Centavos De
@@ -129,7 +153,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_de_cent)
   c.drawString(x_de_cent, y_de_cent, f",{de_cent}")
 
-  w_de_cent = c.stringWidth(f",{de_cent}", "Arial-Black", f_de_cent)
   c.setFont("Arial-Black", f_de_un)
   c.drawCentredString(
       x_de_cent + (w_de_cent / 2),
@@ -140,14 +163,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   # Risco do De
   c.setLineWidth(3.5)
   c.line(
-      x_pos_rs - 2 * mm,
+      x_de_bloco_inicio - 2 * mm,
       y_linha_de - 2 * mm,
       x_de_cent + w_de_cent + 2 * mm,
       y_linha_de + f_de + 2 * mm,
   )
   c.setLineWidth(1)
 
-  # --- 5. PREÇO "POR" ---
+  # --- 5. PREÇO "POR" CENTRALIZADO NO QUADRO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
   if "," in por_raw:
     por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
@@ -165,13 +188,44 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_por, f_por_cent, f_por_rs, f_por_un = 100, 48, 24, 16
     folga_por_cent = -14
 
+  w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
+  w_por_real = (
+      calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
+      + folga_por_cent
+  )
+  w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
+  largura_total_por = w_por_rs + w_por_real + w_por_cent
+
+  # Trava de segurança para não extrapolar a largura do quadro
+  if largura_total_por > largura_quadro:
+    fator_red = largura_quadro / largura_total_por
+    f_por = int(f_por * fator_red)
+    f_por_cent = int(f_por_cent * fator_red)
+    f_por_rs = int(f_por_rs * fator_red)
+    f_por_un = int(f_por_un * fator_red)
+    folga_por_cent = int(folga_por_cent * fator_red)
+
+    w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
+    w_por_real = (
+        calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
+        + folga_por_cent
+    )
+    w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
+    largura_total_por = w_por_rs + w_por_real + w_por_cent
+
+  # Posição X inicial para centralizar todo o bloco "Por" no quadro
+  x_por_bloco_inicio = (
+      x_inicio_quadro + (largura_quadro - largura_total_por) / 2
+  )
+
   # R$ Por
   c.setFont("Arial-Black", f_por_rs)
-  c.drawString(x_pos_rs, y_linha_por + (f_por * 0.75), "R$")
+  c.drawString(x_por_bloco_inicio, y_linha_por + (f_por * 0.75), "R$")
 
   # Valor Por
+  x_por_num = x_por_bloco_inicio + w_por_rs
   x_por_fim = desenhar_inteiro_forcado(
-      c, por_int, x_pos_valor, y_linha_por, "Arial-Black", f_por
+      c, por_int, x_por_num, y_linha_por, "Arial-Black", f_por
   )
 
   # Centavos Por
@@ -180,7 +234,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_por_cent)
   c.drawString(x_por_cent, y_por_cent, f",{por_cent}")
 
-  w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
   c.setFont("Arial-Black", f_por_un)
   c.drawCentredString(
       x_por_cent + (w_por_cent / 2),
