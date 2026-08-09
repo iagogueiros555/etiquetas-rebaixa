@@ -160,10 +160,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # LINHA DE CORTE EXATA (Começa no número e termina nos centavos, igual ao seu exemplo)
+  # LINHA DE CORTE EXATA (Do número até os centavos, igual ao seu exemplo do vetor)
   c.setLineWidth(4.5)
   c.line(
-      x_de_num, y_valor_de, x_de_cent + w_de_cent, y_valor_de + f_de
+      x_de_num - 2 * mm,
+      y_valor_de,
+      x_de_cent + w_de_cent + 2 * mm,
+      y_valor_de + (f_de * 0.75),
   )
   c.setLineWidth(1)
 
