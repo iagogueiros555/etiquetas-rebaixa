@@ -160,13 +160,13 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
       item.get("un", "1 UN"),
   )
 
-  # NOVA LINHA DE RISCO (Estilo Encarte: mais grossa, cobrindo do R$ até os centavos)
-  c.setLineWidth(5.5)
+  # LINHA DE RISCO AJUSTADA (Mais curta e cruzando até os centavos)
+  c.setLineWidth(5)
   c.line(
-      x_de_bloco_inicio - 3 * mm,
-      y_valor_de - 3 * mm,
-      x_de_cent + w_de_cent + 4 * mm,
-      y_valor_de + f_de + 4 * mm,
+      x_de_num - 2 * mm,
+      y_valor_de - 2 * mm,
+      x_de_cent + w_de_cent + 2 * mm,
+      y_valor_de + f_de + 3 * mm,
   )
   c.setLineWidth(1)
 
