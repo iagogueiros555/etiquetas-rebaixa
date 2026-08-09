@@ -99,16 +99,16 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. DELIMITAÇÃO E ANCORAGEM VERTICAL COM RESPIRO ---
+  # --- 3. DELIMITAÇÃO E ANCORAGEM VERTICAL (DESCIDA DOS BLOCOS) ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  # Posicionamento ajustado: "Por" desce um pouco e "De" ganha espaçamento em relação ao topo
-  y_linha_por = limite_inferior_preco + 18 * mm
-  y_linha_de = y_linha_por + 52 * mm
+  # Descemos o Por para 12mm e o De para acompanhar sem encostar em cima
+  y_linha_por = limite_inferior_preco + 12 * mm
+  y_linha_de = y_linha_por + 54 * mm
 
   # Rótulos Fixos
   f_rotulo = 40
