@@ -1,38 +1,40 @@
-from reportlab.lib.colors import black, lightgrey
+from reportlab.lib.colors import black
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
 
 
-def desenhar_inteiro_forçado(c, texto, x_inicial, y, fonte, tamanho):
-  """Desenha caractere por caractere aplicando recuo forçado para o número 1."""
+def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
   x_atual = x_inicial
   c.setFont(fonte, tamanho)
+  total_chars = len(texto)
 
   for i, char in enumerate(texto):
     c.drawString(x_atual, y, char)
     largura_char = c.stringWidth(char, fonte, tamanho)
 
-    # Se for o número 1, corta 40% da largura fantasma da caixa dele
-    if char == "1":
-      x_atual += largura_char * 0.60
-    # Se o próximo for o 1, aproxima também
-    elif i + 1 < len(texto) and texto[i + 1] == "1":
-      x_atual += largura_char * 0.75
+    if i == total_chars - 1:
+      x_atual += largura_char
+    elif char == "1":
+      x_atual += largura_char * 0.78
+    elif i + 1 < total_chars and texto[i + 1] == "1":
+      x_atual += largura_char * 0.85
     else:
       x_atual += largura_char
 
-  return x_atual  # Retorna a posição X final exata onde o texto terminou
+  return x_atual
 
 
-def calcular_largura_inteiro_forçado(c, texto, fonte, tamanho):
-  """Calcula a largura total exata do texto considerando o recuo do número 1."""
+def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
   largura = 0
+  total_chars = len(texto)
   for i, char in enumerate(texto):
     l_char = c.stringWidth(char, fonte, tamanho)
-    if char == "1":
-      largura += l_char * 0.60
-    elif i + 1 < len(texto) and texto[i + 1] == "1":
-      largura += l_char * 0.75
+    if i == total_chars - 1:
+      largura += l_char
+    elif char == "1":
+      largura += l_char * 0.78
+    elif i + 1 < total_chars and texto[i + 1] == "1":
+      largura += l_char * 0.85
     else:
       largura += l_char
   return largura
@@ -45,7 +47,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_lateral_geral = 8 * mm
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
-  # --- 1. MARGEM SUPERIOR DE 69 MM ATÉ A DESCRIÇÃO ---
+  # --- 1. MARGEM SUPERIOR ATÉ A DESCRIÇÃO ---
   y_atual = page_h - (69 * mm)
 
   # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt) ---
@@ -62,44 +64,24 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 3. BLOCO INFERIOR FIXO ---
-  largura_caixa = 202.3 * mm
-  altura_caixa = 22.1 * mm
-  x_caixa = (page_w - largura_caixa) / 2
-  y_caixa = 15 * mm
+  # --- 3. RODAPÉ DE VALIDADE (PRODUTO PRÓXIMO A DATA DE VENCIMENTO) ---
+  limite_inferior_preco = 78 * mm  # Reserva espaço para o bloco de aviso
 
-  # Caixa Cinza
-  c.setFillColor(lightgrey)
-  c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
+  # Desenha o bloco fixo do rodapé de validade
+  c.setFont("Arial-Black", 32)
+  c.drawCentredString(page_w / 2, 60 * mm, "PRODUTO PRÓXIMO A")
+  c.drawCentredString(page_w / 2, 48 * mm, "DATA DE VENCIMENTO")
 
-  # Texto Validade
-  val_str = item.get("val", "")
-  texto_validade = f"VALIDADE: {val_str}" if val_str else "VALIDADE:"
-  f_validade = 46
+  # Faixa cinza da Validade
+  c.setFillColorRGB(0.9, 0.9, 0.9)
+  c.rect(margem_lateral_geral, 20 * mm, largura_util_geral, 22 * mm, fill=1)
   c.setFillColor(black)
-  c.setFont("Arial-Black", f_validade)
-  y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
-  c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
 
-  # Frase Aviso
-  f_aviso = 44
-  margem_aviso = 5.3 * mm
-  largura_util_aviso = page_w - (2 * margem_aviso)
-  c.setFont("Arial-Black", f_aviso)
+  c.setFont("Arial-Black", 36)
+  val_str = f"VALIDADE: {item.get('val', '')}"
+  c.drawCentredString(page_w / 2, 26 * mm, val_str)
 
-  texto_aviso = "PRODUTO PRÓXIMO A DATA DE VENCIMENTO"
-  linhas_aviso = simpleSplit(
-      texto_aviso, "Arial-Black", f_aviso, largura_util_aviso
-  )
-
-  y_linha_aviso = y_caixa + altura_caixa + (3 * mm) + 10
-  for linha in reversed(linhas_aviso):
-    c.drawCentredString(page_w / 2, y_linha_aviso, linha)
-    y_linha_aviso += f_aviso + 2
-
-  limite_inferior_preco = y_linha_aviso
-
-  # --- 4. BLOCO DO PREÇO COM KERNING SEVERO PARA O '1' ---
+  # --- 4. BLOCO DO PREÇO MAXIMIZADO NA ÁREA LIVRE ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -113,53 +95,60 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   num_digitos = len(inteiro_str)
 
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 208, 92, 42, 21
+    f_real, f_cent, f_rs, f_un = 260, 120, 48, 34
+    folga_centavos = -38
   elif num_digitos == 3:
-    f_real, f_cent, f_rs, f_un = 160, 72, 36, 18
+    f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
+    folga_centavos = -28
   else:
-    f_real, f_cent, f_rs, f_un = 120, 54, 28, 16
+    f_real, f_cent, f_rs, f_un = 170, 80, 34, 22
+    folga_centavos = -22
 
-  w_real = calcular_largura_inteiro_forçado(
-      c, inteiro_str, "Arial-Black", f_real
+  w_real = (
+      calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
+      + folga_centavos
   )
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
   largura_total_preco = w_real + w_cent
 
+  # Trava automática para respeitar as margens de 8mm
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
     f_cent = int(f_cent * fator_red)
     f_rs = int(f_rs * fator_red)
     f_un = int(f_un * fator_red)
+    folga_centavos = int(folga_centavos * fator_red)
 
-    w_real = calcular_largura_inteiro_forçado(
-        c, inteiro_str, "Arial-Black", f_real
+    w_real = (
+        calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
+        + folga_centavos
     )
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 2) + 45
+  centro_area = (limite_superior_preco + limite_inferior_preco) / 2
+  y_linha_base_preco = centro_area - (f_real / 2) + 15
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + (f_real * 0.81), "R$")
 
-  # B) VALOR REAL (Desenho forçado caractere por caractere)
-  x_final_real = desenhar_inteiro_forçado(
+  # B) VALOR REAL
+  x_final_real = desenhar_inteiro_forcado(
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS (Grudados no X final real)
-  x_centavos = x_final_real
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
+  # C) CENTAVOS (Bem próximos do valor real)
+  x_centavos = x_final_real + folga_centavos
+  y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE
+  # D) UNIDADE (Baixado 10mm dos centavos)
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 36
+  y_unidade = y_centavos - f_un - (10 * mm)
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
