@@ -99,15 +99,16 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. DELIMITAÇÃO DA CAIXA QUADRO DE CONTEÚDO ---
+  # --- 3. DELIMITAÇÃO E ANCORAGEM VERTICAL COM RESPIRO ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  y_linha_por = limite_inferior_preco + 27 * mm
-  y_linha_de = y_linha_por + 58 * mm
+  # Posicionamento ajustado: "Por" desce um pouco e "De" ganha espaçamento em relação ao topo
+  y_linha_por = limite_inferior_preco + 18 * mm
+  y_linha_de = y_linha_por + 52 * mm
 
   # Rótulos Fixos
   f_rotulo = 40
@@ -115,26 +116,25 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.drawString(x_alinhado_linha_1, y_linha_de, "De")
   c.drawString(x_alinhado_linha_1, y_linha_por, "Por")
 
-  # Limites da caixa interna para centralizar os números (Quadro da imagem)
+  # Limites do quadro de centralização
   x_inicio_quadro = x_alinhado_linha_1 + 24 * mm
   x_fim_quadro = page_w - x_margem_estatica
   largura_quadro = x_fim_quadro - x_inicio_quadro
 
-  # --- 4. PREÇO "DE" CENTRALIZADO NO QUADRO ---
+  # --- 4. PREÇO "DE" CENTRALIZADO ---
   de_raw = item.get("de", "0,00").strip().replace(".", ",")
   if "," in de_raw:
     de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
   else:
     de_int, de_cent = de_raw, "00"
 
-  f_de, f_de_cent, f_de_rs, f_de_un = 80, 38, 22, 14
+  f_de, f_de_cent, f_de_rs, f_de_un = 76, 36, 22, 14
 
   w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
   w_de_real = calcular_largura_inteiro_forcado(c, de_int, "Arial-Black", f_de)
   w_de_cent = c.stringWidth(f",{de_cent}", "Arial-Black", f_de_cent)
   largura_total_de = w_de_rs + w_de_real + w_de_cent
 
-  # Posição X inicial para centralizar todo o bloco "De" no quadro
   x_de_bloco_inicio = x_inicio_quadro + (largura_quadro - largura_total_de) / 2
 
   # R$ De
@@ -170,7 +170,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   )
   c.setLineWidth(1)
 
-  # --- 5. PREÇO "POR" CENTRALIZADO NO QUADRO ---
+  # --- 5. PREÇO "POR" CENTRALIZADO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
   if "," in por_raw:
     por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
@@ -179,10 +179,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_por = len(por_int)
   if num_por <= 2:
-    f_por, f_por_cent, f_por_rs, f_por_un = 160, 75, 34, 22
-    folga_por_cent = -24
+    f_por, f_por_cent, f_por_rs, f_por_un = 150, 70, 32, 20
+    folga_por_cent = -22
   elif num_por == 3:
-    f_por, f_por_cent, f_por_rs, f_por_un = 130, 62, 28, 18
+    f_por, f_por_cent, f_por_rs, f_por_un = 125, 58, 28, 18
     folga_por_cent = -18
   else:
     f_por, f_por_cent, f_por_rs, f_por_un = 100, 48, 24, 16
@@ -196,7 +196,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
   largura_total_por = w_por_rs + w_por_real + w_por_cent
 
-  # Trava de segurança para não extrapolar a largura do quadro
   if largura_total_por > largura_quadro:
     fator_red = largura_quadro / largura_total_por
     f_por = int(f_por * fator_red)
@@ -213,7 +212,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
     largura_total_por = w_por_rs + w_por_real + w_por_cent
 
-  # Posição X inicial para centralizar todo o bloco "Por" no quadro
   x_por_bloco_inicio = (
       x_inicio_quadro + (largura_quadro - largura_total_por) / 2
   )
