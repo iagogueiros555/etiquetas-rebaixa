@@ -62,10 +62,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual  # Fim da descrição
-  limite_inferior_preco = 15 * mm  # Borda inferior
+  limite_superior_preco = y_atual
+  limite_inferior_preco = 15 * mm
 
-  # --- 3. BLOCO DO PREÇO GIGANTE (FONTE 310) ---
+  # --- 3. BLOCO DO PREÇO GIGANTE ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -104,7 +104,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  # Ponto médio exato da área livre ajustado para a linha base do ReportLab
   centro_area = (limite_superior_preco + limite_inferior_preco) / 2
   y_linha_base_preco = centro_area - (f_real / 2) + 20
   x_inicio_real = (page_w - largura_total_preco) / 2
@@ -124,9 +123,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE
+  # D) UNIDADE (Recuo de +4mm para descolar dos centavos)
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 48
+  y_unidade = y_centavos - 48 - (4 * mm)
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
