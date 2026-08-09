@@ -65,7 +65,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   limite_superior_preco = y_atual
   limite_inferior_preco = 15 * mm
 
-  # --- 3. BLOCO DO PREÇO GIGANTE ---
+  # --- 3. BLOCO DO PREÇO PROPORCIONAL E ALINHADO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -80,10 +80,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   if num_digitos <= 2:
     f_real, f_cent, f_rs, f_un = 310, 145, 52, 40
-    folga_centavos = -45  # Recuo forte de 45pt para encostar a vírgula
+    folga_centavos = -45
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 210, 98, 42, 28
-    folga_centavos = -30
+    folga_centavos = -28
   else:
     f_real, f_cent, f_rs, f_un = 140, 65, 32, 20
     folga_centavos = -18
@@ -114,24 +114,24 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   y_linha_base_preco = centro_area - (f_real / 2) + 20
   x_inicio_real = (page_w - largura_total_preco) / 2
 
-  # A) R$
+  # A) R$: Alinhado dinamicamente ao topo do inteiro
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + f_real - 60, "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + (f_real * 0.81), "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
       c, inteiro_str, x_inicio_real, y_linha_base_preco, "Arial-Black", f_real
   )
 
-  # C) CENTAVOS (Recuados 45pt para a esquerda)
+  # C) CENTAVOS: Alinhamento de topo proporcional exato ao inteiro
   x_centavos = x_final_real + folga_centavos
-  y_centavos = y_linha_base_preco + (f_real - f_cent) - 48
+  y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE
+  # D) UNIDADE: Distância proporcional aos centavos
   x_unidade = x_centavos + (w_cent / 2)
-  y_unidade = y_centavos - 48 - (10 * mm)
+  y_unidade = y_centavos - f_un - (10 * mm)
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
