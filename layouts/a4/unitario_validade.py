@@ -25,9 +25,46 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  y_atual -= 15  # Recuo antes do preço
+  limite_superior_preco = y_atual  # Ponto onde termina a descrição
 
-  # --- 3. BLOCO DO PREÇO DINÂMICO ---
+  # --- 3. BLOCO INFERIOR FIXO (CAIXA CINZA, VALIDADE E AVISO) ---
+  largura_caixa = 202.3 * mm
+  altura_caixa = 22.1 * mm
+  x_caixa = (page_w - largura_caixa) / 2
+  y_caixa = 15 * mm
+
+  # Caixa Cinza
+  c.setFillColor(lightgrey)
+  c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
+
+  # Texto da Validade (Fonte 46)
+  val_str = item.get("val", "")
+  texto_validade = f"VALIDADE: {val_str}" if val_str else "VALIDADE:"
+  f_validade = 46
+  c.setFillColor(black)
+  c.setFont("Arial-Black", f_validade)
+  y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
+  c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
+
+  # Frase Aviso (Fonte 44)
+  f_aviso = 44
+  margem_aviso = 5.3 * mm
+  largura_util_aviso = page_w - (2 * margem_aviso)
+  c.setFont("Arial-Black", f_aviso)
+
+  texto_aviso = "PRODUTO PRÓXIMO A DATA DE VENCIMENTO"
+  linhas_aviso = simpleSplit(
+      texto_aviso, "Arial-Black", f_aviso, largura_util_aviso
+  )
+
+  y_linha_aviso = y_caixa + altura_caixa + (3 * mm) + 10
+  for linha in reversed(linhas_aviso):
+    c.drawCentredString(page_w / 2, y_linha_aviso, linha)
+    y_linha_aviso += f_aviso + 2
+
+  limite_inferior_preco = y_linha_aviso  # Ponto onde começa o aviso do topo
+
+  # --- 4. BLOCO DO PREÇO CENTRALIZADO DINAMICAMENTE NO ESPAÇO DISPONÍVEL ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -61,8 +98,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = (w_real - 8) + w_cent
 
+  # Cálculo do Ponto Central Vertical
+  centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
+  y_linha_base_preco = centro_area_livre - (f_real / 2) + 10
   x_inicio_real = (page_w - largura_total_preco) / 2
-  y_linha_base_preco = y_atual - f_real + 50
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
@@ -84,43 +123,3 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
-
-  # --- 4 e 5. BLOCO INFERIOR FIXO (CAIXA CINZA, VALIDADE E AVISO) ---
-  # A) CAIXA CINZA (15mm da borda inferior, 202,3mm de largura e 22,1mm de altura)
-  largura_caixa = 202.3 * mm
-  altura_caixa = 22.1 * mm
-  x_caixa = (page_w - largura_caixa) / 2
-  y_caixa = 15 * mm
-
-  c.setFillColor(lightgrey)
-  c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
-
-  # B) TEXTO DA VALIDADE (Fonte 46 no centro da caixa)
-  val_str = item.get("val", "")
-  texto_validade = f"VALIDADE: {val_str}" if val_str else "VALIDADE:"
-  f_validade = 46
-
-  c.setFillColor(black)
-  c.setFont("Arial-Black", f_validade)
-  # Offset vertical para alinhar a baseline do texto exatamente no centro da caixa
-  y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
-  c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
-
-  # C) FRASE AVISO ("PRODUTO PRÓXIMO A...") (Fonte 44, 3mm acima da caixa, margem 5,3mm)
-  f_aviso = 44
-  margem_aviso = 5.3 * mm
-  largura_util_aviso = page_w - (2 * margem_aviso)
-  c.setFont("Arial-Black", f_aviso)
-
-  texto_aviso = "PRODUTO PRÓXIMO A DATA DE VENCIMENTO"
-  linhas_aviso = simpleSplit(
-      texto_aviso, "Arial-Black", f_aviso, largura_util_aviso
-  )
-
-  # Posiciona o texto de baixo para cima a partir da caixa cinza (+ 3mm)
-  y_linha_aviso = y_caixa + altura_caixa + (3 * mm) + 10
-
-  # Desenha as linhas do aviso de baixo para cima caso dobre de linha
-  for linha in reversed(linhas_aviso):
-    c.drawCentredString(page_w / 2, y_linha_aviso, linha)
-    y_linha_aviso += f_aviso + 2
