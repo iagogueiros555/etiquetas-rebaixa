@@ -7,8 +7,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   page_w = col_w
   page_h = row_h
 
-  margem_lateral = 8 * mm
-  largura_util = page_w - (2 * margem_lateral)
+  margem_lateral_geral = 8 * mm
+  largura_util_geral = page_w - (2 * margem_lateral_geral)
 
   # --- 1. MARGEM SUPERIOR DE 69 MM ATÉ A DESCRIÇÃO ---
   y_atual = page_h - (69 * mm)
@@ -18,12 +18,14 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
 
-  linhas_desc = simpleSplit(desc, "Arial-Black", tamanho_fonte_desc, largura_util)
+  linhas_desc = simpleSplit(
+      desc, "Arial-Black", tamanho_fonte_desc, largura_util_geral
+  )
   for linha in linhas_desc:
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  y_atual -= 15  # Recuo de segurança antes do bloco do preço
+  y_atual -= 15  # Recuo antes do preço
 
   # --- 3. BLOCO DO PREÇO DINÂMICO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
@@ -47,12 +49,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   w_real = c.stringWidth(inteiro_str, "Arial-Black", f_real)
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-
-  # Ajuste na largura total considerando a aproximação dos centavos (-8pts)
   largura_total_preco = (w_real - 8) + w_cent
 
-  if largura_total_preco > largura_util:
-    fator_red = largura_util / largura_total_preco
+  if largura_total_preco > largura_util_geral:
+    fator_red = largura_util_geral / largura_total_preco
     f_real = int(f_real * fator_red)
     f_cent = int(f_cent * fator_red)
     f_rs = int(f_rs * fator_red)
@@ -64,50 +64,63 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   x_inicio_real = (page_w - largura_total_preco) / 2
   y_linha_base_preco = y_atual - f_real + 50
 
-  # A) R$: Subiu 2mm (~5.6 pts) em relação à posição anterior
+  # A) R$
   c.setFont("Arial-Black", f_rs)
   c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
 
-  # B) VALOR REAL (Inteiro)
+  # B) VALOR REAL
   c.setFont("Arial-Black", f_real)
   c.drawString(x_inicio_real, y_linha_base_preco, inteiro_str)
 
-  # C) CENTAVOS (,XX): Puxados 8px para a esquerda (mais próximos do número real)
+  # C) CENTAVOS
   x_centavos = x_inicio_real + w_real - 8
   y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
-  # D) UNIDADE: Afastada mais 4mm (~11.3 pts) para baixo dos centavos
+  # D) UNIDADE
   x_unidade = x_centavos + (w_cent / 2)
   y_unidade = y_centavos - 36
   c.setFont("Arial-Black", f_un)
   un_str = item.get("un", "1 UN")
   c.drawCentredString(x_unidade, y_unidade, un_str)
 
-  # Ponteiro Y ajustado para o aviso de vencimento
-  y_atual = y_linha_base_preco - 20
+  # --- 4 e 5. BLOCO INFERIOR FIXO (CAIXA CINZA, VALIDADE E AVISO) ---
+  # A) CAIXA CINZA (15mm da borda inferior, 202,3mm de largura e 22,1mm de altura)
+  largura_caixa = 202.3 * mm
+  altura_caixa = 22.1 * mm
+  x_caixa = (page_w - largura_caixa) / 2
+  y_caixa = 15 * mm
 
-  # --- 4. AVISO DE VENCIMENTO ---
-  c.setFont("Arial-Black", 26)
-  c.drawCentredString(page_w / 2, y_atual, "PRODUTO PRÓXIMO A")
-  y_atual -= 30
-  c.drawCentredString(page_w / 2, y_atual, "DATA DE VENCIMENTO")
-  y_atual -= 40
+  c.setFillColor(lightgrey)
+  c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
 
-  # --- 5. BLOCO DE VALIDADE COM FUNDO CINZA ---
+  # B) TEXTO DA VALIDADE (Fonte 46 no centro da caixa)
   val_str = item.get("val", "")
-  if val_str:
-    texto_validade = f"VALIDADE: {val_str}"
+  texto_validade = f"VALIDADE: {val_str}" if val_str else "VALIDADE:"
+  f_validade = 46
 
-    largura_faixa = page_w - (2 * margem_lateral)
-    altura_faixa = 45
-    x_faixa = margem_lateral
-    y_faixa = y_atual - 10
+  c.setFillColor(black)
+  c.setFont("Arial-Black", f_validade)
+  # Offset vertical para alinhar a baseline do texto exatamente no centro da caixa
+  y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
+  c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
 
-    c.setFillColor(lightgrey)
-    c.rect(x_faixa, y_faixa, largura_faixa, altura_faixa, stroke=0, fill=1)
+  # C) FRASE AVISO ("PRODUTO PRÓXIMO A...") (Fonte 44, 3mm acima da caixa, margem 5,3mm)
+  f_aviso = 44
+  margem_aviso = 5.3 * mm
+  largura_util_aviso = page_w - (2 * margem_aviso)
+  c.setFont("Arial-Black", f_aviso)
 
-    c.setFillColor(black)
-    c.setFont("Arial-Black", 28)
-    c.drawCentredString(page_w / 2, y_atual, texto_validade)
+  texto_aviso = "PRODUTO PRÓXIMO A DATA DE VENCIMENTO"
+  linhas_aviso = simpleSplit(
+      texto_aviso, "Arial-Black", f_aviso, largura_util_aviso
+  )
+
+  # Posiciona o texto de baixo para cima a partir da caixa cinza (+ 3mm)
+  y_linha_aviso = y_caixa + altura_caixa + (3 * mm) + 10
+
+  # Desenha as linhas do aviso de baixo para cima caso dobre de linha
+  for linha in reversed(linhas_aviso):
+    c.drawCentredString(page_w / 2, y_linha_aviso, linha)
+    y_linha_aviso += f_aviso + 2
