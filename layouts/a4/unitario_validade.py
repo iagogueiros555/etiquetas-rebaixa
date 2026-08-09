@@ -3,6 +3,26 @@ from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
 
 
+def desenhar_texto_com_kerning(c, texto, x, y, fonte, tamanho, aperta_1=18):
+  """Desenha o texto ajustando o espaçamento para o dígito '1' não parecer distante."""
+  cursor_x = x
+  c.setFont(fonte, tamanho)
+
+  for i, char in enumerate(texto):
+    c.drawString(cursor_x, y, char)
+    w_char = c.stringWidth(char, fonte, tamanho)
+
+    # Se o caractere atual for '1' ou o próximo for '1', aproxima mais os dígitos
+    if char == "1":
+      cursor_x += w_char - aperta_1
+    elif i + 1 < len(texto) and texto[i + 1] == "1":
+      cursor_x += w_char - (aperta_1 / 2)
+    else:
+      cursor_x += w_char
+
+  return cursor_x  # Retorna a posição final X
+
+
 def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   page_w = col_w
   page_h = row_h
@@ -27,17 +47,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_superior_preco = y_atual
 
-  # --- 3. BLOCO INFERIOR FIXO (CAIXA CINZA, VALIDADE E AVISO) ---
+  # --- 3. BLOCO INFERIOR FIXO ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
   y_caixa = 15 * mm
 
-  # Caixa Cinza
   c.setFillColor(lightgrey)
   c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
 
-  # Texto da Validade (Fonte 46)
   val_str = item.get("val", "")
   texto_validade = f"VALIDADE: {val_str}" if val_str else "VALIDADE:"
   f_validade = 46
@@ -46,7 +64,6 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   y_texto_validade = y_caixa + (altura_caixa / 2) - (f_validade / 3)
   c.drawCentredString(page_w / 2, y_texto_validade, texto_validade)
 
-  # Frase Aviso (Fonte 44)
   f_aviso = 44
   margem_aviso = 5.3 * mm
   largura_util_aviso = page_w - (2 * margem_aviso)
@@ -64,7 +81,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 4. BLOCO DO PREÇO CENTRALIZADO DINAMICAMENTE NO ESPAÇO DISPONÍVEL ---
+  # --- 4. BLOCO DO PREÇO CENTRALIZADO COM KERNING ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -79,14 +96,27 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   if num_digitos <= 2:
     f_real, f_cent, f_rs, f_un = 208, 92, 42, 21
+    aperta_1 = 38  # Valor de aperto proporcional ao tamanho 208
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 160, 72, 36, 18
+    aperta_1 = 28
   else:
     f_real, f_cent, f_rs, f_un = 120, 54, 28, 16
+    aperta_1 = 20
 
-  w_real = c.stringWidth(inteiro_str, "Arial-Black", f_real)
+  # Cálculo da largura do valor inteiro considerando a aproximação do dígito 1
+  w_real = 0
+  for i, ch in enumerate(inteiro_str):
+    w_ch = c.stringWidth(ch, "Arial-Black", f_real)
+    if ch == "1":
+      w_real += w_ch - aperta_1
+    elif i + 1 < len(inteiro_str) and inteiro_str[i + 1] == "1":
+      w_real += w_ch - (aperta_1 / 2)
+    else:
+      w_real += w_ch
+
   w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-  largura_total_preco = (w_real - 8) + w_cent
+  largura_total_preco = w_real + w_cent
 
   if largura_total_preco > largura_util_geral:
     fator_red = largura_util_geral / largura_total_preco
@@ -94,11 +124,21 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     f_cent = int(f_cent * fator_red)
     f_rs = int(f_rs * fator_red)
     f_un = int(f_un * fator_red)
-    w_real = c.stringWidth(inteiro_str, "Arial-Black", f_real)
-    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
-    largura_total_preco = (w_real - 8) + w_cent
+    aperta_1 = int(aperta_1 * fator_red)
 
-  # Ajuste fino vertical (+45 pts) para descolar da palavra "PRODUTO"
+    w_real = 0
+    for i, ch in enumerate(inteiro_str):
+      w_ch = c.stringWidth(ch, "Arial-Black", f_real)
+      if ch == "1":
+        w_real += w_ch - aperta_1
+      elif i + 1 < len(inteiro_str) and inteiro_str[i + 1] == "1":
+        w_real += w_ch - (aperta_1 / 2)
+      else:
+        w_real += w_ch
+
+    w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
+    largura_total_preco = w_real + w_cent
+
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
   y_linha_base_preco = centro_area_livre - (f_real / 2) + 45
   x_inicio_real = (page_w - largura_total_preco) / 2
@@ -107,12 +147,19 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_rs)
   c.drawString(x_inicio_real, y_linha_base_preco + f_real - 39, "R$")
 
-  # B) VALOR REAL
-  c.setFont("Arial-Black", f_real)
-  c.drawString(x_inicio_real, y_linha_base_preco, inteiro_str)
+  # B) VALOR REAL (Com ajuste de Kerning)
+  x_fim_real = desenhar_texto_com_kerning(
+      c,
+      inteiro_str,
+      x_inicio_real,
+      y_linha_base_preco,
+      "Arial-Black",
+      f_real,
+      aperta_1,
+  )
 
   # C) CENTAVOS
-  x_centavos = x_inicio_real + w_real - 8
+  x_centavos = x_fim_real
   y_centavos = y_linha_base_preco + (f_real - f_cent) - 35
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
