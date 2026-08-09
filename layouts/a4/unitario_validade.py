@@ -61,7 +61,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual  # Ponto inferior da descrição
+  limite_superior_preco = y_atual
 
   # --- 2. BLOCO INFERIOR FIXO (AVISO + VALIDADE) ---
   largura_caixa = 202.3 * mm
@@ -69,7 +69,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   x_caixa = (page_w - largura_caixa) / 2
   y_caixa = 15 * mm
 
-  # Caixa Cinza da Validade
+  # Caixa Cinza
   c.setFillColor(lightgrey)
   c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
 
@@ -98,9 +98,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_linha_aviso, linha)
     y_linha_aviso += f_aviso + 2
 
-  limite_inferior_preco = y_linha_aviso  # Ponto superior do aviso ANVISA
+  limite_inferior_preco = y_linha_aviso
 
-  # --- 3. BLOCO DO PREÇO CENTRALIZADO PERFEITO ---
+  # --- 3. BLOCO DO PREÇO CENTRALIZADO PROPORCIONALMENTE ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
 
   if "," in por_raw:
@@ -116,12 +116,16 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   if num_digitos <= 2:
     f_real, f_cent, f_rs, f_un = 270, 128, 50, 34
     folga_centavos = -40
+    # Desconto maior para compensar a altura de 270pt e nao subir demais
+    offset_y = -10
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 220, 104, 42, 28
     folga_centavos = -30
+    offset_y = 5
   else:
     f_real, f_cent, f_rs, f_un = 175, 82, 34, 22
     folga_centavos = -22
+    offset_y = 12
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -145,11 +149,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  # Centralização Vertical no meio exato da área útil livre
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real / 3) + 10
-
-  # Centralização Horizontal cravada no centro da página
+  y_linha_base_preco = centro_area_livre - (f_real / 2) + offset_y
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
