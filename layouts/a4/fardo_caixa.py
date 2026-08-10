@@ -1,1 +1,183 @@
 
+from reportlab.lib.colors import black, lightgrey
+from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
+
+
+def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
+  x_atual = x_inicial
+  c.setFont(fonte, tamanho)
+  total_chars = len(texto)
+
+  for i, char in enumerate(texto):
+    c.drawString(x_atual, y, char)
+    largura_char = c.stringWidth(char, fonte, tamanho)
+
+    if i == total_chars - 1:
+      x_atual += largura_char
+    elif char == "1":
+      x_atual += largura_char * 0.78
+    elif i + 1 < total_chars and texto[i + 1] == "1":
+      x_atual += largura_char * 0.85
+    else:
+      x_atual += largura_char
+
+  return x_atual
+
+
+def calcular_largura_inteiro_forcado(c, texto, fonte, tamanho):
+  largura = 0
+  total_chars = len(texto)
+  for i, char in enumerate(texto):
+    l_char = c.stringWidth(char, fonte, tamanho)
+    if i == total_chars - 1:
+      largura += l_char
+    elif char == "1":
+      largura += l_char * 0.78
+    elif i + 1 < total_chars and texto[i + 1] == "1":
+      largura += l_char * 0.85
+    else:
+      largura += l_char
+  return largura
+
+
+def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
+  page_w = col_w
+  page_h = row_h
+
+  x_margem_estatica = 8 * mm
+  largura_util_geral = page_w - (2 * x_margem_estatica)
+
+  # --- 1. DESCRIÇÃO DO PRODUTO ---
+  y_atual = page_h - (69 * mm)
+  tamanho_fonte_desc = 56
+  c.setFont("Arial-Black", tamanho_fonte_desc)
+  desc = item.get("desc", "")
+
+  linhas_desc = simpleSplit(
+      desc, "Arial-Black", tamanho_fonte_desc, largura_util_geral
+  )
+  for linha in linhas_desc:
+    c.drawCentredString(page_w / 2, y_atual, linha)
+    y_atual -= tamanho_fonte_desc + 2
+
+  # --- 2. RODAPÉ CINZA: PREÇO DA CAIXA / FARDO ---
+  largura_caixa = page_w - (2 * x_margem_estatica)
+  altura_caixa = 52 * mm
+  x_caixa = x_margem_estatica
+  y_caixa = 15 * mm
+
+  # Caixa Cinza de Isolamento Visual (Acaba com a confusão do cliente)
+  c.setFillColor(lightgrey)
+  c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, stroke=0, fill=1)
+  c.setFillColor(black)
+
+  # Rótulo dinâmico da Caixa puxando direto do app.py (ex: CX 20)
+  f_rotulo_cx = 36
+  c.setFont("Arial-Black", f_rotulo_cx)
+  qtd_fardo_val = item.get("qtd_fardo", 1)
+  unidade_fardo = item.get("un", "UN")
+  texto_fardo_rotulo = f"PREÇO DA CAIXA ({qtd_fardo_val} {unidade_fardo})"
+  c.drawCentredString(page_w / 2, y_caixa + altura_caixa - 13 * mm, texto_fardo_rotulo)
+
+  # Preço total da caixa (vindo do campo 'por' do dicionário)
+  caixa_raw = item.get("por", "0,00").strip().replace(".", ",")
+  if "," in caixa_raw:
+    cx_int, cx_cent = caixa_raw.split(",")[0], caixa_raw.split(",")[1][:2]
+  else:
+    cx_int, cx_cent = caixa_raw, "00"
+
+  num_cx = len(cx_int)
+  if num_cx <= 2:
+    f_cx, f_cx_cent, f_cx_rs = 110, 50, 28
+  elif num_cx == 3:
+    f_cx, f_cx_cent, f_cx_rs = 95, 42, 24
+  else:
+    f_cx, f_cx_cent, f_cx_rs = 80, 36, 20
+
+  y_valor_cx = y_caixa + 8 * mm
+  gap_cx_rs = 2.5 * mm
+
+  w_cx_rs = c.stringWidth("R$", "Arial-Black", f_cx_rs)
+  w_cx_real = calcular_largura_inteiro_forcado(c, cx_int, "Arial-Black", f_cx)
+  w_cx_cent = c.stringWidth(f",{cx_cent}", "Arial-Black", f_cx_cent)
+  largura_total_cx = w_cx_rs + gap_cx_rs + w_cx_real + w_cx_cent
+
+  x_cx_bloco_inicio = (page_w - largura_total_cx) / 2
+
+  c.setFont("Arial-Black", f_cx_rs)
+  c.drawString(x_cx_bloco_inicio, y_valor_cx + (f_cx * 0.65), "R$")
+
+  x_cx_num = x_cx_bloco_inicio + w_cx_rs + gap_cx_rs
+  x_cx_fim = desenhar_inteiro_forcado(
+      c, cx_int, x_cx_num, y_valor_cx, "Arial-Black", f_cx
+  )
+
+  x_cx_cent = x_cx_fim - 6
+  y_cx_cent = y_valor_cx + f_cx - f_cx_cent - (f_cx * 0.12)
+  c.setFont("Arial-Black", f_cx_cent)
+  c.drawString(x_cx_cent, y_cx_cent, f",{cx_cent}")
+
+  # --- 3. PREÇO UNITÁRIO GIGANTE NO TOPO (Vindo do campo 'preco_unit') ---
+  y_linha_por = y_caixa + altura_caixa + 22 * mm
+
+  c.setFont("Arial-Black", 42)
+  c.drawCentredString(page_w / 2, y_linha_por + 22 * mm, "PREÇO UNITÁRIO")
+
+  unit_raw = item.get("preco_unit", "0,00").strip().replace(".", ",")
+  if "," in unit_raw:
+    unit_int, unit_cent = unit_raw.split(",")[0], unit_raw.split(",")[1][:2]
+  else:
+    unit_int, unit_cent = unit_raw, "00"
+
+  num_unit = len(unit_int)
+  if num_unit <= 2:
+    f_unit, f_unit_cent, f_unit_rs, f_unit_un = 200, 90, 42, 28
+  elif num_unit == 3:
+    f_unit, f_unit_cent, f_unit_rs, f_unit_un = 160, 75, 36, 24
+  else:
+    f_unit, f_unit_cent, f_unit_rs, f_unit_un = 130, 60, 30, 20
+
+  y_valor_unit = y_linha_por - (f_unit * 0.35)
+  gap_unit_rs = 2.5 * mm
+
+  w_unit_rs = c.stringWidth("R$", "Arial-Black", f_unit_rs)
+  w_unit_real = calcular_largura_inteiro_forcado(c, unit_int, "Arial-Black", f_unit)
+  w_unit_cent = c.stringWidth(f",{unit_cent}", "Arial-Black", f_unit_cent)
+  largura_total_unit = w_unit_rs + gap_unit_rs + w_unit_real + w_unit_cent
+
+  if largura_total_unit > largura_util_geral:
+    fator_red = largura_util_geral / largura_total_unit
+    f_unit = int(f_unit * fator_red)
+    f_unit_cent = int(f_unit_cent * fator_red)
+    f_unit_rs = int(f_unit_rs * fator_red)
+    f_unit_un = int(f_unit_un * fator_red)
+    gap_unit_rs = gap_unit_rs * fator_red
+
+    w_unit_rs = c.stringWidth("R$", "Arial-Black", f_unit_rs)
+    w_unit_real = calcular_largura_inteiro_forcado(c, unit_int, "Arial-Black", f_unit)
+    w_unit_cent = c.stringWidth(f",{unit_cent}", "Arial-Black", f_unit_cent)
+    largura_total_unit = w_unit_rs + gap_unit_rs + w_unit_real + w_unit_cent
+
+  x_unit_bloco_inicio = (page_w - largura_total_unit) / 2
+
+  c.setFont("Arial-Black", f_unit_rs)
+  c.drawString(x_unit_bloco_inicio, y_valor_unit + (f_unit * 0.75), "R$")
+
+  x_unit_num = x_unit_bloco_inicio + w_unit_rs + gap_unit_rs
+  x_unit_fim = desenhar_inteiro_forcado(
+      c, unit_int, x_unit_num, y_valor_unit, "Arial-Black", f_unit
+  )
+
+  x_unit_cent = x_unit_fim - 10
+  y_unit_cent = y_valor_unit + f_unit - f_unit_cent - (f_unit * 0.15)
+  c.setFont("Arial-Black", f_unit_cent)
+  c.drawString(x_unit_cent, y_unit_cent, f",{unit_cent}")
+
+  # Legenda da unidade menorzinha embaixo do preço unitário
+  c.setFont("Arial-Black", f_unit_un)
+  c.drawCentredString(
+      x_unit_cent + (c.stringWidth(f",{unit_cent}", "Arial-Black", f_unit_cent) / 2),
+      y_unit_cent - f_unit_un - (4 * mm),
+      f"1 {unidade_fardo}",
+  )
