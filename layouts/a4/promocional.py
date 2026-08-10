@@ -99,7 +99,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   y_valor_de = y_linha_de - (f_de * 0.35)
 
-  # Gap manual para desgrudar o R$ do número
+  # Gap manual para desgrudar o R$ do número no "De"
   gap_de_rs = 3 * mm
   w_de_rs = c.stringWidth("R$", "Arial-Black", f_de_rs)
   w_de_real = calcular_largura_inteiro_forcado(c, de_int, "Arial-Black", f_de)
@@ -155,8 +155,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   y_valor_por = y_linha_por - (f_por * 0.35)
 
-  # Gap manual para desgrudar o R$ do número
-  gap_por_rs = 4.5 * mm
+  # Gap manual para desgrudar o R$ do número - Ajustado de 4.5mm para 2.5mm
+  gap_por_rs = 2.5 * mm
   w_por_rs = c.stringWidth("R$", "Arial-Black", f_por_rs)
   w_por_real = calcular_largura_inteiro_forcado(c, por_int, "Arial-Black", f_por)
   w_por_cent = c.stringWidth(f",{por_cent}", "Arial-Black", f_por_cent)
