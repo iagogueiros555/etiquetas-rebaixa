@@ -99,7 +99,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_cx_cent)
   c.drawString(x_cx_fim - 6, y_valor_cx + f_cx - f_cx_cent - (f_cx * 0.12), f",{cx_cent}")
 
-  # --- 3. PREÇO UNITÁRIO GIGANTE (Erguido e com a unidade próxima) ---
+  # --- 3. PREÇO UNITÁRIO GIGANTE ---
   y_linha_por = y_caixa + altura_caixa + 62 * mm
   
   unit_raw = item.get("preco_unit", "0,00").strip().replace(".", ",")
@@ -127,10 +127,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.setFont("Arial-Black", f_unit_cent)
   c.drawString(x_unit_fim - 10, y_unit_cent, f",{unit_cent}")
 
-  # Unidade coladinha logo abaixo dos centavos
+  # Unidade com o respiro exato de 7mm abaixo dos centavos
   c.setFont("Arial-Black", f_unit_un)
   c.drawCentredString(
       x_unit_fim - 10 + (c.stringWidth(f",{unit_cent}", "Arial-Black", f_unit_cent) / 2),
-      y_unit_cent - f_unit_un - (2 * mm),
+      y_unit_cent - f_unit_un - (7 * mm),
       f"1 {unidade_fardo}"
   )
