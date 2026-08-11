@@ -106,6 +106,6 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     c.setFont("Arial-Black", int(34 * scale))
     c.drawCentredString(x_center, y_caixa + (2.5 * mm * scale), f"VALIDADE: {item.get('val', '')}")
-
+ 
     c.setFont("Arial-Black", int(20 * scale))
     c.drawCentredString(x_center, y_caixa + altura_caixa + (3.0 * mm * scale), "PRODUTO PRÓXIMO A DATA DE VENCIMENTO")
