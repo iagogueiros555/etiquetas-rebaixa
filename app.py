@@ -9,16 +9,30 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 # --- IMPORTAÇÃO E RELOAD DOS MÓDULOS DE LAYOUT ---
-from layouts import a5, a6
+from layouts import a6
 from layouts.a4 import fardo_caixa, promocional, promocional_validade, unitario, unitario_validade
 
+# Importando os novos módulos A5 com "apelidos" para não dar conflito com os da A4
+from layouts.a5 import (
+    promo as promo_a5,
+    promo_validade as promo_validade_a5,
+    unitario as unitario_a5,
+    unitario_validade as unitario_validade_a5
+)
+
 importlib.reload(a6)
-importlib.reload(a5)
+# Reloads A4
 importlib.reload(promocional)
 importlib.reload(promocional_validade)
 importlib.reload(unitario)
 importlib.reload(unitario_validade)
 importlib.reload(fardo_caixa)
+# Reloads A5
+importlib.reload(promo_a5)
+importlib.reload(promo_validade_a5)
+importlib.reload(unitario_a5)
+importlib.reload(unitario_validade_a5)
+
 
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
@@ -74,8 +88,18 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_validade.desenhar_etiqueta_a4
         else:
             return unitario.desenhar_etiqueta_a4
+            
     elif pasta == "a5":
-        return a5.desenhar_etiqueta_a5
+        # Nova lógica de roteamento para a pasta A5
+        if tem_de and tem_rebaixa:
+            return promo_validade_a5.desenhar_etiqueta_a5
+        elif tem_de and not tem_rebaixa:
+            return promo_a5.desenhar_etiqueta_a5
+        elif not tem_de and tem_rebaixa:
+            return unitario_validade_a5.desenhar_etiqueta_a5
+        else:
+            return unitario_a5.desenhar_etiqueta_a5
+            
     else:
         return a6.desenhar_etiqueta_a6
 
@@ -134,7 +158,7 @@ if e_fardo_caixa:
 
     with st.form("form_fardo", clear_on_submit=True):
         desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
-        
+
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             qtd_fardo = st.number_input("Qtd. na Caixa/Fardo:", min_value=1, value=12, step=1)
