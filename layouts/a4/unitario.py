@@ -78,16 +78,16 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_digitos = len(inteiro_str)
 
+  # Valores de folga_centavos reduzidos para desgrudar a vírgula do número
   if num_digitos <= 2:
     f_real, f_cent, f_rs, f_un = 310, 145, 52, 40
-    folga_centavos = -45
+    folga_centavos = -15
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 250, 118, 48, 32
-    folga_centavos = -35
+    folga_centavos = -10
   else:
-    # Aumentado para 220pt para esticar o milhar ao máximo
     f_real, f_cent, f_rs, f_un = 220, 102, 42, 28
-    folga_centavos = -28
+    folga_centavos = -5
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
