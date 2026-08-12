@@ -23,9 +23,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     c.setFont("Arial-Black", tam_fonte_desc)
     
-    # --- EIXOS Y CORRIGIDOS PARA FUGIR DA ONDA VERMELHA NO TOPO ---
-    # Ancoramos a descrição a 72mm do topo (totalmente segura da onda vermelha)
-    y_centro_desc = topo_etiqueta - (72.0 * mm * scale) 
+    # Descrição posicionada estrategicamente a 52mm do topo (Abaixo do vermelho, acima do centro)
+    y_centro_desc = topo_etiqueta - (52.0 * mm * scale) 
     espacamento = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
     
     altura_total_texto = (len(linhas_desc) - 1) * espacamento
@@ -36,8 +35,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         y_atual_desc -= espacamento
 
     # --- 2. BLOCO PREÇO UNITÁRIO CENTRALIZADO ---
-    # Fixamos a base do preço a 35mm do fundo da folha, dando respiro para a descrição
-    y_preco_base = y_base + (35.0 * mm * scale)
+    # Fixamos a base do preço a apenas 20mm do fundo da folha
+    # Isso garante que a parte mais alta do número NUNCA passe da metade da A5 (74mm)
+    y_preco_base = y_base + (20.0 * mm * scale)
 
     val_por_raw = item.get("por", "").replace(".", ",")
     if "," in val_por_raw:
