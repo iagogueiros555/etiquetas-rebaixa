@@ -88,7 +88,7 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_validade.desenhar_etiqueta_a4
         else:
             return unitario.desenhar_etiqueta_a4
-            
+
     elif pasta == "a5":
         # Nova lógica de roteamento para a pasta A5
         if tem_de and tem_rebaixa:
@@ -99,7 +99,7 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_validade_a5.desenhar_etiqueta_a5
         else:
             return unitario_a5.desenhar_etiqueta_a5
-            
+
     else:
         return a6.desenhar_etiqueta_a6
 
@@ -272,7 +272,42 @@ else:
 if st.session_state.lista_itens:
     st.divider()
     st.markdown("### 📋 Lista para Impressão")
-    st.table(st.session_state.lista_itens)
+
+    # Cabeçalho da lista
+    h_num, h_desc, h_preco, h_extra, h_del = st.columns([0.5, 3.5, 2, 2, 0.7])
+    h_num.markdown("**#**")
+    h_desc.markdown("**Descrição**")
+    h_preco.markdown("**Preço**")
+    h_extra.markdown("**Un. / Validade**")
+
+    # Uma linha por etiqueta, com botão de apagar individual
+    for idx, item in enumerate(st.session_state.lista_itens):
+        col_num, col_desc, col_preco, col_extra, col_del = st.columns([0.5, 3.5, 2, 2, 0.7])
+
+        col_num.write(idx + 1)
+        col_desc.write(item.get("desc", ""))
+
+        if item.get("e_fardo"):
+            col_preco.write(f"R$ {item.get('por', '')} (fardo)")
+            col_extra.write(f"{item.get('qtd_fardo', '')}x R$ {item.get('preco_unit', '')} • {item.get('un', '')}")
+        elif item.get("de"):
+            col_preco.write(f"De {item.get('de', '')} → Por {item.get('por', '')}")
+            extra_txt = item.get("un", "")
+            if item.get("val"):
+                extra_txt += f" • Val: {item.get('val')}"
+            col_extra.write(extra_txt)
+        else:
+            col_preco.write(f"R$ {item.get('por', '')}")
+            extra_txt = item.get("un", "")
+            if item.get("val"):
+                extra_txt += f" • Val: {item.get('val')}"
+            col_extra.write(extra_txt)
+
+        if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
+            st.session_state.lista_itens.pop(idx)
+            st.rerun()
+
+    st.divider()
 
     c1, c2 = st.columns(2)
     with c1:
