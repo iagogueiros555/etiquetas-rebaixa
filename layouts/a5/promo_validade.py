@@ -32,8 +32,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     # --- 2. OFFSETS CENTRAIS (Com Rebaixa - Bloco elevado) ---
     offset_base_de_y = 100.0
-    offset_reais_padrao = 59.0
-    offset_centavos_padrao = 45.0
+    offset_reais_padrao = 50.0   # antes: 59.0 — reduzido pra não bater no aviso fixo de validade
+    offset_centavos_padrao = 37.0  # antes: 45.0
 
     # --- 3. BLOCO "DE" ---
     val_de_raw = item.get("de", "").replace(".", ",")
@@ -44,14 +44,14 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     num_digitos_de = len(reais_de_str)
     if num_digitos_de <= 1:
-        x_de_pos, fonte_reais_de, fonte_centavos_de = 28.0, 64, 35
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 9.0, offset_centavos_padrao - 4.0
+        x_de_pos, fonte_reais_de, fonte_centavos_de = 28.0, 58, 32
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 11.0, offset_centavos_padrao - 5.0
     elif num_digitos_de == 2:
-        x_de_pos, fonte_reais_de, fonte_centavos_de = 14.0, 52, 28
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 11.0, offset_centavos_padrao - 4.0
+        x_de_pos, fonte_reais_de, fonte_centavos_de = 14.0, 47, 25
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 13.0, offset_centavos_padrao - 5.0
     else:
-        x_de_pos, fonte_reais_de, fonte_centavos_de = 8.0, 40, 22
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 13.0, offset_centavos_padrao - 6.0
+        x_de_pos, fonte_reais_de, fonte_centavos_de = 8.0, 36, 20
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 15.0, offset_centavos_padrao - 7.0
 
     tam_fonte_de = int(20 * scale)
     c.setFont("Arial-Black", tam_fonte_de)
@@ -92,19 +92,19 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     num_digitos_reais = len(reais_por_str)
     if num_digitos_reais <= 1:
-        fonte_reais, fonte_centavos = 144, 72
+        fonte_reais, fonte_centavos = 128, 64
         offset_y_reais, offset_y_centavos = offset_reais_padrao, offset_centavos_padrao
     elif num_digitos_reais == 2:
-        fonte_reais, fonte_centavos = 110, 55
+        fonte_reais, fonte_centavos = 98, 50
         offset_y_reais, offset_y_centavos = offset_reais_padrao - 5.0, offset_centavos_padrao
     else:
-        fonte_reais, fonte_centavos = 85, 42
+        fonte_reais, fonte_centavos = 76, 38
         offset_y_reais, offset_y_centavos = offset_reais_padrao - 11.0, offset_centavos_padrao
 
     tam_fonte_por_rotulo = int(30 * scale)
     c.setFont("Arial-Black", tam_fonte_por_rotulo)
     x_por = x_base + ((90.0 if num_digitos_reais >= 2 else 95.0) * mm * scale)
-    y_por = topo_etiqueta - (offset_base_de_y * mm * scale)
+    y_por = topo_etiqueta - (offset_base_de_y * mm * scale) - (4.0 * mm * scale)  # um pouco mais baixo que o "De", só pra dar folga
     c.drawString(x_por, y_por, "Por")
     c.drawString(x_por, y_por - (11.0 * mm * scale), "R$")
 
