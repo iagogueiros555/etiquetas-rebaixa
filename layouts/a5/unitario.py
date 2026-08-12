@@ -1,35 +1,51 @@
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 
 def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
-    x_center = x_base + (col_w / 2.0)
     topo_etiqueta = y_base + row_h
+    
+    # --- A MÁGICA DO ALINHAMENTO ---
+    margem_onda_direita = 55.0 * mm * scale
+    largura_amarela = col_w - margem_onda_direita
+    
+    # O novo centro agora é o meio exato do espaço amarelo livre
+    x_center = x_base + (largura_amarela / 2.0)
 
-    # --- 1. DESCRIÇÃO DO PRODUTO ---
+    # --- 1. DESCRIÇÃO DO PRODUTO (Dinâmica - Máximo 2 linhas) ---
     tam_fonte_desc = int(36 * scale)
-    c.setFont("Arial-Black", tam_fonte_desc)
-    max_largura_texto = col_w - (9.0 * mm * scale)
-    y_primeira_linha = topo_etiqueta - (62.0 * mm * scale)
+    max_largura_texto = largura_amarela - (10.0 * mm * scale) # 5mm de margem em cada borda
     desc = item.get("desc", "")
 
-    if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
-        c.drawCentredString(x_center, y_primeira_linha, desc)
-    else:
-        palavras = desc.split()
-        linha1, linha2 = "", ""
-        for palavra in palavras:
-            teste_linha1 = f"{linha1} {palavra}".strip()
-            if c.stringWidth(teste_linha1, "Arial-Black", tam_fonte_desc) <= max_largura_texto and not linha2:
-                linha1 = teste_linha1
-            else:
-                linha2 = f"{linha2} {palavra}".strip()
-        y_segunda_linha = y_primeira_linha - ((tam_fonte_desc * 0.35 + 3.0) * mm)
-        c.drawCentredString(x_center, y_primeira_linha, linha1)
-        c.drawCentredString(x_center, y_segunda_linha, linha2)
+    # Loop inteligente: diminui de 1 em 1 ponto até caber em NO MÁXIMO 2 linhas
+    linhas_desc = []
+    while tam_fonte_desc > 10:
+        c.setFont("Arial-Black", tam_fonte_desc)
+        # O simpleSplit quebra o texto perfeitamente usando as palavras
+        linhas_desc = simpleSplit(desc, "Arial-Black", tam_fonte_desc, max_largura_texto)
+        if len(linhas_desc) <= 2:
+            break
+        tam_fonte_desc -= 1
 
-    # --- 2. OFFSETS CENTRAIS (Sem Rebaixa) ---
-    offset_rs_unico_y = 44.0
-    offset_reais_padrao = 62.0
-    offset_centavos_padrao = 48.0
+    c.setFont("Arial-Black", tam_fonte_desc)
+    
+    # Centraliza o bloco de texto para não engolir o preço
+    y_centro_desc = topo_etiqueta - (42.0 * mm * scale) 
+    espacamento = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
+    
+    altura_total_texto = (len(linhas_desc) - 1) * espacamento
+    y_atual_desc = y_centro_desc + (altura_total_texto / 2.0)
+    
+    for linha in linhas_desc:
+        c.drawCentredString(x_center, y_atual_desc, linha)
+        y_atual_desc -= espacamento
+
+    # --- 2. OFFSETS CENTRAIS DO PREÇO ---
+    # Eixo de referência fixo para garantir que o preço nunca se mova
+    y_referencia_preco = topo_etiqueta - (50.0 * mm * scale)
+
+    offset_rs_unico_y = 35.0
+    offset_reais_padrao = 54.0
+    offset_centavos_padrao = 40.0
 
     # --- 3. BLOCO PREÇO UNITÁRIO CENTRALIZADO ---
     val_por_raw = item.get("por", "").replace(".", ",")
@@ -54,8 +70,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     tam_fonte_centavos_por = int(fonte_centavos * scale)
     tam_fonte_un_por = int(20 * scale)
 
-    largura_util_maxima = col_w - (9.0 * mm * scale)
-
+    # Verifica se o preço gigante invade as margens do amarelo, se invadir, diminui
     while True:
         c.setFont("Arial-Black", tam_fonte_rs)
         largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
@@ -66,26 +81,27 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
         largura_total_bloco = largura_rs + (4.0 * mm * scale) + largura_reais_por + (1.5 * mm * scale) + largura_centavos_por
 
-        if largura_total_bloco <= largura_util_maxima or tam_fonte_reais_por <= 40:
+        if largura_total_bloco <= max_largura_texto or tam_fonte_reais_por <= 40:
             break
 
         tam_fonte_reais_por = int(tam_fonte_reais_por * 0.90)
         tam_fonte_centavos_por = int(tam_fonte_centavos_por * 0.90)
         tam_fonte_rs = int(tam_fonte_rs * 0.90)
 
+    # Posiciona o bloco baseado no novo eixo central da área amarela
     x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
     
-    y_rs = y_primeira_linha - (offset_rs_unico_y * mm * scale)
+    y_rs = y_referencia_preco - (offset_rs_unico_y * mm * scale)
     c.setFont("Arial-Black", tam_fonte_rs)
     c.drawString(x_inicio_bloco, y_rs, "R$")
 
     x_reais_por = x_inicio_bloco + largura_rs + (4.0 * mm * scale)
-    y_reais_por = y_primeira_linha - (offset_y_reais * mm * scale)
+    y_reais_por = y_referencia_preco - (offset_y_reais * mm * scale)
     c.setFont("Arial-Black", tam_fonte_reais_por)
     c.drawString(x_reais_por, y_reais_por, reais_por_str)
 
     x_centavos_por = x_reais_por + largura_reais_por + (1.5 * mm * scale)
-    y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
+    y_centavos_por = y_referencia_preco - (offset_y_centavos * mm * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_por)
     c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
