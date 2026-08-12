@@ -1,31 +1,34 @@
 from reportlab.lib.colors import HexColor
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 
 def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     x_center = x_base + (col_w / 2.0)
     topo_etiqueta = y_base + row_h
 
-    # --- 1. DESCRIÇÃO DO PRODUTO ---
+    # --- 1. DESCRIÇÃO DO PRODUTO (mesma altura e mesma lógica da etiqueta unitária) ---
     tam_fonte_desc = int(36 * scale)
-    c.setFont("Arial-Black", tam_fonte_desc)
     max_largura_texto = col_w - (9.0 * mm * scale)
-    y_primeira_linha = topo_etiqueta - (62.0 * mm * scale)
+    y_primeira_linha = topo_etiqueta - (72.0 * mm * scale)  # antes: 62mm — descia perto demais da barra vermelha
     desc = item.get("desc", "")
 
-    if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
-        c.drawCentredString(x_center, y_primeira_linha, desc)
-    else:
-        palavras = desc.split()
-        linha1, linha2 = "", ""
-        for palavra in palavras:
-            teste_linha1 = f"{linha1} {palavra}".strip()
-            if c.stringWidth(teste_linha1, "Arial-Black", tam_fonte_desc) <= max_largura_texto and not linha2:
-                linha1 = teste_linha1
-            else:
-                linha2 = f"{linha2} {palavra}".strip()
-        y_segunda_linha = y_primeira_linha - ((tam_fonte_desc * 0.35 + 3.0) * mm)
-        c.drawCentredString(x_center, y_primeira_linha, linha1)
-        c.drawCentredString(x_center, y_segunda_linha, linha2)
+    # Vai diminuindo de 1 em 1 ponto (nunca de forma abrupta) até caber em no máximo 2 linhas
+    linhas_desc = []
+    while tam_fonte_desc > 10:
+        c.setFont("Arial-Black", tam_fonte_desc)
+        linhas_desc = simpleSplit(desc, "Arial-Black", tam_fonte_desc, max_largura_texto)
+        if len(linhas_desc) <= 2:
+            break
+        tam_fonte_desc -= 1
+
+    linhas_desc = linhas_desc[:2]  # trava de segurança: nunca desenha uma 3ª linha
+    c.setFont("Arial-Black", tam_fonte_desc)
+    espacamento_desc = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
+
+    y_linha_atual = y_primeira_linha
+    for linha in linhas_desc:
+        c.drawCentredString(x_center, y_linha_atual, linha)
+        y_linha_atual -= espacamento_desc
 
     # --- 2. OFFSETS CENTRAIS (Com Rebaixa - Bloco elevado) ---
     offset_base_de_y = 100.0
@@ -66,7 +69,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     tam_fonte_centavos_de = int(fonte_centavos_de * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_de)
     largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
-    x_centavos_de = x_reais_de + largura_reais_de + (1.5 * mm * scale)
+    x_centavos_de = x_reais_de + largura_reais_de + (0.6 * mm * scale)
     y_centavos_de = y_primeira_linha - (offset_y_centavos_de * mm * scale)
     c.drawString(x_centavos_de, y_centavos_de, centavos_de_str)
 
@@ -113,7 +116,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     tam_fonte_centavos_por = int(fonte_centavos * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_por)
-    x_centavos_por = x_reais_por + c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por) + (1.5 * mm * scale)
+    x_centavos_por = x_reais_por + c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por) + (0.6 * mm * scale)
     y_centavos_por = y_primeira_linha - (offset_y_centavos * mm * scale)
     c.drawString(x_centavos_por, y_centavos_por, centavos_por_str)
 
