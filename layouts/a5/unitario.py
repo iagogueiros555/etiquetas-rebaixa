@@ -37,7 +37,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     # --- 2. BLOCO PREÇO UNITÁRIO CENTRALIZADO ---
     # Mantemos o preço seguro na metade inferior da folha (22mm da base)
-    y_preco_base = y_base + (17.0 * mm * scale)
+    y_preco_base = y_base + (10.0 * mm * scale)
 
     val_por_raw = item.get("por", "").replace(".", ",")
     if "," in val_por_raw:
