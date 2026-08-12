@@ -25,7 +25,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     
     # Baseado na sua régua: 65mm é onde começa o texto da loja. 
     # Colocamos a 68mm para garantir que escape totalmente da onda vermelha!
-    y_centro_desc = topo_etiqueta - (68.0 * mm * scale) 
+    y_centro_desc = topo_etiqueta - (70.0 * mm * scale) 
     espacamento = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
     
     altura_total_texto = (len(linhas_desc) - 1) * espacamento
