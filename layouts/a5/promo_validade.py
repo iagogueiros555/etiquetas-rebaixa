@@ -45,18 +45,18 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     num_digitos_de = len(reais_de_str)
     if num_digitos_de <= 1:
         x_de_pos, fonte_reais_de, fonte_centavos_de = 28.0, 58, 32
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 11.0, offset_centavos_padrao - 5.0
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 9.0, offset_centavos_padrao - 3.0
     elif num_digitos_de == 2:
         x_de_pos, fonte_reais_de, fonte_centavos_de = 14.0, 47, 25
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 13.0, offset_centavos_padrao - 5.0
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 11.0, offset_centavos_padrao - 3.0
     else:
         x_de_pos, fonte_reais_de, fonte_centavos_de = 8.0, 36, 20
-        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 15.0, offset_centavos_padrao - 7.0
+        offset_y_reais_de, offset_y_centavos_de = offset_reais_padrao - 13.0, offset_centavos_padrao - 5.0
 
     tam_fonte_de = int(20 * scale)
     c.setFont("Arial-Black", tam_fonte_de)
     x_de = x_base + (x_de_pos * mm * scale)
-    y_de = topo_etiqueta - (offset_base_de_y * mm * scale)
+    y_de = topo_etiqueta - (offset_base_de_y * mm * scale) - (2.0 * mm * scale)  # +2mm pra baixo
     c.drawString(x_de, y_de, "De")
     c.drawString(x_de, y_de - (7.5 * mm * scale), "R$")
 
@@ -92,13 +92,13 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     num_digitos_reais = len(reais_por_str)
     if num_digitos_reais <= 1:
-        fonte_reais, fonte_centavos = 128, 64
+        fonte_reais, fonte_centavos = 120, 60
         offset_y_reais, offset_y_centavos = offset_reais_padrao, offset_centavos_padrao
     elif num_digitos_reais == 2:
-        fonte_reais, fonte_centavos = 98, 50
+        fonte_reais, fonte_centavos = 92, 47
         offset_y_reais, offset_y_centavos = offset_reais_padrao - 5.0, offset_centavos_padrao
     else:
-        fonte_reais, fonte_centavos = 76, 38
+        fonte_reais, fonte_centavos = 70, 36
         offset_y_reais, offset_y_centavos = offset_reais_padrao - 11.0, offset_centavos_padrao
 
     tam_fonte_por_rotulo = int(30 * scale)
