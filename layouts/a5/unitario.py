@@ -4,23 +4,18 @@ from reportlab.lib.utils import simpleSplit
 def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     topo_etiqueta = y_base + row_h
     
-    # --- A MÁGICA DO ALINHAMENTO ---
-    margem_onda_direita = 55.0 * mm * scale
-    largura_amarela = col_w - margem_onda_direita
+    # --- O CENTRO REAL DA FOLHA (De volta ao normal!) ---
+    x_center = x_base + (col_w / 2.0)
     
-    # O novo centro agora é o meio exato do espaço amarelo livre
-    x_center = x_base + (largura_amarela / 2.0)
-
     # --- 1. DESCRIÇÃO DO PRODUTO (Dinâmica - Máximo 2 linhas) ---
     tam_fonte_desc = int(36 * scale)
-    max_largura_texto = largura_amarela - (10.0 * mm * scale) # 5mm de margem em cada borda
+    max_largura_texto = col_w - (12.0 * mm * scale) # 6mm de margem em cada borda
     desc = item.get("desc", "")
 
     # Loop inteligente: diminui de 1 em 1 ponto até caber em NO MÁXIMO 2 linhas
     linhas_desc = []
     while tam_fonte_desc > 10:
         c.setFont("Arial-Black", tam_fonte_desc)
-        # O simpleSplit quebra o texto perfeitamente usando as palavras
         linhas_desc = simpleSplit(desc, "Arial-Black", tam_fonte_desc, max_largura_texto)
         if len(linhas_desc) <= 2:
             break
@@ -28,8 +23,8 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     c.setFont("Arial-Black", tam_fonte_desc)
     
-    # Centraliza o bloco de texto para não engolir o preço
-    y_centro_desc = topo_etiqueta - (42.0 * mm * scale) 
+    # Subimos a descrição para ficar colada no topo, igual ao padrão da loja
+    y_centro_desc = topo_etiqueta - (30.0 * mm * scale) 
     espacamento = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
     
     altura_total_texto = (len(linhas_desc) - 1) * espacamento
@@ -39,9 +34,9 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         c.drawCentredString(x_center, y_atual_desc, linha)
         y_atual_desc -= espacamento
 
-    # --- 2. OFFSETS CENTRAIS DO PREÇO ---
-    # Eixo de referência fixo para garantir que o preço nunca se mova
-    y_referencia_preco = topo_etiqueta - (50.0 * mm * scale)
+    # --- 2. OFFSETS CENTRAIS DO PREÇO (Movidos para cima) ---
+    # Eixo de referência fixo e mais alto
+    y_referencia_preco = topo_etiqueta - (35.0 * mm * scale)
 
     offset_rs_unico_y = 35.0
     offset_reais_padrao = 54.0
@@ -70,7 +65,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     tam_fonte_centavos_por = int(fonte_centavos * scale)
     tam_fonte_un_por = int(20 * scale)
 
-    # Verifica se o preço gigante invade as margens do amarelo, se invadir, diminui
+    # Verifica se o preço gigante invade as margens, se invadir, diminui
     while True:
         c.setFont("Arial-Black", tam_fonte_rs)
         largura_rs = c.stringWidth("R$", "Arial-Black", tam_fonte_rs)
@@ -88,7 +83,7 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
         tam_fonte_centavos_por = int(tam_fonte_centavos_por * 0.90)
         tam_fonte_rs = int(tam_fonte_rs * 0.90)
 
-    # Posiciona o bloco baseado no novo eixo central da área amarela
+    # Posiciona o bloco baseado no eixo central real
     x_inicio_bloco = x_center - (largura_total_bloco / 2.0)
     
     y_rs = y_referencia_preco - (offset_rs_unico_y * mm * scale)
