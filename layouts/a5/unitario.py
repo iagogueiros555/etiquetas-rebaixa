@@ -47,21 +47,20 @@ def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
 
     num_digitos_reais = len(reais_por_str)
     if num_digitos_reais <= 2:
-        fonte_reais, fonte_centavos = 144, 72
+        fonte_reais, fonte_centavos = 152, 88   # antes: 144, 72
         y_reais_por = y_preco_base
         y_centavos_por = y_preco_base + (16.0 * mm * scale)
         y_rs = y_preco_base + (30.0 * mm * scale)
     elif num_digitos_reais == 3:
-        fonte_reais, fonte_centavos = 110, 55
+        fonte_reais, fonte_centavos = 116, 67   # antes: 110, 55
         y_reais_por = y_preco_base + (5.0 * mm * scale)
         y_centavos_por = y_preco_base + (16.0 * mm * scale)
         y_rs = y_preco_base + (25.0 * mm * scale)
     else:
-        fonte_reais, fonte_centavos = 85, 42
+        fonte_reais, fonte_centavos = 90, 52    # antes: 85, 42
         y_reais_por = y_preco_base + (8.0 * mm * scale)
         y_centavos_por = y_preco_base + (16.0 * mm * scale)
         y_rs = y_preco_base + (20.0 * mm * scale)
-
     tam_fonte_rs = int(30 * scale)
     tam_fonte_reais_por = int(fonte_reais * scale)
     tam_fonte_centavos_por = int(fonte_centavos * scale)
