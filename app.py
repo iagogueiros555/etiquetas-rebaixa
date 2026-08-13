@@ -117,19 +117,24 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=cfg["size"])
 
-    for idx, item in enumerate(itens):
-        if idx > 0 and idx % cap_pagina == 0:
-            c.showPage()
-
-        pos_na_pagina = idx % cap_pagina
-        col = pos_na_pagina % cols
-        row = pos_na_pagina // cols
-
-        x_base = col * col_w
-        y_base = page_h - ((row + 1) * row_h)
-
+    posicao_global = 0
+    for item in itens:
+        qtd = max(1, int(item.get("quantidade", 1)))
         draw_func = selecionar_funcao_desenho(modelo_chave, item)
-        draw_func(c, item, x_base, y_base, col_w, row_h, scale)
+
+        for _ in range(qtd):
+            if posicao_global > 0 and posicao_global % cap_pagina == 0:
+                c.showPage()
+
+            pos_na_pagina = posicao_global % cap_pagina
+            col = pos_na_pagina % cols
+            row = pos_na_pagina // cols
+
+            x_base = col * col_w
+            y_base = page_h - ((row + 1) * row_h)
+
+            draw_func(c, item, x_base, y_base, col_w, row_h, scale)
+            posicao_global += 1
 
     c.save()
     buffer.seek(0)
@@ -202,10 +207,10 @@ if e_fardo_caixa:
                     "e_rebaixa": False,
                     "e_fardo": True,
                     "qtd_fardo": qtd_fardo,
+                    "quantidade": int(qtd_copias),
                 }
-                for _ in range(int(qtd_copias)):
-                    st.session_state.lista_itens.append(item_dados)
-                st.success(f"{qtd_copias} etiqueta(s) de caixa adicionada(s)!")
+                st.session_state.lista_itens.append(item_dados)
+                st.success(f"Etiqueta de caixa adicionada (x{qtd_copias})!")
                 st.rerun()
             else:
                 st.warning("Preencha a Descrição do Produto!")
@@ -259,11 +264,11 @@ else:
                     "val": validade,
                     "e_rebaixa": e_rebaixa,
                     "e_fardo": False,
+                    "quantidade": int(qtd_copias),
                 }
-                for _ in range(int(qtd_copias)):
-                    st.session_state.lista_itens.append(item_dados)
+                st.session_state.lista_itens.append(item_dados)
 
-                st.success(f"{qtd_copias} etiqueta(s) do produto '{desc}' adicionada(s)!")
+                st.success(f"Etiqueta do produto '{desc}' adicionada (x{qtd_copias})!")
                 st.rerun()
             else:
                 st.warning("Preencha ao menos a Descrição e o Preço POR!")
@@ -274,15 +279,16 @@ if st.session_state.lista_itens:
     st.markdown("### 📋 Lista para Impressão")
 
     # Cabeçalho da lista
-    h_num, h_desc, h_preco, h_extra, h_del = st.columns([0.5, 3.5, 2, 2, 0.7])
+    h_num, h_desc, h_preco, h_extra, h_qtd, h_del = st.columns([0.5, 3, 2, 2, 1, 0.7])
     h_num.markdown("**#**")
     h_desc.markdown("**Descrição**")
     h_preco.markdown("**Preço**")
     h_extra.markdown("**Un. / Validade**")
+    h_qtd.markdown("**Qtd.**")
 
-    # Uma linha por etiqueta, com botão de apagar individual
+    # Uma linha por etiqueta, com quantidade editável e botão de apagar individual
     for idx, item in enumerate(st.session_state.lista_itens):
-        col_num, col_desc, col_preco, col_extra, col_del = st.columns([0.5, 3.5, 2, 2, 0.7])
+        col_num, col_desc, col_preco, col_extra, col_qtd, col_del = st.columns([0.5, 3, 2, 2, 1, 0.7])
 
         col_num.write(idx + 1)
         col_desc.write(item.get("desc", ""))
@@ -303,9 +309,19 @@ if st.session_state.lista_itens:
                 extra_txt += f" • Val: {item.get('val')}"
             col_extra.write(extra_txt)
 
+        # Caixa de quantidade: quantas vezes essa etiqueta vai repetir no PDF
+        nova_qtd = col_qtd.number_input(
+            "Qtd.", min_value=1, value=int(item.get("quantidade", 1)), step=1,
+            key=f"qtd_item_{idx}", label_visibility="collapsed"
+        )
+        item["quantidade"] = int(nova_qtd)
+
         if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
             st.session_state.lista_itens.pop(idx)
             st.rerun()
+
+    total_etiquetas = sum(int(i.get("quantidade", 1)) for i in st.session_state.lista_itens)
+    st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_etiquetas}**")
 
     st.divider()
 
@@ -326,7 +342,7 @@ if st.session_state.lista_itens:
             <button onclick="openPDF()" style=
                 "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
             >
-                🖨️ ABRIR PDF EM NOVA ABA
+                🖨️ IMPRIMIR ETIQUETAS
             </button>
             <script>
             function openPDF() {{
