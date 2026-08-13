@@ -1,33 +1,32 @@
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 
 def desenhar_etiqueta_a5(c, item, x_base, y_base, col_w, row_h, scale):
     x_center = x_base + (col_w / 2.0)
     topo_etiqueta = y_base + row_h
 
-    # --- 1. DESCRIÇÃO DO PRODUTO ---
+    # --- 1. DESCRIÇÃO DO PRODUTO (mesma lógica das outras etiquetas) ---
     tam_fonte_desc = int(36 * scale)
-    c.setFont("Arial-Black", tam_fonte_desc)
-
     max_largura_texto = col_w - (9.0 * mm * scale)
-    y_primeira_linha = topo_etiqueta - (62.0 * mm * scale)
+    y_primeira_linha = topo_etiqueta - (72.0 * mm * scale)  # antes: 62mm — batia na barra vermelha
     desc = item.get("desc", "")
 
-    if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
-        c.drawCentredString(x_center, y_primeira_linha, desc)
-    else:
-        palavras = desc.split()
-        linha1, linha2 = "", ""
-        for palavra in palavras:
-            teste_linha1 = f"{linha1} {palavra}".strip()
-            if c.stringWidth(teste_linha1, "Arial-Black", tam_fonte_desc) <= max_largura_texto and not linha2:
-                linha1 = teste_linha1
-            else:
-                linha2 = f"{linha2} {palavra}".strip()
+    linhas_desc = []
+    while tam_fonte_desc > 10:
+        c.setFont("Arial-Black", tam_fonte_desc)
+        linhas_desc = simpleSplit(desc, "Arial-Black", tam_fonte_desc, max_largura_texto)
+        if len(linhas_desc) <= 2:
+            break
+        tam_fonte_desc -= 1
 
-        espacamento_linhas = (tam_fonte_desc * 0.35 + 3.0) * mm
-        y_segunda_linha = y_primeira_linha - espacamento_linhas
-        c.drawCentredString(x_center, y_primeira_linha, linha1)
-        c.drawCentredString(x_center, y_segunda_linha, linha2)
+    linhas_desc = linhas_desc[:2]  # trava de segurança: nunca desenha uma 3ª linha
+    c.setFont("Arial-Black", tam_fonte_desc)
+    espacamento_desc = (tam_fonte_desc * 0.35 + 3.0) * mm * scale
+
+    y_linha_atual = y_primeira_linha
+    for linha in linhas_desc:
+        c.drawCentredString(x_center, y_linha_atual, linha)
+        y_linha_atual -= espacamento_desc
 
     # --- 2. OFFSETS CENTRAIS (Sem Rebaixa) ---
     offset_base_de_y = 103.0
