@@ -152,9 +152,9 @@ with col_formato:
         "Formato da Folha:", list(LAYOUTS.keys())
     )
 
-# Altura fixa da caixa de etiquetas geradas — reduzida pra caber tudo numa
-# tela só, sem precisar rolar a página. Ajuste esse número se precisar.
-ALTURA_CAIXA_LISTA = 260
+# Altura fixa da caixa de etiquetas geradas — ajustada pra bater com a
+# altura natural do formulário "Dados do Produto" ao lado.
+ALTURA_CAIXA_LISTA = 320
 
 col_lista, col_menu = st.columns([3, 2], gap="medium")
 
