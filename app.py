@@ -144,7 +144,7 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
 if "lista_itens" not in st.session_state:
     st.session_state.lista_itens = []
 
-col_titulo, col_formato = st.columns([2, 1])
+col_titulo, col_formato = st.columns([3, 2])
 with col_titulo:
     st.markdown("## 🏷️ Gerador de Etiquetas")
 with col_formato:
@@ -290,7 +290,6 @@ with col_menu:
                 valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
                 preco_manual_input = ""
 
-            qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
             btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
 
             if btn_adicionar_fardo:
@@ -314,10 +313,10 @@ with col_menu:
                         "e_rebaixa": False,
                         "e_fardo": True,
                         "qtd_fardo": qtd_fardo,
-                        "quantidade": int(qtd_copias),
+                        "quantidade": 1,
                     }
                     st.session_state.lista_itens.append(item_dados)
-                    st.success(f"Etiqueta de caixa adicionada (x{qtd_copias})!")
+                    st.success("Etiqueta de caixa adicionada! Ajuste a quantidade na lista ao lado.")
                     st.rerun()
                 else:
                     st.warning("Preencha a Descrição do Produto!")
@@ -350,14 +349,10 @@ with col_menu:
                 with col_p2:
                     unidade = st.text_input("Unidade:", value="1 UN").upper()
 
-            col_bottom1, col_bottom2 = st.columns([2, 1])
-            with col_bottom1:
-                if e_rebaixa:
-                    validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
-                else:
-                    validade = ""
-            with col_bottom2:
-                qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
+            if e_rebaixa:
+                validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+            else:
+                validade = ""
 
             btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
 
@@ -371,11 +366,11 @@ with col_menu:
                         "val": validade,
                         "e_rebaixa": e_rebaixa,
                         "e_fardo": False,
-                        "quantidade": int(qtd_copias),
+                        "quantidade": 1,
                     }
                     st.session_state.lista_itens.append(item_dados)
 
-                    st.success(f"Etiqueta do produto '{desc}' adicionada (x{qtd_copias})!")
+                    st.success(f"Etiqueta do produto '{desc}' adicionada! Ajuste a quantidade na lista ao lado.")
                     st.rerun()
                 else:
                     st.warning("Preencha ao menos a Descrição e o Preço POR!")
