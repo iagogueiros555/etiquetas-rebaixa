@@ -41,8 +41,6 @@ st.set_page_config(
     page_title="Gerador de Etiquetas - Novo Atacarejo", layout="wide"
 )
 
-st.title("🏷️ Gerador de Etiquetas")
-
 # --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
 LAYOUTS = {
     "A6 Vertical (6 por A4)": {
@@ -146,21 +144,23 @@ def gerar_pdf_etiquetas(itens, modelo_chave):
 if "lista_itens" not in st.session_state:
     st.session_state.lista_itens = []
 
-modelo_selecionado = st.selectbox(
-    "Selecione o Formato da Folha:", list(LAYOUTS.keys())
-)
+col_titulo, col_formato = st.columns([2, 1])
+with col_titulo:
+    st.markdown("## 🏷️ Gerador de Etiquetas")
+with col_formato:
+    modelo_selecionado = st.selectbox(
+        "Formato da Folha:", list(LAYOUTS.keys())
+    )
 
-st.divider()
+# Altura fixa da caixa de etiquetas geradas — reduzida pra caber tudo numa
+# tela só, sem precisar rolar a página. Ajuste esse número se precisar.
+ALTURA_CAIXA_LISTA = 260
 
-# Altura fixa da caixa de etiquetas geradas — dá pra ajustar esse número
-# conforme sobrar/faltar espaço na tela de vocês no trabalho.
-ALTURA_CAIXA_LISTA = 420
-
-col_lista, col_menu = st.columns([3, 2], gap="large")
+col_lista, col_menu = st.columns([3, 2], gap="medium")
 
 # ===================== COLUNA ESQUERDA: ETIQUETAS GERADAS =====================
 with col_lista:
-    st.markdown("### 📋 Etiquetas Geradas")
+    st.markdown("**📋 Etiquetas Geradas**")
 
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
@@ -254,7 +254,7 @@ with col_lista:
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
-    st.markdown("### 📝 Dados do Produto")
+    st.markdown("**📝 Dados do Produto**")
 
     e_fardo_caixa = False
     if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
