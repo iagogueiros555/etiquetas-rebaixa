@@ -38,7 +38,7 @@ importlib.reload(unitario_validade_a5)
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
 
 st.set_page_config(
-    page_title="Gerador de Etiquetas - Novo Atacarejo", layout="centered"
+    page_title="Gerador de Etiquetas - Novo Atacarejo", layout="wide"
 )
 
 st.title("🏷️ Gerador de Etiquetas")
@@ -151,213 +151,231 @@ modelo_selecionado = st.selectbox(
 )
 
 st.divider()
-st.markdown("### 📝 Dados do Produto")
 
-e_fardo_caixa = False
-if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
-    e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
+# Altura fixa da caixa de etiquetas geradas — dá pra ajustar esse número
+# conforme sobrar/faltar espaço na tela de vocês no trabalho.
+ALTURA_CAIXA_LISTA = 420
 
-if e_fardo_caixa:
-    # Checkbox fora do form para atualizar instantaneamente
-    modo_manual = st.checkbox("✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)", value=False)
+col_lista, col_menu = st.columns([3, 2], gap="large")
 
-    with st.form("form_fardo", clear_on_submit=True):
-        desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
+# ===================== COLUNA ESQUERDA: ETIQUETAS GERADAS =====================
+with col_lista:
+    st.markdown("### 📋 Etiquetas Geradas")
 
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
-            qtd_fardo = st.number_input("Qtd. na Caixa/Fardo:", min_value=1, value=12, step=1)
-        with col_f2:
-            unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
+    with st.container(height=ALTURA_CAIXA_LISTA, border=True):
+        if st.session_state.lista_itens:
+            h_num, h_desc, h_preco, h_extra, h_qtd, h_del = st.columns([0.4, 2.6, 1.8, 1.6, 0.9, 0.6])
+            h_num.markdown("**#**")
+            h_desc.markdown("**Descrição**")
+            h_preco.markdown("**Preço**")
+            h_extra.markdown("**Un. / Val.**")
+            h_qtd.markdown("**Qtd.**")
 
-        # O preço unitário base aparece SEMPRE
-        preco_unitario_base = st.number_input("Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f")
+            for idx, item in enumerate(st.session_state.lista_itens):
+                col_num, col_desc, col_preco, col_extra, col_qtd, col_del = st.columns(
+                    [0.4, 2.6, 1.8, 1.6, 0.9, 0.6]
+                )
 
-        if modo_manual:
-            # Se marcado, exibe a caixa para digitar o total da caixa manualmente
-            preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
-            valor_caixa_str = ""
+                col_num.write(idx + 1)
+                col_desc.write(item.get("desc", ""))
+
+                if item.get("e_fardo"):
+                    col_preco.write(f"R$ {item.get('por', '')} (fardo)")
+                    col_extra.write(
+                        f"{item.get('qtd_fardo', '')}x R$ {item.get('preco_unit', '')} • {item.get('un', '')}"
+                    )
+                elif item.get("de"):
+                    col_preco.write(f"De {item.get('de', '')} → Por {item.get('por', '')}")
+                    extra_txt = item.get("un", "")
+                    if item.get("val"):
+                        extra_txt += f" • Val: {item.get('val')}"
+                    col_extra.write(extra_txt)
+                else:
+                    col_preco.write(f"R$ {item.get('por', '')}")
+                    extra_txt = item.get("un", "")
+                    if item.get("val"):
+                        extra_txt += f" • Val: {item.get('val')}"
+                    col_extra.write(extra_txt)
+
+                # Caixa de quantidade: quantas vezes essa etiqueta vai repetir no PDF
+                nova_qtd = col_qtd.number_input(
+                    "Qtd.", min_value=1, value=int(item.get("quantidade", 1)), step=1,
+                    key=f"qtd_item_{idx}", label_visibility="collapsed"
+                )
+                item["quantidade"] = int(nova_qtd)
+
+                if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
+                    st.session_state.lista_itens.pop(idx)
+                    st.rerun()
         else:
-            # Se desmarcado, calcula automaticamente
-            preco_calculado = preco_unitario_base * qtd_fardo
-            valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
-            preco_manual_input = ""
+            st.caption("Nenhuma etiqueta adicionada ainda. Preencha o formulário ao lado ➡️")
 
-        qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
-        btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
+    # Total e botões de ação ficam FORA da caixa com scroll, sempre visíveis
+    if st.session_state.lista_itens:
+        total_etiquetas = sum(int(i.get("quantidade", 1)) for i in st.session_state.lista_itens)
+        st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_etiquetas}**")
 
-        if btn_adicionar_fardo:
-            if desc:
-                if modo_manual:
-                    if preco_manual_input:
-                        valor_caixa_str = preco_manual_input.replace(".", ",").strip()
-                    else:
-                        st.warning("Informe o preço manual da caixa!")
-                        st.stop()
-
-                valor_unit_str = f"{preco_unitario_base:.2f}".replace(".", ",")
-
-                item_dados = {
-                    "desc": desc,
-                    "de": "",
-                    "por": valor_caixa_str,          # Preço principal da caixa
-                    "preco_unit": valor_unit_str,    # Preço unitário base
-                    "un": unidade,
-                    "val": "",
-                    "e_rebaixa": False,
-                    "e_fardo": True,
-                    "qtd_fardo": qtd_fardo,
-                    "quantidade": int(qtd_copias),
-                }
-                st.session_state.lista_itens.append(item_dados)
-                st.success(f"Etiqueta de caixa adicionada (x{qtd_copias})!")
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("🗑️ Limpar Lista"):
+                st.session_state.lista_itens = []
                 st.rerun()
-            else:
-                st.warning("Preencha a Descrição do Produto!")
-else:
-    # --- MODOS NORMAIS (PROMOCIONAL OU UNITÁRIO) ---
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
-    with col_t2:
-        e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
 
-    with st.form("form_produto", clear_on_submit=True):
-        desc = st.text_input(
-            "Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE"
-        ).upper()
+        with b2:
+            pdf_buffer = gerar_pdf_etiquetas(
+                st.session_state.lista_itens, modelo_selecionado
+            )
+            base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
-        if tem_desconto:
-            col_p1, col_p2, col_p3 = st.columns(3)
-            with col_p1:
-                de = st.text_input("Preço DE (R$):", placeholder="Ex: 5,58")
-            with col_p2:
-                por = st.text_input("Preço POR (R$):", placeholder="Ex: 1,97")
-            with col_p3:
-                unidade = st.text_input("Unidade:", value="1 UN").upper()
-        else:
-            col_p1, col_p2 = st.columns([2, 1])
-            with col_p1:
-                por = st.text_input("Preço Único (R$):", placeholder="Ex: 1,97")
-                de = ""
-            with col_p2:
-                unidade = st.text_input("Unidade:", value="1 UN").upper()
-
-        col_bottom1, col_bottom2 = st.columns([2, 1])
-        with col_bottom1:
-            if e_rebaixa:
-                validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
-            else:
-                validade = ""
-        with col_bottom2:
-            qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
-
-        btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
-
-        if btn_adicionar:
-            if desc and por:
-                item_dados = {
-                    "desc": desc,
-                    "de": de.replace(".", ",").strip(),
-                    "por": por.replace(".", ",").strip(),
-                    "un": unidade,
-                    "val": validade,
-                    "e_rebaixa": e_rebaixa,
-                    "e_fardo": False,
-                    "quantidade": int(qtd_copias),
-                }
-                st.session_state.lista_itens.append(item_dados)
-
-                st.success(f"Etiqueta do produto '{desc}' adicionada (x{qtd_copias})!")
-                st.rerun()
-            else:
-                st.warning("Preencha ao menos a Descrição e o Preço POR!")
-
-# --- TABELA E AÇÃO DE IMPRESSÃO ---
-if st.session_state.lista_itens:
-    st.divider()
-    st.markdown("### 📋 Lista para Impressão")
-
-    # Cabeçalho da lista
-    h_num, h_desc, h_preco, h_extra, h_qtd, h_del = st.columns([0.5, 3, 2, 2, 1, 0.7])
-    h_num.markdown("**#**")
-    h_desc.markdown("**Descrição**")
-    h_preco.markdown("**Preço**")
-    h_extra.markdown("**Un. / Validade**")
-    h_qtd.markdown("**Qtd.**")
-
-    # Uma linha por etiqueta, com quantidade editável e botão de apagar individual
-    for idx, item in enumerate(st.session_state.lista_itens):
-        col_num, col_desc, col_preco, col_extra, col_qtd, col_del = st.columns([0.5, 3, 2, 2, 1, 0.7])
-
-        col_num.write(idx + 1)
-        col_desc.write(item.get("desc", ""))
-
-        if item.get("e_fardo"):
-            col_preco.write(f"R$ {item.get('por', '')} (fardo)")
-            col_extra.write(f"{item.get('qtd_fardo', '')}x R$ {item.get('preco_unit', '')} • {item.get('un', '')}")
-        elif item.get("de"):
-            col_preco.write(f"De {item.get('de', '')} → Por {item.get('por', '')}")
-            extra_txt = item.get("un", "")
-            if item.get("val"):
-                extra_txt += f" • Val: {item.get('val')}"
-            col_extra.write(extra_txt)
-        else:
-            col_preco.write(f"R$ {item.get('por', '')}")
-            extra_txt = item.get("un", "")
-            if item.get("val"):
-                extra_txt += f" • Val: {item.get('val')}"
-            col_extra.write(extra_txt)
-
-        # Caixa de quantidade: quantas vezes essa etiqueta vai repetir no PDF
-        nova_qtd = col_qtd.number_input(
-            "Qtd.", min_value=1, value=int(item.get("quantidade", 1)), step=1,
-            key=f"qtd_item_{idx}", label_visibility="collapsed"
-        )
-        item["quantidade"] = int(nova_qtd)
-
-        if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
-            st.session_state.lista_itens.pop(idx)
-            st.rerun()
-
-    total_etiquetas = sum(int(i.get("quantidade", 1)) for i in st.session_state.lista_itens)
-    st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_etiquetas}**")
-
-    st.divider()
-
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("🗑️ Limpar Lista"):
-            st.session_state.lista_itens = []
-            st.rerun()
-
-    with c2:
-        pdf_buffer = gerar_pdf_etiquetas(
-            st.session_state.lista_itens, modelo_selecionado
-        )
-        base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
-
-        components.html(
-            f"""
-            <button onclick="openPDF()" style=
-                "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
-            >
-                🖨️ IMPRIMIR ETIQUETAS
-            </button>
-            <script>
-            function openPDF() {{
-                const base64Data = "{base64_pdf}";
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {{
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+            components.html(
+                f"""
+                <button onclick="openPDF()" style=
+                    "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
+                >
+                    🖨️ IMPRIMIR ETIQUETAS
+                </button>
+                <script>
+                function openPDF() {{
+                    const base64Data = "{base64_pdf}";
+                    const byteCharacters = atob(base64Data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {{
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }}
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], {{ type: 'application/pdf' }});
+                    const blobUrl = URL.createObjectURL(blob);
+                    window.open(blobUrl, '_blank');
                 }}
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], {{ type: 'application/pdf' }});
-                const blobUrl = URL.createObjectURL(blob);
-                window.open(blobUrl, '_blank');
-            }}
-            </script>
-            """,
-            height=50,
+                </script>
+                """,
+                height=50,
+            )
+
+# ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
+with col_menu:
+    st.markdown("### 📝 Dados do Produto")
+
+    e_fardo_caixa = False
+    if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
+        e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
+
+    if e_fardo_caixa:
+        # Checkbox fora do form para atualizar instantaneamente
+        modo_manual = st.checkbox(
+            "✏️ Digitar preço total da caixa manualmente (Desativar cálculo automático)", value=False
         )
+
+        with st.form("form_fardo", clear_on_submit=True):
+            desc = st.text_input("Descrição do Produto:", placeholder="Ex: SHAMPOO SEDA 325ML").upper()
+
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                qtd_fardo = st.number_input("Qtd. na Caixa/Fardo:", min_value=1, value=12, step=1)
+            with col_f2:
+                unidade = st.text_input("Unidade (Ex: UN, PCT):", value="UN").upper()
+
+            # O preço unitário base aparece SEMPRE
+            preco_unitario_base = st.number_input(
+                "Preço Unitário Base (R$):", min_value=0.01, value=5.00, format="%.2f"
+            )
+
+            if modo_manual:
+                # Se marcado, exibe a caixa para digitar o total da caixa manualmente
+                preco_manual_input = st.text_input("Preço Total da Caixa (R$):", placeholder="Ex: 47,00")
+                valor_caixa_str = ""
+            else:
+                # Se desmarcado, calcula automaticamente
+                preco_calculado = preco_unitario_base * qtd_fardo
+                valor_caixa_str = f"{preco_calculado:.2f}".replace(".", ",")
+                preco_manual_input = ""
+
+            qtd_copias = st.number_input("Qtd. de Etiquetas de Fardo:", min_value=1, value=1, step=1)
+            btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
+
+            if btn_adicionar_fardo:
+                if desc:
+                    if modo_manual:
+                        if preco_manual_input:
+                            valor_caixa_str = preco_manual_input.replace(".", ",").strip()
+                        else:
+                            st.warning("Informe o preço manual da caixa!")
+                            st.stop()
+
+                    valor_unit_str = f"{preco_unitario_base:.2f}".replace(".", ",")
+
+                    item_dados = {
+                        "desc": desc,
+                        "de": "",
+                        "por": valor_caixa_str,          # Preço principal da caixa
+                        "preco_unit": valor_unit_str,    # Preço unitário base
+                        "un": unidade,
+                        "val": "",
+                        "e_rebaixa": False,
+                        "e_fardo": True,
+                        "qtd_fardo": qtd_fardo,
+                        "quantidade": int(qtd_copias),
+                    }
+                    st.session_state.lista_itens.append(item_dados)
+                    st.success(f"Etiqueta de caixa adicionada (x{qtd_copias})!")
+                    st.rerun()
+                else:
+                    st.warning("Preencha a Descrição do Produto!")
+    else:
+        # --- MODOS NORMAIS (PROMOCIONAL OU UNITÁRIO) ---
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
+        with col_t2:
+            e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
+
+        with st.form("form_produto", clear_on_submit=True):
+            desc = st.text_input(
+                "Descrição do Produto:", placeholder="Ex: BISC MAIZENA CAPRICCHE 312G LEITE"
+            ).upper()
+
+            if tem_desconto:
+                col_p1, col_p2, col_p3 = st.columns(3)
+                with col_p1:
+                    de = st.text_input("Preço DE (R$):", placeholder="Ex: 5,58")
+                with col_p2:
+                    por = st.text_input("Preço POR (R$):", placeholder="Ex: 1,97")
+                with col_p3:
+                    unidade = st.text_input("Unidade:", value="1 UN").upper()
+            else:
+                col_p1, col_p2 = st.columns([2, 1])
+                with col_p1:
+                    por = st.text_input("Preço Único (R$):", placeholder="Ex: 1,97")
+                    de = ""
+                with col_p2:
+                    unidade = st.text_input("Unidade:", value="1 UN").upper()
+
+            col_bottom1, col_bottom2 = st.columns([2, 1])
+            with col_bottom1:
+                if e_rebaixa:
+                    validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+                else:
+                    validade = ""
+            with col_bottom2:
+                qtd_copias = st.number_input("Qtd. de Cópias:", min_value=1, value=1, step=1)
+
+            btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
+
+            if btn_adicionar:
+                if desc and por:
+                    item_dados = {
+                        "desc": desc,
+                        "de": de.replace(".", ",").strip(),
+                        "por": por.replace(".", ",").strip(),
+                        "un": unidade,
+                        "val": validade,
+                        "e_rebaixa": e_rebaixa,
+                        "e_fardo": False,
+                        "quantidade": int(qtd_copias),
+                    }
+                    st.session_state.lista_itens.append(item_dados)
+
+                    st.success(f"Etiqueta do produto '{desc}' adicionada (x{qtd_copias})!")
+                    st.rerun()
+                else:
+                    st.warning("Preencha ao menos a Descrição e o Preço POR!")
