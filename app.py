@@ -9,10 +9,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 # --- IMPORTAÇÃO E RELOAD DOS MÓDULOS DE LAYOUT ---
-from layouts import a6
 from layouts.a4 import fardo_caixa, promocional, promocional_validade, unitario, unitario_validade
 
-# Importando os novos módulos A5 com "apelidos" para não dar conflito com os da A4
+# Importando os módulos A5 com "apelidos" para não dar conflito com os da A4
 from layouts.a5 import (
     promo as promo_a5,
     promo_validade as promo_validade_a5,
@@ -20,7 +19,14 @@ from layouts.a5 import (
     unitario_validade as unitario_validade_a5
 )
 
-importlib.reload(a6)
+# Importando os módulos A6 (agora separados, igual ao A5) com "apelidos"
+from layouts.a6 import (
+    promo as promo_a6,
+    promo_validade as promo_validade_a6,
+    unitario as unitario_a6,
+    unitario_validade as unitario_validade_a6
+)
+
 # Reloads A4
 importlib.reload(promocional)
 importlib.reload(promocional_validade)
@@ -32,6 +38,11 @@ importlib.reload(promo_a5)
 importlib.reload(promo_validade_a5)
 importlib.reload(unitario_a5)
 importlib.reload(unitario_validade_a5)
+# Reloads A6
+importlib.reload(promo_a6)
+importlib.reload(promo_validade_a6)
+importlib.reload(unitario_a6)
+importlib.reload(unitario_validade_a6)
 
 
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
@@ -99,7 +110,15 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_a5.desenhar_etiqueta_a5
 
     else:
-        return a6.desenhar_etiqueta_a6
+        # Roteamento para a pasta A6 (mesma lógica do A4 e A5)
+        if tem_de and tem_rebaixa:
+            return promo_validade_a6.desenhar_etiqueta_a6
+        elif tem_de and not tem_rebaixa:
+            return promo_a6.desenhar_etiqueta_a6
+        elif not tem_de and tem_rebaixa:
+            return unitario_validade_a6.desenhar_etiqueta_a6
+        else:
+            return unitario_a6.desenhar_etiqueta_a6
 
 
 def gerar_pdf_etiquetas(itens, modelo_chave):
