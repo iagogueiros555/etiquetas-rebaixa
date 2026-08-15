@@ -1,5 +1,6 @@
 from reportlab.lib.colors import HexColor
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 
 def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     """Etiqueta A6 - Promocional (De / Por), com validade"""
@@ -10,32 +11,28 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     # -------------------------------------------------------------------
     # 1. DESCRIÇÃO DO PRODUTO (Margem exata de 2mm em cada lado = 4mm total)
     # -------------------------------------------------------------------
-    tam_fonte_desc = int(16 * scale)
-    c.setFont("Arial-Black", tam_fonte_desc)
-
+    tam_fonte_desc = int(18 * scale)  # antes: 16 — "um pouco maior"
     max_largura_texto = col_w - (4.0 * mm * scale)
     y_primeira_linha = topo_etiqueta - (40.8 * mm * scale)
     desc = item["desc"]
 
-    if c.stringWidth(desc, "Arial-Black", tam_fonte_desc) <= max_largura_texto:
-        c.drawCentredString(x_center, y_primeira_linha, desc)
-    else:
-        palavras = desc.split()
-        linha1 = ""
-        linha2 = ""
+    # Vai diminuindo de 1 em 1 ponto (nunca abrupto) até caber em no máximo 2 linhas
+    linhas_desc = []
+    while tam_fonte_desc > 8:
+        c.setFont("Arial-Black", tam_fonte_desc)
+        linhas_desc = simpleSplit(desc, "Arial-Black", tam_fonte_desc, max_largura_texto)
+        if len(linhas_desc) <= 2:
+            break
+        tam_fonte_desc -= 1
 
-        for palavra in palavras:
-            teste_linha1 = f"{linha1} {palavra}".strip()
-            if c.stringWidth(teste_linha1, "Arial-Black", tam_fonte_desc) <= max_largura_texto and not linha2:
-                linha1 = teste_linha1
-            else:
-                linha2 = f"{linha2} {palavra}".strip()
+    linhas_desc = linhas_desc[:2]  # trava de segurança: nunca desenha uma 3ª linha
+    c.setFont("Arial-Black", tam_fonte_desc)
+    espacamento_desc = (tam_fonte_desc * 0.35 + 1.8) * mm * scale
 
-        espacamento_linhas = (tam_fonte_desc * 0.35 + 1.8) * mm
-        y_segunda_linha = y_primeira_linha - espacamento_linhas
-
-        c.drawCentredString(x_center, y_primeira_linha, linha1)
-        c.drawCentredString(x_center, y_segunda_linha, linha2)
+    y_linha_atual = y_primeira_linha
+    for linha in linhas_desc:
+        c.drawCentredString(x_center, y_linha_atual, linha)
+        y_linha_atual -= espacamento_desc
 
     # -------------------------------------------------------------------
     # 2. BLOCO "DE / POR"
@@ -141,7 +138,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     # -------------------------------------------------------------------
     x_caixa = x_base + (2.0 * mm * scale)
     y_caixa = y_base + (2.0 * mm * scale)
-    largura_caixa = 104.4 * mm * scale
+    largura_caixa = col_w - (4.0 * mm * scale)  # antes: 104.4mm fixo — estourava 1.4mm na etiqueta vizinha
     altura_caixa = 8.0 * mm * scale
 
     c.setFillColor(HexColor("#CCCCCC"))
