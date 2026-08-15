@@ -392,4 +392,4 @@ with col_menu:
                     st.success(f"Etiqueta do produto '{desc}' adicionada! Ajuste a quantidade na lista ao lado.")
                     st.rerun()
                 else:
-                    st.warning("Preencha ao menos a Descrição e o Preço POR!")
+                    st.warning("Preencha ao menos a Descrição e o Preço POR!") 
