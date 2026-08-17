@@ -56,7 +56,15 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         reais_de_str = val_de_raw
         centavos_de_str = ",00"
 
-    tam_fonte_reais_de = int(26 * scale)
+    num_digitos_de = len(reais_de_str)
+    if num_digitos_de <= 1:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 30, 20
+    elif num_digitos_de == 2:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 24, 16
+    else:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 18, 12
+
+    tam_fonte_reais_de = int(tam_fonte_reais_de * scale)
     c.setFont("Arial-Black", tam_fonte_reais_de)
 
     x_reais_de = x_base + (14.5 * mm * scale)
@@ -65,7 +73,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
     largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
 
-    tam_fonte_centavos_de = int(17 * scale)
+    tam_fonte_centavos_de = int(tam_fonte_centavos_de * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_de)
 
     x_centavos_de = x_reais_de + largura_reais_de + (0.3 * mm * scale)
@@ -109,7 +117,15 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         reais_por_str = val_por_raw
         centavos_por_str = ",00"
 
-    tam_fonte_reais_por = int(58 * scale)
+    num_digitos_por = len(reais_por_str)
+    if num_digitos_por <= 1:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 74, 41
+    elif num_digitos_por == 2:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 52, 29
+    else:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 40, 22
+
+    tam_fonte_reais_por = int(tam_fonte_reais_por * scale)
     c.setFont("Arial-Black", tam_fonte_reais_por)
 
     x_reais_por = x_base + (56.6 * mm * scale)
@@ -118,7 +134,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
     largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
 
-    tam_fonte_centavos_por = int(32 * scale)
+    tam_fonte_centavos_por = int(tam_fonte_centavos_por * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_por)
 
     x_centavos_por = x_reais_por + largura_reais_por + (0.3 * mm * scale)
