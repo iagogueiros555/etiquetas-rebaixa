@@ -1,8 +1,9 @@
+from reportlab.lib.colors import HexColor
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
 
 def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
-    """Etiqueta A6 - Promocional (De / Por), sem validade"""
+    """Etiqueta A6 - Promocional (De / Por), com validade"""
 
     x_center = x_base + (col_w / 2.0)
     topo_etiqueta = y_base + row_h  # Borda superior de cada etiqueta (0 a 99mm)
@@ -55,7 +56,15 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         reais_de_str = val_de_raw
         centavos_de_str = ",00"
 
-    tam_fonte_reais_de = int(26 * scale)
+    num_digitos_de = len(reais_de_str)
+    if num_digitos_de <= 1:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 30, 20
+    elif num_digitos_de == 2:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 24, 16
+    else:
+        tam_fonte_reais_de, tam_fonte_centavos_de = 18, 12
+
+    tam_fonte_reais_de = int(tam_fonte_reais_de * scale)
     c.setFont("Arial-Black", tam_fonte_reais_de)
 
     x_reais_de = x_base + (14.5 * mm * scale)
@@ -64,7 +73,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
     largura_reais_de = c.stringWidth(reais_de_str, "Arial-Black", tam_fonte_reais_de)
 
-    tam_fonte_centavos_de = int(17 * scale)
+    tam_fonte_centavos_de = int(tam_fonte_centavos_de * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_de)
 
     x_centavos_de = x_reais_de + largura_reais_de + (0.3 * mm * scale)
@@ -108,7 +117,15 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
         reais_por_str = val_por_raw
         centavos_por_str = ",00"
 
-    tam_fonte_reais_por = int(58 * scale)
+    num_digitos_por = len(reais_por_str)
+    if num_digitos_por <= 1:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 74, 41
+    elif num_digitos_por == 2:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 52, 29
+    else:
+        tam_fonte_reais_por, tam_fonte_centavos_por = 40, 22
+
+    tam_fonte_reais_por = int(tam_fonte_reais_por * scale)
     c.setFont("Arial-Black", tam_fonte_reais_por)
 
     x_reais_por = x_base + (56.6 * mm * scale)
@@ -117,7 +134,7 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
 
     largura_reais_por = c.stringWidth(reais_por_str, "Arial-Black", tam_fonte_reais_por)
 
-    tam_fonte_centavos_por = int(32 * scale)
+    tam_fonte_centavos_por = int(tam_fonte_centavos_por * scale)
     c.setFont("Arial-Black", tam_fonte_centavos_por)
 
     x_centavos_por = x_reais_por + largura_reais_por + (0.3 * mm * scale)
@@ -131,3 +148,29 @@ def desenhar_etiqueta_a6(c, item, x_base, y_base, col_w, row_h, scale):
     x_un_por = x_centavos_por + (largura_centavos_por / 2.0) + (4.0 * mm * scale)
     y_un_por = y_centavos_por - (6.0 * mm * scale)
     c.drawCentredString(x_un_por, y_un_por, item["un"])
+
+    # -------------------------------------------------------------------
+    # 3. TARJA / AVISO DE REBAIXA (CAIXA CINZA NO RODAPÉ)
+    # -------------------------------------------------------------------
+    x_caixa = x_base + (2.0 * mm * scale)
+    y_caixa = y_base + (2.0 * mm * scale)
+    largura_caixa = col_w - (4.0 * mm * scale)  # antes: 104.4mm fixo — estourava 1.4mm na etiqueta vizinha
+    altura_caixa = 8.0 * mm * scale
+
+    c.setFillColor(HexColor("#CCCCCC"))
+    c.rect(x_caixa, y_caixa, largura_caixa, altura_caixa, fill=1, stroke=0)
+
+    c.setFillColor(HexColor("#000000"))
+
+    tam_fonte_val = int(20 * scale)
+    c.setFont("Arial-Black", tam_fonte_val)
+    y_val = y_caixa + (1.5 * mm * scale)
+    c.drawCentredString(x_center, y_val, f"VALIDADE: {item['val']}")
+
+    tam_fonte_aviso = int(15 * scale)
+    c.setFont("Arial-Black", tam_fonte_aviso)
+    y_aviso2 = y_caixa + altura_caixa + (2.0 * mm * scale)
+    y_aviso1 = y_aviso2 + (5.5 * mm * scale)
+
+    c.drawCentredString(x_center, y_aviso1, "PRODUTO PRÓXIMO")
+    c.drawCentredString(x_center, y_aviso2, "A DATA DE VENCIMENTO")
