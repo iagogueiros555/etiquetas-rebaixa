@@ -1,6 +1,7 @@
 import base64
 import importlib
 import io
+from datetime import date, timedelta
 import streamlit as st
 import streamlit.components.v1 as components
 from reportlab.lib.pagesizes import A4
@@ -369,7 +370,14 @@ with col_menu:
                     unidade = st.text_input("Unidade:", value="1 UN").upper()
 
             if e_rebaixa:
-                validade = st.text_input("Data de Validade:", placeholder="Ex: 01/08/2026")
+                data_validade = st.date_input(
+                    "Data de Validade:",
+                    value=None,
+                    format="DD/MM/YYYY",
+                    min_value=date.today(),
+                    max_value=date.today() + timedelta(days=365 * 3),
+                )
+                validade = data_validade.strftime("%d/%m/%Y") if data_validade else ""
             else:
                 validade = ""
 
