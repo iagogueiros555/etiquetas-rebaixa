@@ -48,7 +48,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   largura_util_geral = page_w - (2 * x_margem_estatica)
 
   # --- 1. DESCRIÇÃO DO PRODUTO ---
-  y_atual = page_h - (69 * mm)
+  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
@@ -101,7 +101,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # --- 3. PREÇO UNITÁRIO GIGANTE ---
   y_linha_por = y_caixa + altura_caixa + 62 * mm
-  
+
   unit_raw = item.get("preco_unit", "0,00").strip().replace(".", ",")
   unit_int, unit_cent = unit_raw.split(",")[0], unit_raw.split(",")[1][:2] if "," in unit_raw else (unit_raw, "00")
 
