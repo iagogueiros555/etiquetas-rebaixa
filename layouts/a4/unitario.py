@@ -48,7 +48,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
   # --- 1. MARGEM SUPERIOR DE 69 MM ATÉ A DESCRIÇÃO ---
-  y_atual = page_h - (69 * mm)
+  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
 
   # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt) ---
   tamanho_fonte_desc = 56
