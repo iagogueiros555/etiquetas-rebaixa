@@ -1,6 +1,12 @@
 from reportlab.lib.colors import black, lightgrey
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase import pdfmetrics
+
+
+def altura_digitos(fonte, tamanho):
+  """Altura real dos dígitos/maiúsculas na fonte em uso (para centralizar certo)."""
+  return pdfmetrics.getFont(fonte).face.capHeight / 1000.0 * tamanho
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
@@ -48,7 +54,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   largura_util_geral = page_w - (2 * x_margem_estatica)
 
   # --- 1. DESCRIÇÃO DO PRODUTO ---
-  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
+  y_atual = page_h - (80 * mm)  # antes: 69mm — folga da curva vermelha/amarela impressa
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
@@ -59,6 +65,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   for linha in linhas_desc:
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
+
+  # y_atual já desceu uma linha inteira após o laço; a tinta da descrição
+  # termina na linha de base da última linha.
+  limite_superior_preco = y_atual + tamanho_fonte_desc + 2
 
   # --- 2. RODAPÉ CINZA: PREÇO DA CAIXA ---
   largura_caixa = page_w - (2 * x_margem_estatica)
@@ -100,16 +110,29 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   c.drawString(x_cx_fim - 6, y_valor_cx + f_cx - f_cx_cent - (f_cx * 0.12), f",{cx_cent}")
 
   # --- 3. PREÇO UNITÁRIO GIGANTE ---
-  y_linha_por = y_caixa + altura_caixa + 62 * mm
-
   unit_raw = item.get("preco_unit", "0,00").strip().replace(".", ",")
   unit_int, unit_cent = unit_raw.split(",")[0], unit_raw.split(",")[1][:2] if "," in unit_raw else (unit_raw, "00")
 
   num_unit = len(unit_int)
   f_unit, f_unit_cent, f_unit_rs, f_unit_un = (240, 110, 50, 32) if num_unit <= 2 else (180, 85, 38, 26)
 
-  y_valor_unit = y_linha_por - (f_unit * 0.35)
   gap_unit_rs = 3 * mm
+
+  # --- CENTRALIZAÇÃO REAL NO ESPAÇO BRANCO (entre descrição e caixa cinza) ---
+  rel_rs = f_unit * 0.75
+  rel_centavos = f_unit - f_unit_cent - (f_unit * 0.15)
+  rel_unidade = rel_centavos - f_unit_un - (7 * mm)
+
+  topo_rel = max(
+      altura_digitos("Arial-Black", f_unit),
+      rel_rs + altura_digitos("Arial-Black", f_unit_rs),
+      rel_centavos + altura_digitos("Arial-Black", f_unit_cent),
+  )
+  base_rel = min(0.0, rel_unidade)
+
+  limite_inferior_preco = y_caixa + altura_caixa
+  centro_area = (limite_superior_preco + limite_inferior_preco) / 2
+  y_valor_unit = centro_area - ((topo_rel + base_rel) / 2)
 
   w_unit_rs = c.stringWidth("R$", "Arial-Black", f_unit_rs)
   w_unit_real = calcular_largura_inteiro_forcado(c, unit_int, "Arial-Black", f_unit)
@@ -118,12 +141,12 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   x_unit_bloco_inicio = (page_w - largura_total_unit) / 2
   c.setFont("Arial-Black", f_unit_rs)
-  c.drawString(x_unit_bloco_inicio, y_valor_unit + (f_unit * 0.75), "R$")
+  c.drawString(x_unit_bloco_inicio, y_valor_unit + rel_rs, "R$")
 
   x_unit_num = x_unit_bloco_inicio + w_unit_rs + gap_unit_rs
   x_unit_fim = desenhar_inteiro_forcado(c, unit_int, x_unit_num, y_valor_unit, "Arial-Black", f_unit)
 
-  y_unit_cent = y_valor_unit + f_unit - f_unit_cent - (f_unit * 0.15)
+  y_unit_cent = y_valor_unit + rel_centavos
   c.setFont("Arial-Black", f_unit_cent)
   c.drawString(x_unit_fim - 10, y_unit_cent, f",{unit_cent}")
 
