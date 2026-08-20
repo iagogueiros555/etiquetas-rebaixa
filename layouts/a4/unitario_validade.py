@@ -1,6 +1,12 @@
 from reportlab.lib.colors import black, lightgrey
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase import pdfmetrics
+
+
+def altura_digitos(fonte, tamanho):
+  """Altura real dos dígitos/maiúsculas na fonte em uso (para centralizar certo)."""
+  return pdfmetrics.getFont(fonte).face.capHeight / 1000.0 * tamanho
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
@@ -48,7 +54,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
   # --- 1. MARGEM SUPERIOR E DESCRIÇÃO ---
-  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
+  y_atual = page_h - (80 * mm)  # antes: 69mm — folga da curva vermelha/amarela impressa
 
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
@@ -61,13 +67,15 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual
+  # y_atual já desceu uma linha inteira após o laço; a tinta da descrição
+  # termina na linha de base da última linha.
+  limite_superior_preco = y_atual + tamanho_fonte_desc + 2
 
-  # --- 2. BLOCO INFERIOR FIXO (CAIXA ABAIXADA PARA 8MM) ---
+  # --- 2. BLOCO INFERIOR FIXO (VALIDADE / ANVISA) ---
   largura_caixa = 202.3 * mm
   altura_caixa = 22.1 * mm
   x_caixa = (page_w - largura_caixa) / 2
-  y_caixa = 8 * mm  # Abaixado de 15mm para 8mm da borda inferior
+  y_caixa = 8 * mm
 
   # Caixa Cinza
   c.setFillColor(lightgrey)
@@ -113,15 +121,17 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   num_digitos = len(inteiro_str)
 
+  # folga_centavos: quanto a vírgula "invade" o número. Alinhado com o unitário
+  # normal, porque em -38/-32/-24 a vírgula colava no valor em reais.
   if num_digitos <= 2:
-    f_real, f_cent, f_rs, f_un = 260, 122, 48, 34  # Aumentado para 260pt
-    folga_centavos = -38
+    f_real, f_cent, f_rs, f_un = 260, 122, 48, 34
+    folga_centavos = -15  # antes: -38
   elif num_digitos == 3:
     f_real, f_cent, f_rs, f_un = 235, 110, 44, 30
-    folga_centavos = -32
+    folga_centavos = -10  # antes: -32
   else:
     f_real, f_cent, f_rs, f_un = 190, 90, 36, 24
-    folga_centavos = -24
+    folga_centavos = -5   # antes: -24
 
   w_real = (
       calcular_largura_inteiro_forcado(c, inteiro_str, "Arial-Black", f_real)
@@ -146,14 +156,25 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
-  # Ponto médio geométrico cravado
+  # --- CENTRALIZAÇÃO REAL NO ESPAÇO BRANCO (entre descrição e aviso) ---
+  rel_rs = f_real * 0.81
+  rel_centavos = f_real - f_cent - (f_real * 0.12)
+  rel_unidade = rel_centavos - f_un - (8 * mm)
+
+  topo_rel = max(
+      altura_digitos("Arial-Black", f_real),
+      rel_rs + altura_digitos("Arial-Black", f_rs),
+      rel_centavos + altura_digitos("Arial-Black", f_cent),
+  )
+  base_rel = min(0.0, rel_unidade)
+
   centro_area_livre = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area_livre - (f_real * 0.35)
+  y_linha_base_preco = centro_area_livre - ((topo_rel + base_rel) / 2)
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + (f_real * 0.81), "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + rel_rs, "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
@@ -162,7 +183,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # C) CENTAVOS
   x_centavos = x_final_real + folga_centavos
-  y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
+  y_centavos = y_linha_base_preco + rel_centavos
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
