@@ -1,6 +1,12 @@
 from reportlab.lib.colors import black
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase import pdfmetrics
+
+
+def altura_digitos(fonte, tamanho):
+  """Altura real dos dígitos/maiúsculas na fonte em uso (para centralizar certo)."""
+  return pdfmetrics.getFont(fonte).face.capHeight / 1000.0 * tamanho
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
@@ -47,8 +53,8 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   margem_lateral_geral = 8 * mm
   largura_util_geral = page_w - (2 * margem_lateral_geral)
 
-  # --- 1. MARGEM SUPERIOR DE 69 MM ATÉ A DESCRIÇÃO ---
-  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
+  # --- 1. MARGEM SUPERIOR ATÉ A DESCRIÇÃO ---
+  y_atual = page_h - (80 * mm)  # antes: 69mm — folga da curva vermelha/amarela impressa
 
   # --- 2. DESCRIÇÃO DO PRODUTO (Fonte 56pt) ---
   tamanho_fonte_desc = 56
@@ -62,8 +68,10 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual
-  limite_inferior_preco = 15 * mm
+  # y_atual já desceu uma linha inteira após o laço; a tinta da descrição
+  # termina na linha de base da última linha.
+  limite_superior_preco = y_atual + tamanho_fonte_desc + 2
+  limite_inferior_preco = 0  # não há caixa embaixo: o branco vai até o pé da folha
 
   # --- 3. BLOCO DO PREÇO MAXIMIZADO ---
   por_raw = item.get("por", "0,00").strip().replace(".", ",")
@@ -112,13 +120,27 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     w_cent = c.stringWidth(f",{centavos_str}", "Arial-Black", f_cent)
     largura_total_preco = w_real + w_cent
 
+  # --- CENTRALIZAÇÃO REAL DO BLOCO NO ESPAÇO BRANCO ---
+  # Mede o topo (R$ ou centavos, o que subir mais) e a base (unidade) do bloco
+  # em relação à linha de base dos reais, e centraliza o conjunto inteiro.
+  rel_rs = f_real * 0.81
+  rel_centavos = f_real - f_cent - (f_real * 0.12)
+  rel_unidade = rel_centavos - f_un - (10 * mm)
+
+  topo_rel = max(
+      altura_digitos("Arial-Black", f_real),
+      rel_rs + altura_digitos("Arial-Black", f_rs),
+      rel_centavos + altura_digitos("Arial-Black", f_cent),
+  )
+  base_rel = min(0.0, rel_unidade)
+
   centro_area = (limite_superior_preco + limite_inferior_preco) / 2
-  y_linha_base_preco = centro_area - (f_real / 2) + 20
+  y_linha_base_preco = centro_area - ((topo_rel + base_rel) / 2)
   x_inicio_real = (page_w - largura_total_preco) / 2
 
   # A) R$
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_inicio_real, y_linha_base_preco + (f_real * 0.81), "R$")
+  c.drawString(x_inicio_real, y_linha_base_preco + rel_rs, "R$")
 
   # B) VALOR REAL
   x_final_real = desenhar_inteiro_forcado(
@@ -127,7 +149,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   # C) CENTAVOS
   x_centavos = x_final_real + folga_centavos
-  y_centavos = y_linha_base_preco + f_real - f_cent - (f_real * 0.12)
+  y_centavos = y_linha_base_preco + rel_centavos
   c.setFont("Arial-Black", f_cent)
   c.drawString(x_centavos, y_centavos, f",{centavos_str}")
 
