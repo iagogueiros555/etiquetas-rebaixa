@@ -4,7 +4,7 @@ import io
 from datetime import date, timedelta
 import streamlit as st
 import streamlit.components.v1 as components
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -19,6 +19,10 @@ from layouts.a5 import (
     unitario as unitario_a5,
     unitario_validade as unitario_validade_a5
 )
+
+# Importando o(s) módulo(s) A4 HORIZONTAL. Por enquanto só o unitário está
+# pronto; conforme os outros forem ficando prontos, importe aqui também.
+from layouts.a4h import unitario as unitario_a4h
 
 # Importando os módulos A6 (agora separados, igual ao A5) com "apelidos"
 from layouts.a6 import (
@@ -39,6 +43,8 @@ importlib.reload(promo_a5)
 importlib.reload(promo_validade_a5)
 importlib.reload(unitario_a5)
 importlib.reload(unitario_validade_a5)
+# Reload A4 Horizontal
+importlib.reload(unitario_a4h)
 # Reloads A6
 importlib.reload(promo_a6)
 importlib.reload(promo_validade_a6)
@@ -76,12 +82,24 @@ LAYOUTS = {
         "scale": 1.5,
         "tipo_pasta": "a4",
     },
+    "A4 / A3 Horizontal (1 por folha)": {
+        "size": landscape(A4),
+        "cols": 1,
+        "rows": 1,
+        "scale": 1.5,
+        "tipo_pasta": "a4h",
+    },
 }
 
 
 def selecionar_funcao_desenho(modelo_chave, item):
     cfg = LAYOUTS[modelo_chave]
     pasta = cfg["tipo_pasta"]
+
+    if pasta == "a4h":
+        # Por enquanto só existe o unitário horizontal. Enquanto os outros
+        # não ficam prontos, qualquer combinação cai nele.
+        return unitario_a4h.desenhar_etiqueta_a4h
 
     if item.get("e_fardo"):
         return fardo_caixa.desenhar_etiqueta_a4
@@ -347,6 +365,13 @@ with col_menu:
             tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
         with col_t2:
             e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
+
+        # Enquanto os outros layouts horizontais não ficam prontos
+        if modelo_selecionado == "A4 / A3 Horizontal (1 por folha)" and (tem_desconto or e_rebaixa):
+            st.warning(
+                "No formato horizontal só o modelo de **preço único** está pronto. "
+                "A etiqueta vai sair sem o De/Por e sem a tarja de validade."
+            )
 
         with st.form("form_produto", clear_on_submit=True):
             desc = st.text_input(
