@@ -1,6 +1,12 @@
 from reportlab.lib.colors import black, lightgrey
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase import pdfmetrics
+
+
+def altura_digitos(fonte, tamanho):
+  """Altura real dos dígitos/maiúsculas na fonte em uso (para centralizar certo)."""
+  return pdfmetrics.getFont(fonte).face.capHeight / 1000.0 * tamanho
 
 
 def desenhar_inteiro_forcado(c, texto, x_inicial, y, fonte, tamanho):
@@ -48,7 +54,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   largura_util_geral = page_w - (2 * x_margem_estatica)
 
   # --- 1. DESCRIÇÃO DO PRODUTO ---
-  y_atual = page_h - (80 * mm)  # antes: 69mm — mais folga da curva vermelha/amarela impressa
+  y_atual = page_h - (80 * mm)  # antes: 69mm — folga da curva vermelha/amarela impressa
   tamanho_fonte_desc = 56
   c.setFont("Arial-Black", tamanho_fonte_desc)
   desc = item.get("desc", "")
@@ -60,7 +66,9 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
     c.drawCentredString(page_w / 2, y_atual, linha)
     y_atual -= tamanho_fonte_desc + 2
 
-  limite_superior_preco = y_atual
+  # y_atual já desceu uma linha inteira após o laço; a tinta da descrição
+  # termina na linha de base da última linha.
+  limite_superior_preco = y_atual + tamanho_fonte_desc + 2
 
   # --- 2. RODAPÉ DE VALIDADE ---
   largura_caixa = 202.3 * mm
@@ -99,17 +107,73 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
 
   limite_inferior_preco = y_linha_aviso
 
-  # --- 3. RÓTULOS 'DE' E 'POR' FIXOS ---
+  # --- 3. SEPARAÇÃO DOS VALORES ---
+  de_raw = item.get("de", "0,00").strip().replace(".", ",")
+  if "," in de_raw:
+    de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
+  else:
+    de_int, de_cent = de_raw, "00"
+
+  por_raw = item.get("por", "0,00").strip().replace(".", ",")
+  if "," in por_raw:
+    por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
+  else:
+    por_int, por_cent = por_raw, "00"
+
+  # Fontes reduzidas ~15% em relação à versão anterior, para o bloco De/Por
+  # caber com folga entre a descrição e o aviso da validade.
+  num_de = len(de_int)
+  if num_de <= 2:
+    f_de, f_de_cent, f_de_rs, f_de_un = 94, 43, 22, 14   # antes: 110, 50, 26, 16
+  elif num_de == 3:
+    f_de, f_de_cent, f_de_rs, f_de_un = 77, 36, 20, 13   # antes: 90, 42, 24, 15
+  else:
+    f_de, f_de_cent, f_de_rs, f_de_un = 64, 31, 17, 12   # antes: 75, 36, 20, 14
+
+  num_por = len(por_int)
+  if num_por <= 2:
+    f_por, f_por_cent, f_por_rs, f_por_un = 154, 73, 32, 22  # antes: 180, 85, 38, 26
+  elif num_por == 3:
+    f_por, f_por_cent, f_por_rs, f_por_un = 128, 60, 27, 19  # antes: 150, 70, 32, 22
+  else:
+    f_por, f_por_cent, f_por_rs, f_por_un = 102, 47, 24, 15  # antes: 120, 55, 28, 18
+
+  f_rotulo = 40
+
+  # --- 4. CENTRALIZAÇÃO DO CONJUNTO "DE + POR" NO ESPAÇO BRANCO ---
+  # Distância vertical entre a linha do "De" e a linha do "Por"
+  gap_de_por = 50 * mm  # antes: 58mm (acompanha a redução das fontes)
+
+  # Extremos do "Por" (referência y = 0)
+  rel_por_valor = -(f_por * 0.35)
+  rel_por_rs = rel_por_valor + (f_por * 0.75)
+  rel_por_cent = rel_por_valor + f_por - f_por_cent - (f_por * 0.15)
+  rel_por_un = rel_por_cent - f_por_un - (5 * mm)
+
+  # Extremos do "De" (deslocado de gap_de_por para cima)
+  rel_de_valor = gap_de_por - (f_de * 0.35)
+  rel_de_rs = rel_de_valor + (f_de * 0.65)
+  rel_de_cent = rel_de_valor + f_de - f_de_cent - (f_de * 0.12)
+
+  topo_rel = max(
+      gap_de_por + altura_digitos("Arial-Black", f_rotulo),
+      rel_de_valor + altura_digitos("Arial-Black", f_de),
+      rel_de_rs + altura_digitos("Arial-Black", f_de_rs),
+      rel_de_cent + altura_digitos("Arial-Black", f_de_cent),
+  )
+  base_rel = min(rel_por_valor, rel_por_un)
+
+  centro_area = (limite_superior_preco + limite_inferior_preco) / 2
+  y_linha_por = centro_area - ((topo_rel + base_rel) / 2)
+  y_linha_de = y_linha_por + gap_de_por
+
+  # --- 5. RÓTULOS 'DE' E 'POR' ---
   primeira_linha_aviso = linhas_aviso[0] if linhas_aviso else ""
   largura_linha_1 = c.stringWidth(
       primeira_linha_aviso, "Arial-Black", f_aviso
   )
   x_alinhado_linha_1 = (page_w - largura_linha_1) / 2
 
-  y_linha_por = limite_inferior_preco + 27 * mm
-  y_linha_de = y_linha_por + 58 * mm
-
-  f_rotulo = 40
   c.setFont("Arial-Black", f_rotulo)
   c.drawString(x_alinhado_linha_1, y_linha_de, "De")
   c.drawString(x_alinhado_linha_1, y_linha_por, "Por")
@@ -119,22 +183,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   x_fim_quadro = page_w - x_margem_estatica
   largura_quadro = x_fim_quadro - x_inicio_quadro
 
-  # --- 4. PREÇO "DE" ---
-  de_raw = item.get("de", "0,00").strip().replace(".", ",")
-  if "," in de_raw:
-    de_int, de_cent = de_raw.split(",")[0], de_raw.split(",")[1][:2]
-  else:
-    de_int, de_cent = de_raw, "00"
-
-  # Lógica de escala de fonte para o "De"
-  num_de = len(de_int)
-  if num_de <= 2:
-    f_de, f_de_cent, f_de_rs, f_de_un = 110, 50, 26, 16
-  elif num_de == 3:
-    f_de, f_de_cent, f_de_rs, f_de_un = 90, 42, 24, 15
-  else:
-    f_de, f_de_cent, f_de_rs, f_de_un = 75, 36, 20, 14
-
+  # --- 6. PREÇO "DE" ---
   y_valor_de = y_linha_de - (f_de * 0.35)
 
   w_de_rs = c.stringWidth("R$ ", "Arial-Black", f_de_rs)
@@ -174,21 +223,7 @@ def desenhar_etiqueta_a4(c, item, x_base, y_base, col_w, row_h, scale):
   )
   c.setLineWidth(1)
 
-  # --- 5. PREÇO "POR" ---
-  por_raw = item.get("por", "0,00").strip().replace(".", ",")
-  if "," in por_raw:
-    por_int, por_cent = por_raw.split(",")[0], por_raw.split(",")[1][:2]
-  else:
-    por_int, por_cent = por_raw, "00"
-
-  num_por = len(por_int)
-  if num_por <= 2:
-    f_por, f_por_cent, f_por_rs, f_por_un = 180, 85, 38, 26
-  elif num_por == 3:
-    f_por, f_por_cent, f_por_rs, f_por_un = 150, 70, 32, 22
-  else:
-    f_por, f_por_cent, f_por_rs, f_por_un = 120, 55, 28, 18
-
+  # --- 7. PREÇO "POR" ---
   y_valor_por = y_linha_por - (f_por * 0.35)
 
   w_por_rs = c.stringWidth("R$ ", "Arial-Black", f_por_rs)
