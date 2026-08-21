@@ -110,13 +110,15 @@ def desenhar_etiqueta_a4h(c, item, x_base, y_base, col_w, row_h, scale):
   else:
     f_por, f_por_cent, f_por_rot, f_por_un = 190, 95, 38, 26
 
+  # Tabela do bloco "De". É a MESMA do promocional com validade, de propósito:
+  # assim o valor riscado sai do mesmo tamanho nos dois cartazes.
   n_de = len(de_int)
   if n_de <= 2:
-    f_de, f_de_cent, f_de_rot, f_de_un = 100, 50, 24, 24
+    f_de, f_de_cent, f_de_rot, f_de_un = 103, 52, 25, 25
   elif n_de == 3:
-    f_de, f_de_cent, f_de_rot, f_de_un = 85, 42, 22, 22
+    f_de, f_de_cent, f_de_rot, f_de_un = 88, 44, 21, 21
   else:
-    f_de, f_de_cent, f_de_rot, f_de_un = 72, 36, 20, 20
+    f_de, f_de_cent, f_de_rot, f_de_un = 75, 37, 18, 18
 
   esp_blocos = ESPACO_ENTRE_BLOCOS
   gap_por = GAP_ROTULO_POR
