@@ -65,7 +65,9 @@ importlib.reload(unitario_validade_a6)
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
 
 st.set_page_config(
-    page_title="Gerador de Etiquetas - Novo Atacarejo", layout="wide"
+    page_title="Cartazeiro - Novo Atacarejo",
+    page_icon="🏷️",
+    layout="wide",
 )
 
 # --- MAPEAMENTO DE LAYOUTS E DIMENSÕES ---
@@ -202,7 +204,7 @@ if "lista_itens" not in st.session_state:
 
 col_titulo, col_formato = st.columns([3, 2])
 with col_titulo:
-    st.markdown("## 🏷️ Gerador de Etiquetas")
+    st.markdown("## 🏷️ Cartazeiro")
 with col_formato:
     modelo_selecionado = st.selectbox(
         "Formato da Folha:", list(LAYOUTS.keys())
