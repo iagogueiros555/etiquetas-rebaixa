@@ -20,9 +20,14 @@ from layouts.a5 import (
     unitario_validade as unitario_validade_a5
 )
 
-# Importando o(s) módulo(s) A4 HORIZONTAL. Por enquanto só o unitário está
-# pronto; conforme os outros forem ficando prontos, importe aqui também.
-from layouts.a4h import unitario as unitario_a4h
+# Importando os módulos A4 HORIZONTAL com "apelidos"
+from layouts.a4h import (
+    fardo_caixa as fardo_caixa_a4h,
+    promocional as promocional_a4h,
+    promo_validade as promo_validade_a4h,
+    unitario as unitario_a4h,
+    unitario_validade as unitario_validade_a4h,
+)
 
 # Importando os módulos A6 (agora separados, igual ao A5) com "apelidos"
 from layouts.a6 import (
@@ -43,8 +48,12 @@ importlib.reload(promo_a5)
 importlib.reload(promo_validade_a5)
 importlib.reload(unitario_a5)
 importlib.reload(unitario_validade_a5)
-# Reload A4 Horizontal
+# Reloads A4 Horizontal
+importlib.reload(fardo_caixa_a4h)
+importlib.reload(promocional_a4h)
+importlib.reload(promo_validade_a4h)
 importlib.reload(unitario_a4h)
+importlib.reload(unitario_validade_a4h)
 # Reloads A6
 importlib.reload(promo_a6)
 importlib.reload(promo_validade_a6)
@@ -96,16 +105,25 @@ def selecionar_funcao_desenho(modelo_chave, item):
     cfg = LAYOUTS[modelo_chave]
     pasta = cfg["tipo_pasta"]
 
+    tem_de = bool(item.get("de"))
+    tem_rebaixa = item.get("e_rebaixa")
+
     if pasta == "a4h":
-        # Por enquanto só existe o unitário horizontal. Enquanto os outros
-        # não ficam prontos, qualquer combinação cai nele.
-        return unitario_a4h.desenhar_etiqueta_a4h
+        # O fardo é tratado aqui dentro: se caísse no bloco geral abaixo,
+        # chamaria o layout VERTICAL numa folha deitada.
+        if item.get("e_fardo"):
+            return fardo_caixa_a4h.desenhar_etiqueta_a4h
+        if tem_de and tem_rebaixa:
+            return promo_validade_a4h.desenhar_etiqueta_a4h
+        elif tem_de and not tem_rebaixa:
+            return promocional_a4h.desenhar_etiqueta_a4h
+        elif not tem_de and tem_rebaixa:
+            return unitario_validade_a4h.desenhar_etiqueta_a4h
+        else:
+            return unitario_a4h.desenhar_etiqueta_a4h
 
     if item.get("e_fardo"):
         return fardo_caixa.desenhar_etiqueta_a4
-
-    tem_de = bool(item.get("de"))
-    tem_rebaixa = item.get("e_rebaixa")
 
     if pasta == "a4":
         if tem_de and tem_rebaixa:
@@ -295,7 +313,8 @@ with col_menu:
     st.markdown("**📝 Dados do Produto**")
 
     e_fardo_caixa = False
-    if modelo_selecionado == "A4 / A3 Vertical (1 por folha)":
+    if modelo_selecionado in ("A4 / A3 Vertical (1 por folha)",
+                              "A4 / A3 Horizontal (1 por folha)"):
         e_fardo_caixa = st.checkbox("📦 Preço de Caixa / Fardo (Atacado)")
 
     if e_fardo_caixa:
@@ -366,12 +385,6 @@ with col_menu:
         with col_t2:
             e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
 
-        # Enquanto os outros layouts horizontais não ficam prontos
-        if modelo_selecionado == "A4 / A3 Horizontal (1 por folha)" and (tem_desconto or e_rebaixa):
-            st.warning(
-                "No formato horizontal só o modelo de **preço único** está pronto. "
-                "A etiqueta vai sair sem o De/Por e sem a tarja de validade."
-            )
 
         with st.form("form_produto", clear_on_submit=True):
             desc = st.text_input(
