@@ -1,6 +1,7 @@
 import base64
 import importlib
 import io
+import os
 from datetime import date, timedelta
 import streamlit as st
 import streamlit.components.v1 as components
@@ -64,9 +65,14 @@ importlib.reload(unitario_validade_a6)
 # --- REGISTRO DA FONTE CUSTOMIZADA ---
 pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
 
+# Ícone da aba: usa o arquivo se ele existir, senão cai no emoji.
+# Assim o app não quebra se a pasta de ícones não estiver no lugar.
+CAMINHO_ICONE = "docs/icons/favicon-32.png"
+icone_aba = CAMINHO_ICONE if os.path.exists(CAMINHO_ICONE) else "🏷️"
+
 st.set_page_config(
     page_title="Cartazeiro - Novo Atacarejo",
-    page_icon="🏷️",
+    page_icon=icone_aba,
     layout="wide",
 )
 
