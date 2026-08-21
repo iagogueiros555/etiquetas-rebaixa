@@ -322,8 +322,7 @@ with col_lista:
             )
             base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
-            components.html(
-                f"""
+            botao_html = f"""
                 <button onclick="openPDF()" style=
                     "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
                 >
@@ -343,9 +342,15 @@ with col_lista:
                     window.open(blobUrl, '_blank');
                 }}
                 </script>
-                """,
-                height=50,
-            )
+                """
+
+            # st.components.v1.html foi descontinuado (a data de remoção já
+            # passou). st.iframe é a substituição e existe a partir da 1.56.
+            # O fallback mantém o botão funcionando em versões mais antigas.
+            if hasattr(st, "iframe"):
+                st.iframe(botao_html, height=50)
+            else:
+                components.html(botao_html, height=50)
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
