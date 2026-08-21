@@ -320,6 +320,9 @@ with col_lista:
             base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
             botao_html = f"""
+                <style>
+                  html, body {{ margin: 0; padding: 0; overflow: hidden; }}
+                </style>
                 <button onclick="openPDF()" style=
                     "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
                 >
@@ -344,10 +347,12 @@ with col_lista:
             # st.components.v1.html foi descontinuado (a data de remoção já
             # passou). st.iframe é a substituição e existe a partir da 1.56.
             # O fallback mantém o botão funcionando em versões mais antigas.
+            # 58 e não 50: o st.iframe conta as margens de forma diferente do
+            # components.html antigo, e com 50 sobrava uma barra de rolagem.
             if hasattr(st, "iframe"):
-                st.iframe(botao_html, height=50)
+                st.iframe(botao_html, height=58)
             else:
-                components.html(botao_html, height=50)
+                components.html(botao_html, height=58)
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
