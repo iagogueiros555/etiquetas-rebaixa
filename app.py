@@ -109,6 +109,15 @@ LAYOUTS = {
 }
 
 
+# Nome curto de cada formato, para caber na coluna da lista
+APELIDO_FORMATO = {
+    "A6 Vertical (6 por A4)": "A6",
+    "A5 Vertical (2 por A4)": "A5",
+    "A4 / A3 Vertical (1 por folha)": "A4 ↕",
+    "A4 / A3 Horizontal (1 por folha)": "A4 ↔",
+}
+
+
 def selecionar_funcao_desenho(modelo_chave, item):
     cfg = LAYOUTS[modelo_chave]
     pasta = cfg["tipo_pasta"]
@@ -166,37 +175,52 @@ def selecionar_funcao_desenho(modelo_chave, item):
             return unitario_a6.desenhar_etiqueta_a6
 
 
-def gerar_pdf_etiquetas(itens, modelo_chave):
-    cfg = LAYOUTS[modelo_chave]
-    page_w, page_h = cfg["size"]
-    cols, rows = cfg["cols"], cfg["rows"]
-    scale = cfg["scale"]
+def gerar_pdf_etiquetas(itens, modelo_padrao):
+    """Gera o PDF respeitando o formato gravado em CADA etiqueta.
 
-    cap_pagina = cols * rows
-    col_w = page_w / cols
-    row_h = page_h / rows
+    As etiquetas são agrupadas por formato (mantendo a ordem em que os
+    formatos apareceram na lista) e cada grupo vira páginas do seu próprio
+    tamanho. Um mesmo PDF pode ter páginas A6, A5 e A4 misturadas.
+    """
+    grupos = {}
+    for item in itens:
+        chave = item.get("formato", modelo_padrao)
+        if chave not in LAYOUTS:          # formato antigo ou removido
+            chave = modelo_padrao
+        grupos.setdefault(chave, []).append(item)
 
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=cfg["size"])
+    c = canvas.Canvas(buffer, pagesize=LAYOUTS[modelo_padrao]["size"])
+    pagina_aberta = False
 
-    posicao_global = 0
-    for item in itens:
-        qtd = max(1, int(item.get("quantidade", 1)))
-        draw_func = selecionar_funcao_desenho(modelo_chave, item)
+    for modelo_chave, lista in grupos.items():
+        cfg = LAYOUTS[modelo_chave]
+        page_w, page_h = cfg["size"]
+        cols, rows, scale = cfg["cols"], cfg["rows"], cfg["scale"]
+        cap_pagina = cols * rows
+        col_w, row_h = page_w / cols, page_h / rows
 
-        for _ in range(qtd):
-            if posicao_global > 0 and posicao_global % cap_pagina == 0:
-                c.showPage()
+        posicao = 0
+        for item in lista:
+            qtd = max(1, int(item.get("quantidade", 1)))
+            draw_func = selecionar_funcao_desenho(modelo_chave, item)
 
-            pos_na_pagina = posicao_global % cap_pagina
-            col = pos_na_pagina % cols
-            row = pos_na_pagina // cols
+            for _ in range(qtd):
+                if posicao % cap_pagina == 0:
+                    if pagina_aberta:
+                        c.showPage()
+                    c.setPageSize(cfg["size"])   # cada grupo tem seu tamanho
+                    pagina_aberta = True
 
-            x_base = col * col_w
-            y_base = page_h - ((row + 1) * row_h)
+                pos_na_pagina = posicao % cap_pagina
+                col = pos_na_pagina % cols
+                row = pos_na_pagina // cols
 
-            draw_func(c, item, x_base, y_base, col_w, row_h, scale)
-            posicao_global += 1
+                x_base = col * col_w
+                y_base = page_h - ((row + 1) * row_h)
+
+                draw_func(c, item, x_base, y_base, col_w, row_h, scale)
+                posicao += 1
 
     c.save()
     buffer.seek(0)
@@ -228,16 +252,19 @@ with col_lista:
 
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
-            h_num, h_desc, h_preco, h_extra, h_qtd, h_del = st.columns([0.4, 2.6, 1.8, 1.6, 0.9, 0.6])
+            h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_del = st.columns(
+                [0.4, 2.4, 1.7, 1.5, 0.8, 0.9, 0.6]
+            )
             h_num.markdown("**#**")
             h_desc.markdown("**Descrição**")
             h_preco.markdown("**Preço**")
             h_extra.markdown("**Un. / Val.**")
+            h_fmt.markdown("**Folha**")
             h_qtd.markdown("**Qtd.**")
 
             for idx, item in enumerate(st.session_state.lista_itens):
-                col_num, col_desc, col_preco, col_extra, col_qtd, col_del = st.columns(
-                    [0.4, 2.6, 1.8, 1.6, 0.9, 0.6]
+                col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_del = st.columns(
+                    [0.4, 2.4, 1.7, 1.5, 0.8, 0.9, 0.6]
                 )
 
                 col_num.write(idx + 1)
@@ -260,6 +287,10 @@ with col_lista:
                     if item.get("val"):
                         extra_txt += f" • Val: {item.get('val')}"
                     col_extra.write(extra_txt)
+
+                # Formato gravado quando a etiqueta foi criada
+                fmt = item.get("formato", modelo_selecionado)
+                col_fmt.write(APELIDO_FORMATO.get(fmt, fmt))
 
                 # Caixa de quantidade: quantas vezes essa etiqueta vai repetir no PDF
                 nova_qtd = col_qtd.number_input(
@@ -379,6 +410,7 @@ with col_menu:
                         "e_fardo": True,
                         "qtd_fardo": qtd_fardo,
                         "quantidade": 1,
+                        "formato": modelo_selecionado,
                     }
                     st.session_state.lista_itens.append(item_dados)
                     st.success("Etiqueta de caixa adicionada! Ajuste a quantidade na lista ao lado.")
@@ -440,6 +472,7 @@ with col_menu:
                         "e_rebaixa": e_rebaixa,
                         "e_fardo": False,
                         "quantidade": 1,
+                        "formato": modelo_selecionado,
                     }
                     st.session_state.lista_itens.append(item_dados)
 
