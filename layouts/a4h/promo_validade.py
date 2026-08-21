@@ -92,20 +92,38 @@ def separar_valor(bruto):
   return inteiro, centavos
 
 
-def fontes_do_grupo(f_por):
-  """Todas as fontes do bloco De/Por derivam do tamanho do 'Por'.
+def tabela_do_de(de_int):
+  """Tamanho do bloco "De" por quantidade de dígitos.
 
-  As proporções vieram das medidas do cartaz promocional oficial da loja,
-  então o conjunto inteiro encolhe junto sem desalinhar.
+  É a MESMA tabela do promocional sem validade, e de propósito NÃO depende
+  do tamanho do "Por": aqui o "Por" encolhe para caber junto com o rodapé,
+  e se o "De" acompanhasse essa redução ele sairia bem menor que o do outro
+  cartaz - foi exatamente o que apareceu na impressão.
   """
+  n = len(de_int)
+  if n <= 2:
+    return 103, 52, 25, 25
+  if n == 3:
+    return 88, 44, 21, 21
+  return 75, 37, 18, 18
+
+
+def fontes_do_grupo(f_por, fontes_de):
+  """O 'Por' e seus derivados; o 'De' vem pronto da tabela."""
   f_por_cent = max(8, round(f_por * 0.50))
   f_por_rot = max(8, round(f_por * 0.168))
   f_por_un = max(8, round(f_por * 0.121))
 
-  f_de = max(8, round(f_por * 0.357))
-  f_de_cent = max(8, round(f_de * 0.50))
-  f_de_rot = max(8, round(f_de * 0.24))
-  f_de_un = max(8, round(f_de * 0.24))
+  f_de, f_de_cent, f_de_rot, f_de_un = fontes_de
+  # trava: o valor riscado nunca pode ficar maior que o preço principal
+  teto = max(8, round(f_por * 0.60))
+  if f_de > teto:
+    fator = teto / f_de
+    f_de = teto
+    f_de_cent = max(8, round(f_de_cent * fator))
+    f_de_rot = max(8, round(f_de_rot * fator))
+    f_de_un = max(8, round(f_de_un * fator))
+
   return (f_por, f_por_cent, f_por_rot, f_por_un,
           f_de, f_de_cent, f_de_rot, f_de_un)
 
@@ -175,16 +193,27 @@ def larguras_grupo(c, f, de_int, de_cent, por_int, por_cent, escala):
 
 
 def ajustar_grupo(c, de_int, de_cent, por_int, por_cent, max_w, max_h, minimo=60):
-  """Reduz o conjunto De/Por de 1 em 1 ponto até caber na largura E na altura."""
+  """Reduz o 'Por' de 1 em 1 ponto até o conjunto caber na largura E na altura."""
+  fontes_de = tabela_do_de(de_int)
   f_por = FONTE_POR_INICIAL
   while f_por > minimo:
-    f = fontes_do_grupo(f_por)
+    f = fontes_do_grupo(f_por, fontes_de)
     escala = f_por / FONTE_POR_INICIAL
     larg = larguras_grupo(c, f, de_int, de_cent, por_int, por_cent, escala)
     geo = geometria_grupo(f)
     if larg["total"] <= max_w and (geo["topo"] - geo["base"]) <= max_h:
-      break
+      return f, larg, geo
     f_por -= 1
+
+  # Só chega aqui em casos extremos (dois valores enormes). Aí o conjunto
+  # inteiro, "De" incluído, encolhe proporcionalmente para não furar a margem.
+  if larg["total"] > max_w:
+    fator = max_w / larg["total"]
+    fontes_de = tuple(max(8, round(v * fator)) for v in fontes_de)
+    f = fontes_do_grupo(max(8, round(f_por * fator)), fontes_de)
+    escala = (f[0] / FONTE_POR_INICIAL)
+    larg = larguras_grupo(c, f, de_int, de_cent, por_int, por_cent, escala)
+    geo = geometria_grupo(f)
   return f, larg, geo
 
 
