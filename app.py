@@ -253,18 +253,18 @@ with col_lista:
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
             h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_del = st.columns(
-                [0.4, 2.4, 1.7, 1.5, 0.8, 0.9, 0.6]
+                [0.4, 2.5, 1.9, 1.2, 0.8, 0.9, 0.6]
             )
             h_num.markdown("**#**")
             h_desc.markdown("**Descrição**")
             h_preco.markdown("**Preço**")
-            h_extra.markdown("**Un. / Val.**")
+            h_extra.markdown("**Validade**")
             h_fmt.markdown("**Folha**")
             h_qtd.markdown("**Qtd.**")
 
             for idx, item in enumerate(st.session_state.lista_itens):
                 col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_del = st.columns(
-                    [0.4, 2.4, 1.7, 1.5, 0.8, 0.9, 0.6]
+                    [0.4, 2.5, 1.9, 1.2, 0.8, 0.9, 0.6]
                 )
 
                 col_num.write(idx + 1)
@@ -273,20 +273,17 @@ with col_lista:
                 if item.get("e_fardo"):
                     col_preco.write(f"R$ {item.get('por', '')} (fardo)")
                     col_extra.write(
-                        f"{item.get('qtd_fardo', '')}x R$ {item.get('preco_unit', '')} • {item.get('un', '')}"
+                        f"{item.get('qtd_fardo', '')}x R$ {item.get('preco_unit', '')}"
                     )
                 elif item.get("de"):
-                    col_preco.write(f"De {item.get('de', '')} → Por {item.get('por', '')}")
-                    extra_txt = item.get("un", "")
-                    if item.get("val"):
-                        extra_txt += f" • Val: {item.get('val')}"
-                    col_extra.write(extra_txt)
+                    # o preço antigo aparece riscado e em itálico, igual na etiqueta
+                    col_preco.write(
+                        f"~~*{item.get('de', '')}*~~ → **{item.get('por', '')}**"
+                    )
+                    col_extra.write(item.get("val", ""))
                 else:
                     col_preco.write(f"R$ {item.get('por', '')}")
-                    extra_txt = item.get("un", "")
-                    if item.get("val"):
-                        extra_txt += f" • Val: {item.get('val')}"
-                    col_extra.write(extra_txt)
+                    col_extra.write(item.get("val", ""))
 
                 # Formato gravado quando a etiqueta foi criada
                 fmt = item.get("formato", modelo_selecionado)
