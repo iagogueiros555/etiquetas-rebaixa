@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartazeiro</title>
+
+<!-- É este manifesto que dá o nome e o ícone na instalação -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6E141E">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cartazeiro">
+
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    overflow: hidden; background: #6E141E;
+  }
+  #app { border: 0; width: 100%; height: 100%; display: block; }
+
+  /* Tela de abertura, some quando o app carrega */
+  #abertura {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    background: #6E141E; color: #FAECC8;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px; letter-spacing: .3px;
+  }
+  #abertura img { width: 104px; height: 104px; border-radius: 22%; }
+  #abertura.sumindo { opacity: 0; transition: opacity .45s; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="abertura">
+  <img src="icons/icon-192.png" alt="Cartazeiro">
+  <div>Abrindo o Cartazeiro…</div>
+</div>
+
+<!-- ================================================================
+     TROQUE AQUI se o endereço do app mudar.
+     O "?embed=true" tira o cabeçalho e o rodapé do Streamlit.
+     ================================================================ -->
+<iframe id="app"
+        src="https://etiquetas-rebaixa.streamlit.app/?embed=true"
+        allow="clipboard-write; fullscreen"
+        referrerpolicy="origin"></iframe>
+
+<script>
+  const quadro = document.getElementById('app');
+  const abertura = document.getElementById('abertura');
+
+  function esconderAbertura() {
+    if (!abertura || abertura.classList.contains('sumindo')) return;
+    abertura.classList.add('sumindo');
+    setTimeout(() => abertura.remove(), 600);
+  }
+
+  quadro.addEventListener('load', esconderAbertura);
+  // rede lenta: some assim mesmo depois de 12s, para não travar na tela de abertura
+  setTimeout(esconderAbertura, 12000);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
