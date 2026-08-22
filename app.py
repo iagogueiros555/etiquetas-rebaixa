@@ -109,6 +109,19 @@ LAYOUTS = {
 }
 
 
+# O parâmetro que estica o botão mudou de nome entre versões do Streamlit.
+# Descobrimos qual existe uma vez só, aqui, em vez de arriscar erro em tempo
+# de execução dentro da lista.
+import inspect
+_params_botao = inspect.signature(st.button).parameters
+if "width" in _params_botao:
+    LARGURA_CHEIA = {"width": "stretch"}
+elif "use_container_width" in _params_botao:
+    LARGURA_CHEIA = {"use_container_width": True}
+else:
+    LARGURA_CHEIA = {}
+
+
 # Nome curto de cada formato, para caber na coluna da lista
 APELIDO_FORMATO = {
     "A6 Vertical (6 por A4)": "A6",
@@ -237,10 +250,12 @@ def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
     base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
     if compacto:
-        estilo = ("background-color: transparent; border: 1px solid rgba(250,250,250,.3);"
-                  " color: inherit; padding: 6px 0; border-radius: 8px; font-size: 15px;"
-                  " cursor: pointer; width: 100%; font-family: sans-serif;")
-        altura = 42
+        # cinza médio: aparece tanto no tema claro quanto no escuro
+        estilo = ("background-color: transparent; border: 1px solid rgba(128,128,128,.45);"
+                  " padding: 0; border-radius: 8px; font-size: 16px; cursor: pointer;"
+                  " width: 100%; height: 38px; display: flex; align-items: center;"
+                  " justify-content: center; font-family: sans-serif;")
+        altura = 44
     else:
         estilo = ("background-color: #FF4B4B; color: white; padding: 10px 16px; border: none;"
                   " border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;"
@@ -356,7 +371,9 @@ with col_lista:
                         compacto=True,
                     )
 
-                if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
+                if col_del.button("🗑️", key=f"del_item_{idx}",
+                                  help="Remover apenas esta etiqueta",
+                                  **LARGURA_CHEIA):
                     st.session_state.lista_itens.pop(idx)
                     st.rerun()
         else:
