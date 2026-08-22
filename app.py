@@ -378,7 +378,7 @@ with col_lista:
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
             h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_prt, h_del = st.columns(
-                [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6]
+                [0.4, 2.7, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6]
             )
             h_num.markdown("**#**")
             h_desc.markdown("**Descrição**")
@@ -389,7 +389,7 @@ with col_lista:
 
             for idx, item in enumerate(st.session_state.lista_itens):
                 col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_prt, col_del = st.columns(
-                    [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6], **ALINHAR_MEIO
+                    [0.4, 2.7, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6], **ALINHAR_MEIO
                 )
 
                 col_num.write(idx + 1)
