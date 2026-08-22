@@ -2,6 +2,7 @@ import base64
 import importlib
 import io
 import os
+import uuid
 from datetime import date, timedelta
 import streamlit as st
 import streamlit.components.v1 as components
@@ -395,9 +396,10 @@ with col_lista:
 
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
-            h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_prt, h_del = st.columns(
-                [0.4, 2.7, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6]
+            h_sel, h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_prt, h_del = st.columns(
+                [0.4, 0.4, 2.5, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6]
             )
+            h_sel.markdown("**✓**")
             h_num.markdown("**#**")
             h_desc.markdown("**Descrição**")
             h_preco.markdown("**Preço**")
@@ -406,8 +408,20 @@ with col_lista:
             h_qtd.markdown("**Qtd.**")
 
             for idx, item in enumerate(st.session_state.lista_itens):
-                col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_prt, col_del = st.columns(
-                    [0.4, 2.7, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6], **ALINHAR_MEIO
+                col_sel, col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_prt, col_del = st.columns(
+                    [0.4, 0.4, 2.5, 1.5, 1.1, 0.8, 0.9, 0.6, 0.6], **ALINHAR_MEIO
+                )
+
+                # Identificador fixo da etiqueta. Os widgets são identificados
+                # por ele, e não pela posição: sem isso, apagar uma etiqueta faz
+                # as de baixo herdarem a quantidade e a marcação da vizinha.
+                iid = item.setdefault("id", uuid.uuid4().hex[:8])
+
+                item["sel"] = col_sel.checkbox(
+                    "Selecionar esta etiqueta",
+                    value=item.get("sel", False),
+                    key=f"sel_{iid}",
+                    label_visibility="collapsed",
                 )
 
                 col_num.write(idx + 1)
@@ -432,23 +446,22 @@ with col_lista:
                 fmt = item.get("formato", modelo_selecionado)
                 col_fmt.write(APELIDO_FORMATO.get(fmt, fmt))
 
-                # Caixa de quantidade: quantas vezes essa etiqueta vai repetir no PDF
-                nova_qtd = col_qtd.number_input(
-                    "Qtd.", min_value=1, value=int(item.get("quantidade", 1)), step=1,
-                    key=f"qtd_item_{idx}", label_visibility="collapsed"
-                )
-                item["quantidade"] = int(nova_qtd)
+                # Quantas vezes essa etiqueta vai repetir no PDF
+                item["quantidade"] = int(col_qtd.number_input(
+                    "Quantidade", min_value=1, value=int(item.get("quantidade", 1)),
+                    step=1, key=f"qtd_{iid}", label_visibility="collapsed",
+                ))
 
                 # Abre o PDF só desta etiqueta, direto no clique
                 with col_prt:
                     botao_abrir_pdf(
                         gerar_pdf_etiquetas([item], modelo_selecionado),
                         ICONE_IMPRESSORA,
-                        chave=f"linha{idx}",
+                        chave=f"linha{iid}",
                         compacto=True,
                     )
 
-                if col_del.button(key=f"del_item_{idx}",
+                if col_del.button(key=f"del_{iid}",
                                   help="Remover apenas esta etiqueta",
                                   **ICONE_LIXEIRA, **LARGURA_CHEIA):
                     st.session_state.lista_itens.pop(idx)
@@ -458,21 +471,54 @@ with col_lista:
 
     # Total e botões de ação ficam FORA da caixa com scroll, sempre visíveis
     if st.session_state.lista_itens:
-        total_etiquetas = sum(int(i.get("quantidade", 1)) for i in st.session_state.lista_itens)
-        st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_etiquetas}**")
+        itens = st.session_state.lista_itens
+        marcadas = [i for i in itens if i.get("sel")]
+        total_geral = sum(int(i.get("quantidade", 1)) for i in itens)
+        total_marcadas = sum(int(i.get("quantidade", 1)) for i in marcadas)
 
-        b1, b2 = st.columns(2)
-        with b1:
-            if st.button("🗑️ Limpar Lista"):
+        if marcadas:
+            st.caption(
+                f"🏷️ **{len(marcadas)}** de {len(itens)} etiquetas marcadas "
+                f"— **{total_marcadas}** impressões (total da lista: {total_geral})"
+            )
+        else:
+            st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_geral}**")
+
+        def _marcar_todas(valor):
+            """Muda a marcação de todas. Precisa mexer no estado dos widgets
+            também, senão as caixas continuam mostrando o valor antigo."""
+            for it in itens:
+                it["sel"] = valor
+                st.session_state[f"sel_{it['id']}"] = valor
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            if st.button("Marcar todas", **LARGURA_CHEIA):
+                _marcar_todas(True)
+                st.rerun()
+        with m2:
+            if st.button("Desmarcar", **LARGURA_CHEIA):
+                _marcar_todas(False)
+                st.rerun()
+        with m3:
+            if st.button("🗑️ Limpar Lista", **LARGURA_CHEIA):
                 st.session_state.lista_itens = []
                 st.rerun()
 
-        with b2:
+        # Só as marcadas
+        if marcadas:
             botao_abrir_pdf(
-                gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado),
-                "🖨️ IMPRIMIR ETIQUETAS",
-                chave="todas",
+                gerar_pdf_etiquetas(marcadas, modelo_selecionado),
+                f"🖨️ IMPRIMIR AS {len(marcadas)} MARCADAS",
+                chave="marcadas",
             )
+
+        # A lista inteira
+        botao_abrir_pdf(
+            gerar_pdf_etiquetas(itens, modelo_selecionado),
+            "🖨️ IMPRIMIR TODAS",
+            chave="todas",
+        )
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
@@ -538,6 +584,8 @@ with col_menu:
                         "qtd_fardo": qtd_fardo,
                         "quantidade": 1,
                         "formato": modelo_selecionado,
+                        "id": uuid.uuid4().hex[:8],
+                        "sel": False,
                     }
                     st.session_state.lista_itens.append(item_dados)
                     st.success("Etiqueta de caixa adicionada! Ajuste a quantidade na lista ao lado.")
@@ -600,6 +648,8 @@ with col_menu:
                         "e_fardo": False,
                         "quantidade": 1,
                         "formato": modelo_selecionado,
+                        "id": uuid.uuid4().hex[:8],
+                        "sel": False,
                     }
                     st.session_state.lista_itens.append(item_dados)
 
