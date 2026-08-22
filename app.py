@@ -227,6 +227,49 @@ def gerar_pdf_etiquetas(itens, modelo_padrao):
     return buffer
 
 
+def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58):
+    """Desenha um botão que abre o PDF numa aba nova.
+
+    O PDF vai embutido em base64 e é aberto por JavaScript. Precisa ser no
+    clique do próprio botão: se a aba fosse aberta sozinha depois de um
+    recarregamento, o navegador barraria como pop-up.
+    """
+    base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
+
+    botao_html = f"""
+        <style>
+          html, body {{ margin: 0; padding: 0; overflow: hidden; }}
+        </style>
+        <button onclick="openPDF_{chave}()" style=
+            "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
+        >
+            {rotulo}
+        </button>
+        <script>
+        function openPDF_{chave}() {{
+            const base64Data = "{base64_pdf}";
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {{
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }}
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], {{ type: 'application/pdf' }});
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+        }}
+        </script>
+        """
+
+    # st.components.v1.html foi descontinuado (a data de remoção já passou).
+    # st.iframe é a substituição e existe a partir da 1.56; o fallback mantém
+    # o botão funcionando em versões mais antigas.
+    if hasattr(st, "iframe"):
+        st.iframe(botao_html, height=altura)
+    else:
+        components.html(botao_html, height=altura)
+
+
 # --- INTERFACE DE USUÁRIO (STREAMLIT) ---
 
 if "lista_itens" not in st.session_state:
@@ -252,8 +295,8 @@ with col_lista:
 
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
-            h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_del = st.columns(
-                [0.4, 2.5, 1.9, 1.2, 0.8, 0.9, 0.6]
+            h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_prt, h_del = st.columns(
+                [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6]
             )
             h_num.markdown("**#**")
             h_desc.markdown("**Descrição**")
@@ -263,8 +306,8 @@ with col_lista:
             h_qtd.markdown("**Qtd.**")
 
             for idx, item in enumerate(st.session_state.lista_itens):
-                col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_del = st.columns(
-                    [0.4, 2.5, 1.9, 1.2, 0.8, 0.9, 0.6]
+                col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_prt, col_del = st.columns(
+                    [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6]
                 )
 
                 col_num.write(idx + 1)
@@ -296,11 +339,41 @@ with col_lista:
                 )
                 item["quantidade"] = int(nova_qtd)
 
+                if col_prt.button("🖨️", key=f"prt_item_{idx}",
+                                  help="Imprimir apenas esta etiqueta"):
+                    st.session_state.imprimir_idx = idx
+                    st.rerun()
+
                 if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
                     st.session_state.lista_itens.pop(idx)
+                    st.session_state.imprimir_idx = None   # o índice mudaria
                     st.rerun()
         else:
             st.caption("Nenhuma etiqueta adicionada ainda. Preencha o formulário ao lado ➡️")
+
+    # Etiqueta escolhida para impressão avulsa
+    idx_sel = st.session_state.get("imprimir_idx")
+    if idx_sel is not None:
+        if 0 <= idx_sel < len(st.session_state.lista_itens):
+            item_sel = st.session_state.lista_itens[idx_sel]
+            qtd_sel = int(item_sel.get("quantidade", 1))
+            st.info(
+                f"Etiqueta {idx_sel + 1} — {item_sel.get('desc', '')} "
+                f"({qtd_sel}x)", icon="🖨️"
+            )
+            s1, s2 = st.columns([3, 1])
+            with s1:
+                botao_abrir_pdf(
+                    gerar_pdf_etiquetas([item_sel], modelo_selecionado),
+                    "🖨️ ABRIR PDF DESTA ETIQUETA",
+                    chave=f"avulsa{idx_sel}",
+                )
+            with s2:
+                if st.button("Cancelar", key="cancelar_avulsa"):
+                    st.session_state.imprimir_idx = None
+                    st.rerun()
+        else:
+            st.session_state.imprimir_idx = None   # a etiqueta saiu da lista
 
     # Total e botões de ação ficam FORA da caixa com scroll, sempre visíveis
     if st.session_state.lista_itens:
@@ -314,45 +387,11 @@ with col_lista:
                 st.rerun()
 
         with b2:
-            pdf_buffer = gerar_pdf_etiquetas(
-                st.session_state.lista_itens, modelo_selecionado
+            botao_abrir_pdf(
+                gerar_pdf_etiquetas(st.session_state.lista_itens, modelo_selecionado),
+                "🖨️ IMPRIMIR ETIQUETAS",
+                chave="todas",
             )
-            base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
-
-            botao_html = f"""
-                <style>
-                  html, body {{ margin: 0; padding: 0; overflow: hidden; }}
-                </style>
-                <button onclick="openPDF()" style=
-                    "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
-                >
-                    🖨️ IMPRIMIR ETIQUETAS
-                </button>
-                <script>
-                function openPDF() {{
-                    const base64Data = "{base64_pdf}";
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {{
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }}
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], {{ type: 'application/pdf' }});
-                    const blobUrl = URL.createObjectURL(blob);
-                    window.open(blobUrl, '_blank');
-                }}
-                </script>
-                """
-
-            # st.components.v1.html foi descontinuado (a data de remoção já
-            # passou). st.iframe é a substituição e existe a partir da 1.56.
-            # O fallback mantém o botão funcionando em versões mais antigas.
-            # 58 e não 50: o st.iframe conta as margens de forma diferente do
-            # components.html antigo, e com 50 sobrava uma barra de rolagem.
-            if hasattr(st, "iframe"):
-                st.iframe(botao_html, height=58)
-            else:
-                components.html(botao_html, height=58)
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
