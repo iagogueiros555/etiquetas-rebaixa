@@ -70,6 +70,19 @@ pdfmetrics.registerFont(TTFont("Arial-Black", "arialblack.ttf"))
 CAMINHO_ICONE = "docs/icons/favicon-32.png"
 icone_aba = CAMINHO_ICONE if os.path.exists(CAMINHO_ICONE) else "🏷️"
 
+ESTILO_PAGINA = """
+<style>
+  /* O Streamlit reserva uma margem lateral larga mesmo no modo "wide".
+     Reduzindo ela, a lista de etiquetas ganha espaço e o formulário
+     da direita encosta mais na borda. */
+  .block-container {
+      padding-left: 2rem !important;
+      padding-right: 2rem !important;
+      padding-top: 2.5rem !important;
+  }
+</style>
+"""
+
 st.set_page_config(
     page_title="Cartazeiro - Novo Atacarejo",
     page_icon=icone_aba,
@@ -120,6 +133,13 @@ elif "use_container_width" in _params_botao:
     LARGURA_CHEIA = {"use_container_width": True}
 else:
     LARGURA_CHEIA = {}
+
+
+_params_colunas = inspect.signature(st.columns).parameters
+if "vertical_alignment" in _params_colunas:
+    ALINHAR_MEIO = {"vertical_alignment": "center"}
+else:
+    ALINHAR_MEIO = {}
 
 
 # Nome curto de cada formato, para caber na coluna da lista
@@ -298,7 +318,9 @@ def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
 if "lista_itens" not in st.session_state:
     st.session_state.lista_itens = []
 
-col_titulo, col_formato = st.columns([3, 2])
+st.markdown(ESTILO_PAGINA, unsafe_allow_html=True)
+
+col_titulo, col_formato = st.columns([3.4, 2])
 with col_titulo:
     st.markdown("## 🏷️ Cartazeiro")
 with col_formato:
@@ -306,11 +328,22 @@ with col_formato:
         "Formato da Folha:", list(LAYOUTS.keys())
     )
 
+# Margem lateral da página. O padrão do Streamlit deixa muito espaço vazio
+# nas laterais; encolher aqui sobra largura para a lista de etiquetas.
+# Se um dia o Streamlit mudar essa classe, o CSS só deixa de valer e a
+# página volta à margem padrão - não quebra nada.
+MARGEM_PAGINA = "2.5rem"
+st.markdown(
+    f"<style>.block-container {{ padding-left: {MARGEM_PAGINA};"
+    f" padding-right: {MARGEM_PAGINA}; }}</style>",
+    unsafe_allow_html=True,
+)
+
 # Altura fixa da caixa de etiquetas geradas — ajustada pra bater com a
 # altura natural do formulário "Dados do Produto" ao lado.
 ALTURA_CAIXA_LISTA = 320
 
-col_lista, col_menu = st.columns([3, 2], gap="medium")
+col_lista, col_menu = st.columns([3.4, 2], gap="medium")
 
 # ===================== COLUNA ESQUERDA: ETIQUETAS GERADAS =====================
 with col_lista:
@@ -330,7 +363,7 @@ with col_lista:
 
             for idx, item in enumerate(st.session_state.lista_itens):
                 col_num, col_desc, col_preco, col_extra, col_fmt, col_qtd, col_prt, col_del = st.columns(
-                    [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6]
+                    [0.4, 2.4, 1.8, 1.1, 0.8, 0.9, 0.6, 0.6], **ALINHAR_MEIO
                 )
 
                 col_num.write(idx + 1)
@@ -366,12 +399,12 @@ with col_lista:
                 with col_prt:
                     botao_abrir_pdf(
                         gerar_pdf_etiquetas([item], modelo_selecionado),
-                        "🖨️",
+                        "🖨",
                         chave=f"linha{idx}",
                         compacto=True,
                     )
 
-                if col_del.button("🗑️", key=f"del_item_{idx}",
+                if col_del.button("🗑", key=f"del_item_{idx}",
                                   help="Remover apenas esta etiqueta",
                                   **LARGURA_CHEIA):
                     st.session_state.lista_itens.pop(idx)
