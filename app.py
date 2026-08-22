@@ -227,7 +227,7 @@ def gerar_pdf_etiquetas(itens, modelo_padrao):
     return buffer
 
 
-def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58):
+def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
     """Desenha um botão que abre o PDF numa aba nova.
 
     O PDF vai embutido em base64 e é aberto por JavaScript. Precisa ser no
@@ -236,13 +236,21 @@ def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58):
     """
     base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
+    if compacto:
+        estilo = ("background-color: transparent; border: 1px solid rgba(250,250,250,.3);"
+                  " color: inherit; padding: 6px 0; border-radius: 8px; font-size: 15px;"
+                  " cursor: pointer; width: 100%; font-family: sans-serif;")
+        altura = 42
+    else:
+        estilo = ("background-color: #FF4B4B; color: white; padding: 10px 16px; border: none;"
+                  " border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;"
+                  " width: 100%; font-family: sans-serif;")
+
     botao_html = f"""
         <style>
           html, body {{ margin: 0; padding: 0; overflow: hidden; }}
         </style>
-        <button onclick="openPDF_{chave}()" style=
-            "background-color: #FF4B4B; color: white; padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; font-family: sans-serif;"
-        >
+        <button onclick="openPDF_{chave}()" style="{estilo}">
             {rotulo}
         </button>
         <script>
@@ -339,41 +347,20 @@ with col_lista:
                 )
                 item["quantidade"] = int(nova_qtd)
 
-                if col_prt.button("🖨️", key=f"prt_item_{idx}",
-                                  help="Imprimir apenas esta etiqueta"):
-                    st.session_state.imprimir_idx = idx
-                    st.rerun()
+                # Abre o PDF só desta etiqueta, direto no clique
+                with col_prt:
+                    botao_abrir_pdf(
+                        gerar_pdf_etiquetas([item], modelo_selecionado),
+                        "🖨️",
+                        chave=f"linha{idx}",
+                        compacto=True,
+                    )
 
                 if col_del.button("🗑️", key=f"del_item_{idx}", help="Remover apenas esta etiqueta"):
                     st.session_state.lista_itens.pop(idx)
-                    st.session_state.imprimir_idx = None   # o índice mudaria
                     st.rerun()
         else:
             st.caption("Nenhuma etiqueta adicionada ainda. Preencha o formulário ao lado ➡️")
-
-    # Etiqueta escolhida para impressão avulsa
-    idx_sel = st.session_state.get("imprimir_idx")
-    if idx_sel is not None:
-        if 0 <= idx_sel < len(st.session_state.lista_itens):
-            item_sel = st.session_state.lista_itens[idx_sel]
-            qtd_sel = int(item_sel.get("quantidade", 1))
-            st.info(
-                f"Etiqueta {idx_sel + 1} — {item_sel.get('desc', '')} "
-                f"({qtd_sel}x)", icon="🖨️"
-            )
-            s1, s2 = st.columns([3, 1])
-            with s1:
-                botao_abrir_pdf(
-                    gerar_pdf_etiquetas([item_sel], modelo_selecionado),
-                    "🖨️ ABRIR PDF DESTA ETIQUETA",
-                    chave=f"avulsa{idx_sel}",
-                )
-            with s2:
-                if st.button("Cancelar", key="cancelar_avulsa"):
-                    st.session_state.imprimir_idx = None
-                    st.rerun()
-        else:
-            st.session_state.imprimir_idx = None   # a etiqueta saiu da lista
 
     # Total e botões de ação ficam FORA da caixa com scroll, sempre visíveis
     if st.session_state.lista_itens:
