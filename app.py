@@ -134,6 +134,19 @@ elif "use_container_width" in _params_botao:
 else:
     LARGURA_CHEIA = {}
 
+# Ícone nativo do Streamlit (Material). Centraliza sozinho e acompanha o tema,
+# ao contrário do emoji, que carrega um caractere invisível e sai torto.
+if "icon" in _params_botao:
+    ICONE_LIXEIRA = {"label": "", "icon": ":material/delete:"}
+else:
+    ICONE_LIXEIRA = {"label": "🗑️"}
+
+# Alinhar verticalmente o conteúdo das colunas (existe a partir da 1.36)
+if "vertical_alignment" in inspect.signature(st.columns).parameters:
+    ALINHAR_MEIO = {"vertical_alignment": "center"}
+else:
+    ALINHAR_MEIO = {}
+
 
 _params_colunas = inspect.signature(st.columns).parameters
 if "vertical_alignment" in _params_colunas:
@@ -260,6 +273,19 @@ def gerar_pdf_etiquetas(itens, modelo_padrao):
     return buffer
 
 
+# Impressora desenhada em SVG: fica nítida em qualquer tamanho e assume a cor
+# definida no botão, então combina com o tema claro e com o escuro.
+ICONE_IMPRESSORA = (
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" '
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+    'stroke-linejoin="round">'
+    '<polyline points="6 9 6 2 18 2 18 9"></polyline>'
+    '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>'
+    '<rect x="6" y="14" width="12" height="8"></rect>'
+    '</svg>'
+)
+
+
 def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
     """Desenha um botão que abre o PDF numa aba nova.
 
@@ -270,12 +296,12 @@ def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
     base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
     if compacto:
-        # cinza médio: aparece tanto no tema claro quanto no escuro
-        estilo = ("background-color: transparent; border: 1px solid rgba(128,128,128,.45);"
-                  " padding: 0; border-radius: 8px; font-size: 16px; cursor: pointer;"
+        # cinza médio: legível tanto no tema claro quanto no escuro
+        estilo = ("background-color: transparent; border: 1px solid rgba(128,128,128,.4);"
+                  " color: #6b7280; padding: 0; border-radius: 8px; cursor: pointer;"
                   " width: 100%; height: 38px; display: flex; align-items: center;"
-                  " justify-content: center; font-family: sans-serif;")
-        altura = 44
+                  " justify-content: center;")
+        altura = 40
     else:
         estilo = ("background-color: #FF4B4B; color: white; padding: 10px 16px; border: none;"
                   " border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;"
@@ -399,14 +425,14 @@ with col_lista:
                 with col_prt:
                     botao_abrir_pdf(
                         gerar_pdf_etiquetas([item], modelo_selecionado),
-                        "🖨",
+                        ICONE_IMPRESSORA,
                         chave=f"linha{idx}",
                         compacto=True,
                     )
 
-                if col_del.button("🗑", key=f"del_item_{idx}",
+                if col_del.button(key=f"del_item_{idx}",
                                   help="Remover apenas esta etiqueta",
-                                  **LARGURA_CHEIA):
+                                  **ICONE_LIXEIRA, **LARGURA_CHEIA):
                     st.session_state.lista_itens.pop(idx)
                     st.rerun()
         else:
