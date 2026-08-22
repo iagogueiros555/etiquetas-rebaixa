@@ -348,7 +348,25 @@ st.markdown(ESTILO_PAGINA, unsafe_allow_html=True)
 
 col_titulo, col_formato = st.columns([3.4, 2])
 with col_titulo:
-    st.markdown("## 🏷️ Cartazeiro")
+    # Cabeçalho com o cartaz ao lado do nome. Se a imagem não estiver no
+    # lugar, cai no emoji - o app não pode deixar de abrir por causa disso.
+    CAMINHO_LOGO = "docs/icons/logo-cartaz.png"
+    ALTURA_LOGO = 74   # pixels
+    if os.path.exists(CAMINHO_LOGO):
+        with open(CAMINHO_LOGO, "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode("utf-8")
+        st.markdown(
+            f"""<div style="display:flex; align-items:center; gap:14px;
+                        margin: 0 0 .4rem 0;">
+                  <img src="data:image/png;base64,{logo_b64}"
+                       style="height:{ALTURA_LOGO}px;" alt="Cartazeiro">
+                  <span style="font-size:2.1rem; font-weight:700;
+                               letter-spacing:-.01em;">Cartazeiro</span>
+                </div>""",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown("## 🏷️ Cartazeiro")
 with col_formato:
     modelo_selecionado = st.selectbox(
         "Formato da Folha:", list(LAYOUTS.keys())
