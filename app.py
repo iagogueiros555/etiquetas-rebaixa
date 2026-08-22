@@ -84,7 +84,7 @@ ESTILO_PAGINA = """
 """
 
 st.set_page_config(
-    page_title="Cartazeiro - Novo Atacarejo",
+    page_title="Cartazeiro",
     page_icon=icone_aba,
     layout="wide",
 )
