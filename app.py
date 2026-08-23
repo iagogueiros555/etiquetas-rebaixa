@@ -706,3 +706,28 @@ with col_menu:
                     st.warning("Preencha a Descrição do Produto!")
                 else:
                     st.warning("Informe um Preço POR válido (ex: 1,97).")
+
+
+# ===================== ASSINATURA =====================
+AUTOR = "Iago Moraes"
+UNIDADE = "Loja 38 — Garanhuns"
+CONTATO = "iago.gueiros555@gmail.com"   # deixe "" para não mostrar contato
+
+_linhas = [f"Cartazeiro · desenvolvido por {AUTOR} · {UNIDADE}"]
+if CONTATO:
+    # O endereço aparece escrito, e não como palavra clicável: se o
+    # computador não tiver e-mail configurado, a pessoa ainda consegue ler
+    # e copiar em vez de clicar num link que não faz nada.
+    _linhas.append(
+        f'Dúvidas, problemas ou sugestões: '
+        f'<a href="mailto:{CONTATO}?subject=Cartazeiro" '
+        f'style="color:inherit;">{CONTATO}</a>'
+    )
+
+st.markdown(
+    f"""<div style="text-align:center; opacity:.5; font-size:.78rem;
+                line-height:1.6; padding: 1.5rem 0 .5rem;">
+          {"<br>".join(_linhas)}
+        </div>""",
+    unsafe_allow_html=True,
+)
