@@ -165,6 +165,33 @@ APELIDO_FORMATO = {
 }
 
 
+def normalizar_preco(bruto):
+    """Devolve o preço no formato que os layouts esperam: "1548,00".
+
+    Trata o ÚLTIMO separador (vírgula ou ponto) como o decimal e descarta os
+    anteriores, que são ponto de milhar. Sem isso, quem digitasse "1.548,00"
+    veria "R$ 1,54" no cartaz impresso, porque os layouts cortam o valor no
+    primeiro separador que encontram.
+
+    Devolve "" quando não há número nenhum, para a validação recusar.
+    """
+    if bruto is None:
+        return ""
+    texto = str(bruto).strip().replace(" ", "").replace("R$", "")
+    if not any(c.isdigit() for c in texto):
+        return ""
+
+    corte = max(texto.rfind(","), texto.rfind("."))
+    if corte == -1:
+        inteiro, centavos = texto, "00"
+    else:
+        inteiro, centavos = texto[:corte], texto[corte + 1:]
+
+    inteiro = "".join(c for c in inteiro if c.isdigit()) or "0"
+    centavos = "".join(c for c in centavos if c.isdigit())[:2]
+    return f"{inteiro},{(centavos + '00')[:2]}"
+
+
 def selecionar_funcao_desenho(modelo_chave, item):
     cfg = LAYOUTS[modelo_chave]
     pasta = cfg["tipo_pasta"]
@@ -576,10 +603,14 @@ with col_menu:
             btn_adicionar_fardo = st.form_submit_button("➕ Adicionar Caixa à Lista")
 
             if btn_adicionar_fardo:
+                desc = desc.strip()
                 if desc:
                     if modo_manual:
                         if preco_manual_input:
-                            valor_caixa_str = preco_manual_input.replace(".", ",").strip()
+                            valor_caixa_str = normalizar_preco(preco_manual_input)
+                            if not valor_caixa_str:
+                                st.warning("Preço da caixa inválido (ex: 227,76).")
+                                st.stop()
                         else:
                             st.warning("Informe o preço manual da caixa!")
                             st.stop()
@@ -651,11 +682,13 @@ with col_menu:
             btn_adicionar = st.form_submit_button("➕ Adicionar à Lista")
 
             if btn_adicionar:
-                if desc and por:
+                desc = desc.strip()
+                por_ok = normalizar_preco(por)
+                if desc and por_ok:
                     item_dados = {
                         "desc": desc,
-                        "de": de.replace(".", ",").strip(),
-                        "por": por.replace(".", ",").strip(),
+                        "de": normalizar_preco(de),
+                        "por": normalizar_preco(por),
                         "un": unidade,
                         "val": validade,
                         "e_rebaixa": e_rebaixa,
@@ -669,5 +702,7 @@ with col_menu:
 
                     st.success(f"Etiqueta do produto '{desc}' adicionada! Ajuste a quantidade na lista ao lado.")
                     st.rerun()
+                elif not desc:
+                    st.warning("Preencha a Descrição do Produto!")
                 else:
-                    st.warning("Preencha ao menos a Descrição e o Preço POR!")
+                    st.warning("Informe um Preço POR válido (ex: 1,97).")
