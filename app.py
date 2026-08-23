@@ -287,13 +287,24 @@ ICONE_IMPRESSORA = (
 )
 
 
-def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False):
+def botao_abrir_pdf(pdf_buffer, rotulo, chave, altura=58, compacto=False, ativo=True):
     """Desenha um botão que abre o PDF numa aba nova.
 
     O PDF vai embutido em base64 e é aberto por JavaScript. Precisa ser no
     clique do próprio botão: se a aba fosse aberta sozinha depois de um
     recarregamento, o navegador barraria como pop-up.
     """
+    # Sem nada marcado, nem chega a gerar PDF: desenha só o botão apagado.
+    if not ativo:
+        st.markdown(
+            f"""<div style="background:#e6e6e6; color:#9a9a9a; padding:10px 16px;
+                        border-radius:8px; font-weight:bold; font-size:15px;
+                        text-align:center; font-family:sans-serif;
+                        cursor:not-allowed; user-select:none;">{rotulo}</div>""",
+            unsafe_allow_html=True,
+        )
+        return
+
     base64_pdf = base64.b64encode(pdf_buffer.read()).decode("utf-8")
 
     if compacto:
@@ -483,10 +494,10 @@ with col_lista:
         if marcadas:
             st.caption(
                 f"🏷️ **{len(marcadas)}** de {len(itens)} etiquetas marcadas "
-                f"— **{total_marcadas}** impressões (total da lista: {total_geral})"
+                f"— **{total_marcadas}** impressões"
             )
         else:
-            st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_geral}**")
+            st.caption("🏷️ Marque as etiquetas que você quer imprimir")
 
         def _marcar_todas(valor):
             """Marca ou desmarca todas as etiquetas.
@@ -513,20 +524,15 @@ with col_lista:
         with m3:
             st.button("🗑️ Limpar Lista", on_click=_limpar_lista, **LARGURA_CHEIA)
 
-        # Só as marcadas
+        # Um botão só: imprime o que estiver marcado, e fica apagado sem seleção
         if marcadas:
             botao_abrir_pdf(
                 gerar_pdf_etiquetas(marcadas, modelo_selecionado),
-                f"🖨️ IMPRIMIR AS {len(marcadas)} MARCADAS",
+                f"🖨️ IMPRIMIR ({total_marcadas})",
                 chave="marcadas",
             )
-
-        # A lista inteira
-        botao_abrir_pdf(
-            gerar_pdf_etiquetas(itens, modelo_selecionado),
-            "🖨️ IMPRIMIR TODAS",
-            chave="todas",
-        )
+        else:
+            botao_abrir_pdf(None, "🖨️ IMPRIMIR", chave="off", ativo=False)
 
 # ===================== COLUNA DIREITA: MENU DE CRIAÇÃO =====================
 with col_menu:
@@ -593,7 +599,7 @@ with col_menu:
                         "quantidade": 1,
                         "formato": modelo_selecionado,
                         "id": uuid.uuid4().hex[:8],
-                        "sel": False,
+                        "sel": True,
                     }
                     st.session_state.lista_itens.append(item_dados)
                     st.success("Etiqueta de caixa adicionada! Ajuste a quantidade na lista ao lado.")
@@ -657,7 +663,7 @@ with col_menu:
                         "quantidade": 1,
                         "formato": modelo_selecionado,
                         "id": uuid.uuid4().hex[:8],
-                        "sel": False,
+                        "sel": True,
                     }
                     st.session_state.lista_itens.append(item_dados)
 
