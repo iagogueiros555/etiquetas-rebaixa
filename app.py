@@ -394,6 +394,10 @@ col_lista, col_menu = st.columns([3.4, 2], gap="medium")
 with col_lista:
     st.markdown("**📋 Etiquetas Geradas**")
 
+    # Todo item precisa de id antes de qualquer botão mexer nas marcações
+    for _it in st.session_state.lista_itens:
+        _it.setdefault("id", uuid.uuid4().hex[:8])
+
     with st.container(height=ALTURA_CAIXA_LISTA, border=True):
         if st.session_state.lista_itens:
             h_sel, h_num, h_desc, h_preco, h_extra, h_fmt, h_qtd, h_prt, h_del = st.columns(
@@ -485,25 +489,29 @@ with col_lista:
             st.caption(f"🏷️ Total de etiquetas a imprimir: **{total_geral}**")
 
         def _marcar_todas(valor):
-            """Muda a marcação de todas. Precisa mexer no estado dos widgets
-            também, senão as caixas continuam mostrando o valor antigo."""
-            for it in itens:
+            """Marca ou desmarca todas as etiquetas.
+
+            Roda como callback (on_click) de propósito: o Streamlit não deixa
+            alterar o estado de um widget depois que ele já foi desenhado, e as
+            caixinhas de marcação aparecem acima destes botões. O callback roda
+            antes do redesenho, então a alteração é permitida.
+            """
+            for it in st.session_state.lista_itens:
                 it["sel"] = valor
                 st.session_state[f"sel_{it['id']}"] = valor
 
+        def _limpar_lista():
+            st.session_state.lista_itens = []
+
         m1, m2, m3 = st.columns(3)
         with m1:
-            if st.button("Marcar todas", **LARGURA_CHEIA):
-                _marcar_todas(True)
-                st.rerun()
+            st.button("Marcar todas", on_click=_marcar_todas, args=(True,),
+                      **LARGURA_CHEIA)
         with m2:
-            if st.button("Desmarcar", **LARGURA_CHEIA):
-                _marcar_todas(False)
-                st.rerun()
+            st.button("Desmarcar", on_click=_marcar_todas, args=(False,),
+                      **LARGURA_CHEIA)
         with m3:
-            if st.button("🗑️ Limpar Lista", **LARGURA_CHEIA):
-                st.session_state.lista_itens = []
-                st.rerun()
+            st.button("🗑️ Limpar Lista", on_click=_limpar_lista, **LARGURA_CHEIA)
 
         # Só as marcadas
         if marcadas:
