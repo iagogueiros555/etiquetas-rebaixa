@@ -30,7 +30,7 @@ F_FONTE_RS = 0.34            # "R$" como fração do tamanho dos dígitos
 F_FONTE_UN = 0.22            # unidade como fração do tamanho dos dígitos
 F_UN_DESCE = 2.5 / 74.9      # unidade abaixo da linha dos dígitos (oficial)
 GAP_UNIDADE = 1.3 / 74.9     # entre os centavos e a unidade (oficial)
-F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
+F_MARGEM_PRECO = 2.0 / 74.0  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
 
 COR_LINHA = HexColor("#B0B0B0")   # linhas de corte
