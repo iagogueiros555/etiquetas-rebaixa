@@ -112,8 +112,8 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   # O conjunto (dígitos + centavos + unidade) precisa caber entre o início
   # do preço e a margem direita. Só os dígitos cedem: "R$" e unidade ficam
   # do tamanho oficial, senão um preço de 3 casas miniaturiza o cartaz.
-  disponivel = ((x_base + col_w - (col_w * F_MARGEM_PRECO))
-                - x_preco - gap_un - w_un)
+  # a unidade fica sob os centavos, então não disputa mais largura com o preço
+  disponivel = (x_base + col_w - (col_w * F_MARGEM_PRECO)) - x_preco
 
   def largura_valor(fr, fc):
     return (c.stringWidth(inteiro, "Arial-Black", fr)
@@ -137,7 +137,8 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   c.drawString(x_preco + w_int, y_preco + rel_cent, f",{centavos}")
   w_cent = c.stringWidth(f",{centavos}", "Arial-Black", f_cent)
 
-  # a unidade fica um pouco abaixo da linha do preço, alinhada sob os centavos
+  # a unidade fica CENTRALIZADA sob os centavos, não depois deles: colocada
+  # ao lado ela ficava longe na diagonal, porque os centavos são elevados
   c.setFont("Arial-Black", f_un)
-  c.drawString(x_preco + w_int + w_cent + gap_un,
-               y_preco - (row_h * F_UN_DESCE), unidade)
+  c.drawCentredString(x_preco + w_int + (w_cent / 2),
+                      y_preco - (row_h * F_UN_DESCE), unidade)
