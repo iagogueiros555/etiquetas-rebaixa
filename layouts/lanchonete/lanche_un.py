@@ -46,10 +46,16 @@ def fontes_do_preco(f_real):
 
 
 def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
-  """Etiqueta da padaria - produto vendido por UNIDADE.
+  """Etiqueta da lanchonete - produto vendido por UNIDADE.
 
   x_base / y_base são o canto inferior esquerdo da célula.
+  A moldura de corte é desenhada aqui dentro, para o app não precisar
+  saber que este formato tem linhas de recorte.
   """
+  c.setStrokeColor(COR_LINHA)
+  c.setLineWidth(0.5)
+  c.rect(x_base, y_base, col_w, row_h, stroke=1, fill=0)
+
   topo = y_base + row_h                      # borda superior da célula
   x_centro = x_base + (col_w / 2)
   largura_util = col_w - (2 * MARGEM_LATERAL)
@@ -76,7 +82,12 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   inteiro, centavos = separar_valor(item.get("por"))
   unidade = item.get("un", "UN")
 
-  f_real, f_cent, f_rs, f_un = fontes_do_preco(FONTE_PRECO)
+  # "R$" e "UN" têm tamanho fixo, como no modelo oficial. Só os dígitos
+  # encolhem quando o valor é largo - senão um preço de 3 casas miniaturiza
+  # o cartaz inteiro.
+  _, _, f_rs, f_un = fontes_do_preco(FONTE_PRECO)
+  f_real = FONTE_PRECO
+  f_cent = max(8, round(f_real * 0.50))
 
   # se o valor for largo demais, o conjunto encolhe de 1 em 1 ponto
   def largura(fr, fc):
@@ -89,7 +100,7 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   disponivel = col_w - X_PRECO - MARGEM_LATERAL - larg_un
   while f_real > 30 and largura(f_real, f_cent) > disponivel:
     f_real -= 1
-    f_real, f_cent, f_rs, f_un = fontes_do_preco(f_real)
+    f_cent = max(8, round(f_real * 0.50))
 
   y_preco = topo - PRECO_BASE
 
@@ -110,10 +121,3 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   # ancorada à direita: assim nunca escapa da célula, seja qual for a largura
   c.setFont("Arial-Black", f_un)
   c.drawRightString(x_base + col_w - MARGEM_LATERAL, y_preco, unidade)
-
-
-def desenhar_linhas_corte(c, x, y, largura, altura):
-  """Moldura da célula, para saber onde recortar."""
-  c.setStrokeColor(COR_LINHA)
-  c.setLineWidth(0.5)
-  c.rect(x, y, largura, altura, stroke=1, fill=0)
