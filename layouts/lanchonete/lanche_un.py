@@ -23,6 +23,9 @@ F_PRECO_BASE = 68.5 / 74.9   # linha de base do preço
 FONTE_DESC = 20              # tamanhos de referência, reescalados pela célula
 MAX_LINHAS_DESC = 4
 FONTE_PRECO = 80
+F_FONTE_RS = 0.34            # "R$" como fração do tamanho dos dígitos
+F_FONTE_UN = 0.25            # unidade como fração do tamanho dos dígitos
+F_UN_DESCE = 3.0 / 74.9      # o quanto a unidade fica abaixo da linha do preço
 GAP_UNIDADE = 3.0 / 74.9     # entre os centavos e a unidade
 F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
@@ -94,8 +97,8 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   inteiro, centavos = separar_valor(item.get("por"))
   unidade = (item.get("un") or "UN").strip()
 
-  f_rs = max(8, round(FONTE_PRECO * 0.40 * k))
-  f_un = max(8, round(FONTE_PRECO * 0.30 * k))
+  f_rs = max(8, round(FONTE_PRECO * F_FONTE_RS * k))
+  f_un = max(8, round(FONTE_PRECO * F_FONTE_UN * k))
   f_real = max(8, round(FONTE_PRECO * k))
   f_cent = max(8, round(f_real * 0.50))
 
@@ -131,5 +134,7 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   c.drawString(x_preco + w_int, y_preco + rel_cent, f",{centavos}")
   w_cent = c.stringWidth(f",{centavos}", "Arial-Black", f_cent)
 
+  # a unidade fica um pouco abaixo da linha do preço, alinhada sob os centavos
   c.setFont("Arial-Black", f_un)
-  c.drawString(x_preco + w_int + w_cent + gap_un, y_preco, unidade)
+  c.drawString(x_preco + w_int + w_cent + gap_un,
+               y_preco - (row_h * F_UN_DESCE), unidade)
