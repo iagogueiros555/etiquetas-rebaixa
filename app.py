@@ -23,6 +23,7 @@ from layouts.a5 import (
 )
 
 # Importando os módulos A4 HORIZONTAL com "apelidos"
+from layouts.lanchonete import lanche_un
 from layouts.a4h import (
     fardo_caixa as fardo_caixa_a4h,
     promocional as promocional_a4h,
@@ -51,6 +52,7 @@ importlib.reload(promo_validade_a5)
 importlib.reload(unitario_a5)
 importlib.reload(unitario_validade_a5)
 # Reloads A4 Horizontal
+importlib.reload(lanche_un)
 importlib.reload(fardo_caixa_a4h)
 importlib.reload(promocional_a4h)
 importlib.reload(promo_validade_a4h)
@@ -113,6 +115,13 @@ LAYOUTS = {
         "scale": 1.5,
         "tipo_pasta": "a4",
     },
+    "Lanchonete - Unidade (12 por A4)": {
+        "size": A4,
+        "cols": 3,
+        "rows": 4,
+        "scale": 1.0,
+        "tipo_pasta": "lanchonete",
+    },
     "A4 / A3 Horizontal (1 por folha)": {
         "size": landscape(A4),
         "cols": 1,
@@ -162,6 +171,7 @@ APELIDO_FORMATO = {
     "A5 Vertical (2 por A4)": "A5",
     "A4 / A3 Vertical (1 por folha)": "A4 ↕",
     "A4 / A3 Horizontal (1 por folha)": "A4 ↔",
+    "Lanchonete - Unidade (12 por A4)": "Lanch.",
 }
 
 
@@ -198,6 +208,11 @@ def selecionar_funcao_desenho(modelo_chave, item):
 
     tem_de = bool(item.get("de"))
     tem_rebaixa = item.get("e_rebaixa")
+
+    if pasta == "lanchonete":
+        # Modelo da lanchonete: só preço por unidade. De/Por, validade e
+        # fardo ainda não existem neste formato.
+        return lanche_un.desenhar_etiqueta_padaria
 
     if pasta == "a4h":
         # O fardo é tratado aqui dentro: se caísse no bloco geral abaixo,
@@ -639,11 +654,21 @@ with col_menu:
                     st.warning("Preencha a Descrição do Produto!")
     else:
         # --- MODOS NORMAIS (PROMOCIONAL OU UNITÁRIO) ---
-        col_t1, col_t2 = st.columns(2)
-        with col_t1:
-            tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
-        with col_t2:
-            e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
+        # O modelo da lanchonete só tem preço por unidade. Escondo as opções
+        # que ele ignora, senão a pessoa digita um "De" que não sai no cartaz.
+        eh_lanchonete = LAYOUTS[modelo_selecionado]["tipo_pasta"] == "lanchonete"
+
+        if eh_lanchonete:
+            tem_desconto = False
+            e_rebaixa = False
+            st.caption("Modelo da lanchonete: preço por unidade. "
+                       "De/Por e validade ainda não existem neste formato.")
+        else:
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                tem_desconto = st.checkbox("Promocional com Desconto (De / Por)", value=True)
+            with col_t2:
+                e_rebaixa = st.checkbox("Etiqueta de Rebaixa (Próximo à Validade)", value=True)
 
 
         with st.form("form_produto", clear_on_submit=True):
