@@ -15,18 +15,21 @@ CELULA_REF = 74.9 * mm
 F_MARGEM = 4.0 / 74.9        # respiro lateral dentro da célula
 F_DESC_TOPO = 11.2 / 74.9    # linha de base da 1ª linha da descrição
 F_ESPACO_LINHA = 8.0 / 74.9  # entre as linhas da descrição
-F_X_RS = 6.3 / 74.9          # onde começa o "R$"
-F_RS_BASE = 48.6 / 74.9      # linha de base do "R$"
-F_X_PRECO = 20.6 / 74.9      # onde começam os dígitos
-F_PRECO_BASE = 68.5 / 74.9   # linha de base do preço
+# Medidas conferidas no PDF oficial (célula de 74,9mm):
+F_X_RS = 6.9 / 74.9          # onde começa o "R$"
+F_RS_BASE = 48.4 / 74.9      # linha de base do "R$"
+F_X_PRECO = 20.8 / 74.9      # onde começam os dígitos
+F_PRECO_BASE = 65.7 / 74.9   # linha de base dos DÍGITOS. Cuidado: o pé da
+                             # vírgula desce até 68,5mm, e usar esse valor
+                             # empurrava o preço todo 2,8mm para baixo.
 
 FONTE_DESC = 20              # tamanhos de referência, reescalados pela célula
 MAX_LINHAS_DESC = 4
 FONTE_PRECO = 80
 F_FONTE_RS = 0.34            # "R$" como fração do tamanho dos dígitos
-F_FONTE_UN = 0.25            # unidade como fração do tamanho dos dígitos
-F_UN_DESCE = 3.0 / 74.9      # o quanto a unidade fica abaixo da linha do preço
-GAP_UNIDADE = 3.0 / 74.9     # entre os centavos e a unidade
+F_FONTE_UN = 0.22            # unidade como fração do tamanho dos dígitos
+F_UN_DESCE = 2.5 / 74.9      # unidade abaixo da linha dos dígitos (oficial)
+GAP_UNIDADE = 1.3 / 74.9     # entre os centavos e a unidade (oficial)
 F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
 
