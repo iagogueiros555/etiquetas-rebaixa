@@ -1,7 +1,6 @@
 from reportlab.lib.colors import black, HexColor
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
-from reportlab.pdfbase import pdfmetrics
 
 # =====================================================================
 # AJUSTES RÁPIDOS
@@ -30,16 +29,11 @@ F_FONTE_RS = 0.34            # "R$" como fração do tamanho dos dígitos
 F_FONTE_UN = 0.22            # unidade como fração do tamanho dos dígitos
 F_UN_DESCE = 1.5 / 160      # unidade abaixo da linha dos dígitos (oficial)
 F_UN_DIREITA = 4.0 / 74.9    # desloca a unidade para a direita (negativo = esquerda)
-GAP_UNIDADE = 1.3 / 74.9     # entre os centavos e a unidade (oficial)
 F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
 
 COR_LINHA = HexColor("#B0B0B0")   # linhas de corte
 # =====================================================================
-
-
-def altura_digitos(fonte, tamanho):
-  return pdfmetrics.getFont(fonte).face.capHeight / 1000.0 * tamanho
 
 
 def separar_valor(bruto):
@@ -52,13 +46,6 @@ def separar_valor(bruto):
     inteiro, centavos = bruto[:corte], bruto[corte + 1:][:2]
   inteiro = inteiro.replace(".", "").replace(",", "") or "0"
   return inteiro, (centavos + "00")[:2]
-
-
-def fontes_do_preco(f_real):
-  return (f_real,
-          max(8, round(f_real * 0.50)),   # centavos
-          max(8, round(f_real * 0.40)),   # R$
-          max(8, round(f_real * 0.30)))   # UN
 
 
 def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
@@ -107,13 +94,11 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   f_cent = max(8, round(f_real * 0.50))
 
   x_preco = x_base + (col_w * F_X_PRECO)
-  gap_un = col_w * GAP_UNIDADE
   w_un = c.stringWidth(unidade, "Arial-Black", f_un)
 
-  # O conjunto (dígitos + centavos + unidade) precisa caber entre o início
-  # do preço e a margem direita. Só os dígitos cedem: "R$" e unidade ficam
-  # do tamanho oficial, senão um preço de 3 casas miniaturiza o cartaz.
-  # a unidade fica sob os centavos, então não disputa mais largura com o preço
+  # Só os dígitos cedem espaço: "R$" e unidade ficam do tamanho oficial,
+  # senão um preço de 3 casas miniaturiza o cartaz inteiro. A unidade fica
+  # sob os centavos, então não disputa largura com o preço.
   disponivel = (x_base + col_w - (col_w * F_MARGEM_PRECO)) - x_preco
 
   def largura_valor(fr, fc):
@@ -138,8 +123,15 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   c.drawString(x_preco + w_int, y_preco + rel_cent, f",{centavos}")
   w_cent = c.stringWidth(f",{centavos}", "Arial-Black", f_cent)
 
-  # a unidade fica CENTRALIZADA sob os centavos, não depois deles: colocada
-  # ao lado ela ficava longe na diagonal, porque os centavos são elevados
+  # A unidade fica CENTRALIZADA sob os centavos, não depois deles: ao lado
+  # ela ficava longe na diagonal, porque os centavos são elevados.
   c.setFont("Arial-Black", f_un)
-  c.drawCentredString(x_preco + w_int + (w_cent / 2) + (col_w * F_UN_DIREITA),
-                      y_preco - (row_h * F_UN_DESCE), unidade)
+  x_un = x_preco + w_int + (w_cent / 2) + (col_w * F_UN_DIREITA)
+
+  # Trava: nomes compridos ("PORCAO", "BANDEJA") somados ao deslocamento
+  # passavam da borda e saíam cortados na impressão.
+  limite = x_base + col_w - (col_w * F_MARGEM_PRECO) - (w_un / 2)
+  minimo = x_base + margem + (w_un / 2)
+  x_un = max(minimo, min(x_un, limite))
+
+  c.drawCentredString(x_un, y_preco - (row_h * F_UN_DESCE), unidade)
