@@ -658,6 +658,10 @@ with col_menu:
         # que ele ignora, senão a pessoa digita um "De" que não sai no cartaz.
         eh_lanchonete = LAYOUTS[modelo_selecionado]["tipo_pasta"] == "lanchonete"
 
+        # No modelo da lanchonete a unidade é "UN", sem o "1" na frente:
+        # "1 UN" é mais largo e obriga o preço a encolher para caber.
+        UNIDADE_PADRAO = "UN" if eh_lanchonete else "1 UN"
+
         if eh_lanchonete:
             tem_desconto = False
             e_rebaixa = False
@@ -683,14 +687,14 @@ with col_menu:
                 with col_p2:
                     por = st.text_input("Preço POR (R$):", placeholder="Ex: 1,97")
                 with col_p3:
-                    unidade = st.text_input("Unidade:", value="1 UN").upper()
+                    unidade = st.text_input("Unidade:", value=UNIDADE_PADRAO).upper()
             else:
                 col_p1, col_p2 = st.columns([2, 1])
                 with col_p1:
                     por = st.text_input("Preço Único (R$):", placeholder="Ex: 1,97")
                     de = ""
                 with col_p2:
-                    unidade = st.text_input("Unidade:", value="1 UN").upper()
+                    unidade = st.text_input("Unidade:", value=UNIDADE_PADRAO).upper()
 
             if e_rebaixa:
                 data_validade = st.date_input(
