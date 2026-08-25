@@ -28,7 +28,8 @@ MAX_LINHAS_DESC = 4
 FONTE_PRECO = 80
 F_FONTE_RS = 0.34            # "R$" como fração do tamanho dos dígitos
 F_FONTE_UN = 0.22            # unidade como fração do tamanho dos dígitos
-F_UN_DESCE = 1.5 / 200    # unidade abaixo da linha dos dígitos (oficial)
+F_UN_DESCE = 2.5 / 74.9      # unidade abaixo da linha dos dígitos (oficial)
+F_UN_DIREITA = 4.0 / 74.9    # desloca a unidade para a direita (negativo = esquerda)
 GAP_UNIDADE = 1.3 / 74.9     # entre os centavos e a unidade (oficial)
 F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
@@ -140,5 +141,5 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   # a unidade fica CENTRALIZADA sob os centavos, não depois deles: colocada
   # ao lado ela ficava longe na diagonal, porque os centavos são elevados
   c.setFont("Arial-Black", f_un)
-  c.drawCentredString(x_preco + w_int + (w_cent / 2),
+  c.drawCentredString(x_preco + w_int + (w_cent / 2) + (col_w * F_UN_DIREITA),
                       y_preco - (row_h * F_UN_DESCE), unidade)
