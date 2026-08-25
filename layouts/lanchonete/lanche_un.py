@@ -6,17 +6,26 @@ from reportlab.pdfbase import pdfmetrics
 # =====================================================================
 # AJUSTES RÁPIDOS
 # =====================================================================
-MARGEM_LATERAL = 4 * mm      # respiro dentro da célula
-DESC_TOPO = 11.2 * mm        # linha de base da 1ª linha da descrição
-FONTE_DESC = 20              # tamanho inicial (reduz se precisar)
-MAX_LINHAS_DESC = 4
-ESPACO_LINHA = 8 * mm        # entre as linhas da descrição
+# Todas as medidas são FRAÇÕES da célula, tiradas do modelo oficial de
+# 74,9 x 74,9 mm. Assim o cartaz fica idêntico se um dia a célula mudar de
+# tamanho - foi o que quebrou quando passamos de 75mm para 70mm usando
+# medidas absolutas: o preço encolheu para caber.
+CELULA_REF = 74.9 * mm
 
-PRECO_BASE = 68.5 * mm       # linha de base do preço, medida do TOPO da célula
-FONTE_PRECO = 80             # tamanho inicial dos reais
-X_RS = 6.3 * mm              # onde começa o "R$"
-RS_BASE = 48.6 * mm          # linha de base do "R$", medida do TOPO da célula
-X_PRECO = 20.6 * mm          # onde começam os dígitos
+F_MARGEM = 4.0 / 74.9        # respiro lateral dentro da célula
+F_DESC_TOPO = 11.2 / 74.9    # linha de base da 1ª linha da descrição
+F_ESPACO_LINHA = 8.0 / 74.9  # entre as linhas da descrição
+F_X_RS = 6.3 / 74.9          # onde começa o "R$"
+F_RS_BASE = 48.6 / 74.9      # linha de base do "R$"
+F_X_PRECO = 20.6 / 74.9      # onde começam os dígitos
+F_PRECO_BASE = 68.5 / 74.9   # linha de base do preço
+
+FONTE_DESC = 20              # tamanhos de referência, reescalados pela célula
+MAX_LINHAS_DESC = 4
+FONTE_PRECO = 80
+GAP_UNIDADE = 3.0 / 74.9     # entre os centavos e a unidade
+F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
+                             # o das outras linhas, para o valor ficar grande)
 
 COR_LINHA = HexColor("#B0B0B0")   # linhas de corte
 # =====================================================================
@@ -48,23 +57,26 @@ def fontes_do_preco(f_real):
 def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
   """Etiqueta da lanchonete - produto vendido por UNIDADE.
 
-  x_base / y_base são o canto inferior esquerdo da célula.
-  A moldura de corte é desenhada aqui dentro, para o app não precisar
-  saber que este formato tem linhas de recorte.
+  x_base / y_base são o canto inferior esquerdo da célula. A moldura de
+  corte é desenhada aqui dentro, para o app não precisar saber que este
+  formato tem linhas de recorte.
   """
   c.setStrokeColor(COR_LINHA)
   c.setLineWidth(0.5)
   c.rect(x_base, y_base, col_w, row_h, stroke=1, fill=0)
 
-  topo = y_base + row_h                      # borda superior da célula
+  # tudo escala junto com a célula, tomando a oficial como referência
+  k = col_w / CELULA_REF
+  margem = col_w * F_MARGEM
+  topo = y_base + row_h
   x_centro = x_base + (col_w / 2)
-  largura_util = col_w - (2 * MARGEM_LATERAL)
+  largura_util = col_w - (2 * margem)
 
   # --- 1. DESCRIÇÃO (reduz até caber nas linhas disponíveis) ---
-  tam = FONTE_DESC
+  tam = max(6, round(FONTE_DESC * k))
   desc = (item.get("desc", "") or "").upper()
   linhas = []
-  while tam > 8:
+  while tam > 6:
     linhas = simpleSplit(desc, "Arial-Black", tam, largura_util)
     if len(linhas) <= MAX_LINHAS_DESC:
       break
@@ -73,51 +85,51 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
 
   c.setFillColor(black)
   c.setFont("Arial-Black", tam)
-  y = topo - DESC_TOPO
+  y = topo - (row_h * F_DESC_TOPO)
   for linha in linhas:
     c.drawCentredString(x_centro, y, linha)
-    y -= ESPACO_LINHA
+    y -= row_h * F_ESPACO_LINHA
 
-  # --- 2. PREÇO (posição fixa, como no modelo oficial) ---
+  # --- 2. PREÇO ---
   inteiro, centavos = separar_valor(item.get("por"))
-  unidade = item.get("un", "UN")
+  unidade = (item.get("un") or "UN").strip()
 
-  # "R$" e "UN" têm tamanho fixo, como no modelo oficial. Só os dígitos
-  # encolhem quando o valor é largo - senão um preço de 3 casas miniaturiza
-  # o cartaz inteiro.
-  _, _, f_rs, f_un = fontes_do_preco(FONTE_PRECO)
-  f_real = FONTE_PRECO
+  f_rs = max(8, round(FONTE_PRECO * 0.40 * k))
+  f_un = max(8, round(FONTE_PRECO * 0.30 * k))
+  f_real = max(8, round(FONTE_PRECO * k))
   f_cent = max(8, round(f_real * 0.50))
 
-  # se o valor for largo demais, o conjunto encolhe de 1 em 1 ponto
-  def largura(fr, fc):
+  x_preco = x_base + (col_w * F_X_PRECO)
+  gap_un = col_w * GAP_UNIDADE
+  w_un = c.stringWidth(unidade, "Arial-Black", f_un)
+
+  # O conjunto (dígitos + centavos + unidade) precisa caber entre o início
+  # do preço e a margem direita. Só os dígitos cedem: "R$" e unidade ficam
+  # do tamanho oficial, senão um preço de 3 casas miniaturiza o cartaz.
+  disponivel = ((x_base + col_w - (col_w * F_MARGEM_PRECO))
+                - x_preco - gap_un - w_un)
+
+  def largura_valor(fr, fc):
     return (c.stringWidth(inteiro, "Arial-Black", fr)
             + c.stringWidth(f",{centavos}", "Arial-Black", fc))
 
-  # a unidade fica ancorada na margem direita, então o preço tem que caber
-  # ANTES dela - senão um valor largo passa por baixo do "UN"
-  larg_un = c.stringWidth(unidade, "Arial-Black", f_un) + (3 * mm)
-  disponivel = col_w - X_PRECO - MARGEM_LATERAL - larg_un
-  while f_real > 30 and largura(f_real, f_cent) > disponivel:
+  while f_real > 20 and largura_valor(f_real, f_cent) > disponivel:
     f_real -= 1
     f_cent = max(8, round(f_real * 0.50))
 
-  y_preco = topo - PRECO_BASE
+  y_preco = topo - (row_h * F_PRECO_BASE)
 
-  # o "R$" tem posição própria no modelo oficial, não derivada do preço:
-  # calculado por proporção ele descia 5mm e encostava no número
   c.setFont("Arial-Black", f_rs)
-  c.drawString(x_base + X_RS, topo - RS_BASE, "R$")
+  c.drawString(x_base + (col_w * F_X_RS), topo - (row_h * F_RS_BASE), "R$")
 
   c.setFont("Arial-Black", f_real)
-  c.drawString(x_base + X_PRECO, y_preco, inteiro)
+  c.drawString(x_preco, y_preco, inteiro)
   w_int = c.stringWidth(inteiro, "Arial-Black", f_real)
 
   rel_cent = f_real - f_cent - (f_real * 0.12)
   c.setFont("Arial-Black", f_cent)
-  c.drawString(x_base + X_PRECO + w_int, y_preco + rel_cent, f",{centavos}")
+  c.drawString(x_preco + w_int, y_preco + rel_cent, f",{centavos}")
   w_cent = c.stringWidth(f",{centavos}", "Arial-Black", f_cent)
 
-  # ancorada à direita: assim nunca escapa da célula, seja qual for a largura
   c.setFont("Arial-Black", f_un)
-  c.drawRightString(x_base + col_w - MARGEM_LATERAL, y_preco, unidade)
+  c.drawString(x_preco + w_int + w_cent + gap_un, y_preco, unidade)
