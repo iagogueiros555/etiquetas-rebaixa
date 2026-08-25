@@ -1,6 +1,7 @@
 from reportlab.lib.colors import black, HexColor
 from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
+from reportlab.pdfbase import pdfmetrics
 
 # =====================================================================
 # AJUSTES RÁPIDOS
@@ -12,7 +13,8 @@ from reportlab.lib.utils import simpleSplit
 CELULA_REF = 74.9 * mm
 
 F_MARGEM = 4.0 / 74.9        # respiro lateral dentro da célula
-F_DESC_TOPO = 11.2 / 74.9    # linha de base da 1ª linha da descrição
+F_DESC_MARGEM = 6.1 / 74.9   # respiro entre o topo da célula e a descrição
+F_GAP_DESC_PRECO = 2.5 / 74.9  # respiro mínimo entre a descrição e o "R$"
 F_ESPACO_LINHA = 8.0 / 74.9  # entre as linhas da descrição
 # Medidas conferidas no PDF oficial (célula de 74,9mm):
 F_X_RS = 6.9 / 74.9          # onde começa o "R$"
@@ -33,6 +35,12 @@ F_MARGEM_PRECO = 2.0 / 74.9  # respiro à direita da linha do preço (menor que
                              # o das outras linhas, para o valor ficar grande)
 
 COR_LINHA = HexColor("#B0B0B0")   # linhas de corte
+# =====================================================================
+
+
+def altura_letras(tamanho):
+  """Altura real das maiúsculas, para centralizar o bloco de texto."""
+  return pdfmetrics.getFont("Arial-Black").face.capHeight / 1000.0 * tamanho
 # =====================================================================
 
 
@@ -77,18 +85,31 @@ def desenhar_etiqueta_padaria(c, item, x_base, y_base, col_w, row_h, scale=1.0):
     tam -= 1
   linhas = linhas[:MAX_LINHAS_DESC]
 
+  # O bloco fica CENTRALIZADO entre o topo da célula e o "R$", em vez de
+  # ancorado no alto. Ancorado, um nome de 1 linha deixava um vazio enorme
+  # até o preço, enquanto um de 4 linhas quase encostava nele - dois
+  # cartazes lado a lado ficavam com aparências bem diferentes.
+  f_rs = max(8, round(FONTE_PRECO * F_FONTE_RS * k))
+  topo_rs = (topo - (row_h * F_RS_BASE)) + altura_letras(f_rs)
+
+  area_topo = topo - (row_h * F_DESC_MARGEM)
+  area_base = topo_rs + (row_h * F_GAP_DESC_PRECO)
+
+  espaco = row_h * F_ESPACO_LINHA
+  altura_bloco = ((len(linhas) - 1) * espaco) + altura_letras(tam)
+  centro_area = (area_topo + area_base) / 2
+
   c.setFillColor(black)
   c.setFont("Arial-Black", tam)
-  y = topo - (row_h * F_DESC_TOPO)
+  y = centro_area + (altura_bloco / 2) - altura_letras(tam)
   for linha in linhas:
     c.drawCentredString(x_centro, y, linha)
-    y -= row_h * F_ESPACO_LINHA
+    y -= espaco
 
   # --- 2. PREÇO ---
   inteiro, centavos = separar_valor(item.get("por"))
   unidade = (item.get("un") or "UN").strip()
 
-  f_rs = max(8, round(FONTE_PRECO * F_FONTE_RS * k))
   f_un = max(8, round(FONTE_PRECO * F_FONTE_UN * k))
   f_real = max(8, round(FONTE_PRECO * k))
   f_cent = max(8, round(f_real * 0.50))
